@@ -1,0 +1,28 @@
+<view class="page-shell admin-bracket-page">
+  <app-header title="淘汰赛管理" subtitle="生成对阵树并创建单场淘汰比赛" season-name="ADMIN" />
+  <view wx:if="{{loading}}" class="center"><t-loading theme="circular" size="44rpx" text="加载中" /></view>
+  <view wx:elif="{{!verified}}" class="surface-card"><empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" /></view>
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-title">生成淘汰赛</view>
+      <input class="form-input" type="number" value="{{knockoutStageId}}" data-field="knockoutStageId" bindinput="input" placeholder="淘汰赛阶段 ID" />
+      <input class="form-input" type="number" value="{{groupStageId}}" data-field="groupStageId" bindinput="input" placeholder="小组赛阶段 ID" />
+      <input class="form-input" type="number" value="{{qualifiersPerGroup}}" data-field="qualifiersPerGroup" bindinput="input" placeholder="每组晋级数 1 或 2" />
+      <view class="row"><text>包含三四名决赛</text><switch checked="{{thirdPlace}}" color="#0B6B4B" bindchange="switchThirdPlace" /></view>
+      <t-button theme="primary" block bind:tap="generate">生成对阵</t-button>
+      <t-button theme="default" variant="outline" block bind:tap="loadBracket">刷新对阵</t-button>
+    </view>
+    <view wx:if="{{bracket}}" class="surface-card bracket-result">
+      <view class="form-title">{{bracket.stageName}}</view>
+      <view wx:if="{{bracket.champion}}" class="champion">冠军：{{bracket.champion.name}}</view>
+      <view wx:for="{{bracket.rounds}}" wx:key="id" class="round-block">
+        <view class="round-name">{{item.name}}</view>
+        <view wx:for="{{item.ties}}" wx:for-item="tie" wx:key="id" class="tie-row">
+          <view class="tie-teams">{{tie.homeTeam ? tie.homeTeam.name : "待定"}} vs {{tie.awayTeam ? tie.awayTeam.name : "待定"}}</view>
+          <view class="tie-meta">{{tie.status}} · {{tie.fixtureId ? "比赛 #" + tie.fixtureId : "未创建比赛"}}</view>
+          <t-button wx:if="{{!tie.fixtureId && tie.homeTeam && tie.awayTeam}}" size="small" theme="primary" variant="outline" data-id="{{tie.id}}" bind:tap="createFixture">创建比赛</t-button>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

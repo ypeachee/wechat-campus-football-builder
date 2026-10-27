@@ -1,0 +1,17 @@
+.bracket-page { padding-top: 22rpx; }
+.bracket-loading { display: flex; justify-content: center; padding: 100rpx 0; }
+.champion-card { margin-top: 20rpx; padding: 26rpx; border-radius: 20rpx; background: #0B6B4B; color: #fff; text-align: center; }
+.champion-card__label { color: #B7F34A; font-size: 20rpx; letter-spacing: 3rpx; }
+.champion-card__name { margin-top: 8rpx; font-size: 38rpx; font-weight: 800; }
+.bracket-scroll { margin-top: 20rpx; width: 100%; white-space: nowrap; }
+.bracket-columns { display: inline-flex; align-items: flex-start; gap: 18rpx; padding: 10rpx 24rpx 30rpx 0; }
+.bracket-round { width: 280rpx; display: flex; flex-direction: column; gap: 14rpx; }
+.bracket-round__title { padding: 12rpx 0; color: #0B6B4B; font-size: 24rpx; font-weight: 800; text-align: center; }
+.bracket-tie { padding: 16rpx; border-radius: 16rpx; background: #fff; border: 1rpx solid #E4E2D9; }
+.bracket-tie--third { border-color: #C68A1A; }
+.bracket-tie__team { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; padding: 8rpx 0; font-size: 22rpx; }
+.bracket-tie__team--winner { color: #0B6B4B; font-weight: 800; }
+.bracket-tie__penalty { padding-top: 8rpx; border-top: 1rpx solid #EEECE5; color: #5E6B65; font-size: 18rpx; }
+.bracket-tie__status { margin-top: 6rpx; color: #9AA49F; font-size: 17rpx; text-align: right; }
+.third-place { margin-top: 18rpx; }
+.third-place__title { margin-bottom: 8rpx; font-weight: 800; }

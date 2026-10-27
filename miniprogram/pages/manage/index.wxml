@@ -45,6 +45,16 @@
         <view class="admin-card__title">比赛数据</view>
         <view class="admin-card__copy">录入出场、进球与红黄牌</view>
       </view>
+      <view class="admin-card" bindtap="goAdminCompetition">
+        <view class="admin-card__index">C</view>
+        <view class="admin-card__title">赛事层级</view>
+        <view class="admin-card__copy">赛事、赛季、阶段和小组</view>
+      </view>
+      <view class="admin-card" bindtap="goAdminBracket">
+        <view class="admin-card__index">K</view>
+        <view class="admin-card__title">淘汰赛</view>
+        <view class="admin-card__copy">生成对阵树和淘汰赛比赛</view>
+      </view>
     </view>
 
     <view wx:if="{{!isAdmin}}" class="manager-actions">

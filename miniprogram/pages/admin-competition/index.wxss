@@ -1,0 +1,3 @@
+.admin-hierarchy-page{padding-top:22rpx}.center{display:flex;justify-content:center;padding:100rpx 0}.form-card{margin-top:18rpx}.form-title{margin-bottom:14rpx;font-size:29rpx;font-weight:800}.form-title--small{margin-top:26rpx}.form-input,.picker-value{height:72rpx;padding:0 16rpx;margin-top:12rpx;display:flex;align-items:center;border-radius:14rpx;background:#F8F6F0;border:1rpx solid #E4E2D9;box-sizing:border-box;font-size:24rpx}.chips{display:flex;gap:10rpx;margin:12rpx 0}.chip{padding:10rpx 18rpx;border-radius:999rpx;background:#F8F6F0;border:1rpx solid #E4E2D9;font-size:21rpx}.chip--active{background:#E4F5EC;border-color:#AAD9C2;color:#0B6B4B;font-weight:700}
+
+.id-list{display:flex;flex-direction:column;gap:4rpx;margin-top:8rpx;color:#7C8983;font-size:18rpx}

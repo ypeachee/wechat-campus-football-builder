@@ -49,7 +49,9 @@ Page({
     scoreMode: "score" as ScoreMode,
     scoreFixtureId: 0,
     scoreHome: "",
-    scoreAway: ""
+    scoreAway: "",
+    scoreHomePenalty: "",
+    scoreAwayPenalty: ""
   },
 
   onLoad() {
@@ -277,7 +279,9 @@ Page({
       scoreMode: mode,
       scoreFixtureId: fixture.id,
       scoreHome: fixture.homeScore === null ? "" : String(fixture.homeScore),
-      scoreAway: fixture.awayScore === null ? "" : String(fixture.awayScore)
+      scoreAway: fixture.awayScore === null ? "" : String(fixture.awayScore),
+      scoreHomePenalty: fixture.homePenaltyScore === null ? "" : String(fixture.homePenaltyScore),
+      scoreAwayPenalty: fixture.awayPenaltyScore === null ? "" : String(fixture.awayPenaltyScore)
     });
   },
 
@@ -291,7 +295,7 @@ Page({
   },
 
   handleScoreInput(event: WechatMiniprogram.Input) {
-    const field = event.currentTarget.dataset.field as "scoreHome" | "scoreAway";
+    const field = event.currentTarget.dataset.field as "scoreHome" | "scoreAway" | "scoreHomePenalty" | "scoreAwayPenalty";
     this.setData({ [field]: event.detail.value });
   },
 
@@ -302,12 +306,19 @@ Page({
       wx.showToast({ title: "比分必须是非负整数", icon: "none" });
       return;
     }
+    const homePenalty = this.data.scoreHomePenalty ? Number(this.data.scoreHomePenalty) : null;
+    const awayPenalty = this.data.scoreAwayPenalty ? Number(this.data.scoreAwayPenalty) : null;
+    if (this.data.scoreMode === "finish" && homeScore === awayScore
+        && (homePenalty === null || awayPenalty === null || homePenalty === awayPenalty)) {
+      wx.showToast({ title: "平局完赛必须填写不同点球比分", icon: "none" });
+      return;
+    }
     this.setData({ submitting: true });
     try {
       if (this.data.scoreMode === "finish") {
-        await finishFixture(this.data.scoreFixtureId, homeScore, awayScore);
+        await finishFixture(this.data.scoreFixtureId, homeScore, awayScore, homePenalty, awayPenalty);
       } else {
-        await updateOfficialScore(this.data.scoreFixtureId, homeScore, awayScore);
+        await updateOfficialScore(this.data.scoreFixtureId, homeScore, awayScore, homePenalty, awayPenalty);
       }
       this.setData({ scoreDialogVisible: false });
       await this.loadSeason(this.data.selectedSeasonId);

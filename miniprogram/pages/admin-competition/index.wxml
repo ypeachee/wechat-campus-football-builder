@@ -1,0 +1,41 @@
+<view class="page-shell admin-hierarchy-page">
+  <app-header title="赛事层级管理" subtitle="赛事 → 赛季 → 阶段 → 小组" season-name="ADMIN" />
+  <view wx:if="{{loading}}" class="center"><t-loading theme="circular" size="44rpx" text="加载中" /></view>
+  <view wx:elif="{{!verified}}" class="surface-card"><empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" /></view>
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-title">新建赛事</view>
+      <input class="form-input" value="{{competitionName}}" data-field="competitionName" bindinput="input" placeholder="赛事名称，例如 CUGB校园足球杯" />
+      <view class="chips"><view class="chip {{competitionType==='LEAGUE'?'chip--active':''}}" data-value="LEAGUE" bindtap="selectCompetitionType">联赛</view><view class="chip {{competitionType==='CUP'?'chip--active':''}}" data-value="CUP" bindtap="selectCompetitionType">杯赛</view></view>
+      <t-button theme="primary" block bind:tap="submitCompetition">创建赛事</t-button>
+    </view>
+
+    <view class="surface-card form-card">
+      <view class="form-title">当前赛事</view>
+      <picker mode="selector" range="{{competitions}}" range-key="name" value="{{competitionIndex}}" bindchange="handleCompetitionChange"><view class="picker-value">{{competitions.length ? competitions[competitionIndex].name : "选择赛事"}}</view></picker>
+      <input class="form-input" value="{{seasonName}}" data-field="seasonName" bindinput="input" placeholder="新赛季名称" />
+      <t-button theme="primary" block bindtap="submitSeason">创建赛季</t-button>
+    </view>
+
+    <view class="surface-card form-card">
+      <view class="form-title">当前赛季</view>
+      <picker mode="selector" range="{{seasons}}" range-key="name" value="{{seasonIndex}}" bindchange="handleSeasonChange"><view class="picker-value">{{seasons.length ? seasons[seasonIndex].name : "选择赛季"}}</view></picker>
+      <input class="form-input" value="{{stageName}}" data-field="stageName" bindinput="input" placeholder="阶段名称，例如 小组赛 / 淘汰赛" />
+      <view class="chips"><view wx:for="{{['LEAGUE','GROUP','KNOCKOUT']}}" wx:key="*this" class="chip {{stageType===item?'chip--active':''}}" data-value="{{item}}" bindtap="selectStageType">{{item}}</view></view>
+      <t-button theme="primary" block bindtap="submitStage">创建阶段</t-button>
+    </view>
+
+    <view class="surface-card form-card">
+      <view class="form-title">当前阶段 / 小组</view>
+      <picker mode="selector" range="{{stages}}" range-key="name" value="{{stageIndex}}" bindchange="handleStageChange"><view class="picker-value">{{stages.length ? stages[stageIndex].name : "选择阶段"}}</view></picker>
+      <view class="id-list"><text wx:for="{{stages}}" wx:key="id">#{{item.id}} {{item.name}} ({{item.type}})</text></view>
+      <picker wx:if="{{groups.length}}" mode="selector" range="{{groups}}" range-key="name" value="{{groupIndex}}" bindchange="handleGroupChange"><view class="picker-value">{{groups[groupIndex].name}}</view></picker>
+      <view class="id-list"><text wx:for="{{groups}}" wx:key="id">#{{item.id}} {{item.name}}</text></view>
+      <input class="form-input" value="{{groupName}}" data-field="groupName" bindinput="input" placeholder="新小组名称，例如 A组" />
+      <t-button theme="primary" block bindtap="submitGroup">创建小组</t-button>
+      <view class="form-title form-title--small">加入球队</view>
+      <input class="form-input" type="number" value="{{groupTeamId}}" data-field="groupTeamId" bindinput="input" placeholder="球队 ID" />
+      <t-button theme="default" variant="outline" block bindtap="addTeam">加入当前小组</t-button>
+    </view>
+  </block>
+</view>

@@ -14,7 +14,10 @@
     "pages/admin-access/index",
     "pages/admin-fixtures/index",
     "pages/manage-fixture-data/index",
-    "pages/admin-audit/index"
+    "pages/admin-audit/index",
+    "pages/bracket/index",
+    "pages/admin-competition/index",
+    "pages/admin-bracket/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",

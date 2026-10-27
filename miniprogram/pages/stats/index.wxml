@@ -1,10 +1,22 @@
 <view class="page-shell stats-page">
-  <app-header title="联赛榜单" subtitle="积分、射手、助攻与出场数据" season-name="{{selectedSeasonName}}" />
-  <season-picker
-    seasons="{{seasons}}"
-    selected-id="{{selectedSeasonId}}"
-    bind:change="handleSeasonChange"
-  />
+  <app-header title="赛事榜单" subtitle="积分、射手、助攻与出场数据" season-name="RANKINGS" />
+  <view class="hierarchy-card">
+    <picker mode="selector" range="{{competitions}}" range-key="name" bindchange="handleCompetitionChange">
+      <view class="hierarchy-row"><text class="hierarchy-label">赛事</text><text class="hierarchy-value">{{selectedCompetitionName || "选择赛事"}}</text></view>
+    </picker>
+    <picker mode="selector" range="{{seasons}}" range-key="name" bindchange="handleSeasonChange">
+      <view class="hierarchy-row"><text class="hierarchy-label">赛季</text><text class="hierarchy-value">{{selectedSeasonName || "选择赛季"}}</text></view>
+    </picker>
+    <picker mode="selector" range="{{stages}}" range-key="name" bindchange="handleStageChange">
+      <view class="hierarchy-row"><text class="hierarchy-label">阶段</text><text class="hierarchy-value">{{selectedStageName || "选择阶段"}}</text></view>
+    </picker>
+    <picker wx:if="{{groups.length > 0}}" mode="selector" range="{{groups}}" range-key="name" bindchange="handleGroupChange">
+      <view class="hierarchy-row"><text class="hierarchy-label">小组</text><text class="hierarchy-value">{{selectedGroupName || "选择小组"}}</text></view>
+    </picker>
+    <view wx:if="{{canOpenBracket}}" class="hierarchy-row hierarchy-row--action" bindtap="openBracket">
+      <text class="hierarchy-label">淘汰赛</text><text class="hierarchy-value">查看决赛树 ›</text>
+    </view>
+  </view>
 
   <view wx:if="{{loading}}" class="stats-loading">
     <t-loading theme="circular" size="48rpx" text="加载榜单" />

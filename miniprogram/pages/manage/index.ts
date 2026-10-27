@@ -91,6 +91,14 @@ Page({
     wx.navigateTo({ url: "/pages/admin-audit/index" });
   },
 
+  goAdminCompetition() {
+    wx.navigateTo({ url: "/pages/admin-competition/index" });
+  },
+
+  goAdminBracket() {
+    wx.navigateTo({ url: "/pages/admin-bracket/index" });
+  },
+
   goFixtureData() {
     wx.navigateTo({ url: "/pages/manage-fixture-data/index" });
   },

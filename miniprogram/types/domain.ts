@@ -55,6 +55,8 @@ export interface FixtureSummary {
   status: FixtureStatus;
   homeScore: number | null;
   awayScore: number | null;
+  homePenaltyScore: number | null;
+  awayPenaltyScore: number | null;
   dataLocked: boolean;
 }
 
@@ -94,6 +96,8 @@ export interface FixtureDetail {
   status: FixtureStatus;
   homeScore: number | null;
   awayScore: number | null;
+  homePenaltyScore: number | null;
+  awayPenaltyScore: number | null;
   dataLocked: boolean;
   events: FixtureEvent[];
   appearances: FixtureAppearance[];
@@ -160,4 +164,70 @@ export interface RankingDisplayItem {
   name: string;
   teamName: string;
   value: number;
+}
+
+export type CompetitionType = "LEAGUE" | "CUP";
+export type CompetitionStatus = "ACTIVE" | "INACTIVE";
+export type StageType = "LEAGUE" | "GROUP" | "KNOCKOUT";
+export type StageStatus = "DRAFT" | "ACTIVE" | "FINISHED";
+export type TieStatus = "PENDING" | "READY" | "FINISHED" | "CANCELLED";
+
+export interface Competition {
+  id: number;
+  name: string;
+  type: CompetitionType;
+  description: string | null;
+  status: CompetitionStatus;
+}
+
+export interface Stage {
+  id: number;
+  seasonId: number;
+  name: string;
+  type: StageType;
+  sortOrder: number;
+  status: StageStatus;
+}
+
+export interface CompetitionGroup {
+  id: number;
+  stageId: number;
+  name: string;
+  sortOrder: number;
+}
+
+export interface BracketTeamRef {
+  id: number;
+  name: string;
+  shortName: string | null;
+}
+
+export interface BracketTieView {
+  id: number;
+  bracketPosition: number;
+  homeTeam: BracketTeamRef | null;
+  awayTeam: BracketTeamRef | null;
+  winnerTeam: BracketTeamRef | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  homePenaltyScore: number | null;
+  awayPenaltyScore: number | null;
+  status: TieStatus;
+  fixtureId: number | null;
+  thirdPlace: boolean;
+}
+
+export interface BracketRoundView {
+  id: number;
+  roundNo: number;
+  name: string;
+  ties: BracketTieView[];
+}
+
+export interface BracketView {
+  stageId: number;
+  stageName: string;
+  rounds: BracketRoundView[];
+  thirdPlace: BracketTieView | null;
+  champion: BracketTeamRef | null;
 }

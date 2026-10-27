@@ -6,6 +6,11 @@ export function fetchPublicFixtures(seasonId: number): Promise<FixtureSummary[]>
   return request<FixtureSummary[]>(`/api/v1/fixtures?seasonId=${seasonId}`);
 }
 
+export function fetchPublicFixturesByStage(stageId: number, groupId?: number | null): Promise<FixtureSummary[]> {
+  const group = groupId ? `&groupId=${groupId}` : "";
+  return request<FixtureSummary[]>(`/api/v1/fixtures?stageId=${stageId}${group}`);
+}
+
 export function fetchFixtureDetail(fixtureId: number): Promise<FixtureDetail> {
   return request<FixtureDetail>(`/api/v1/fixtures/${fixtureId}`);
 }
@@ -75,17 +80,19 @@ export function changeFixtureStatus(fixtureId: number, status: FixtureStatus): P
   });
 }
 
-export function updateOfficialScore(fixtureId: number, homeScore: number, awayScore: number): Promise<void> {
+export function updateOfficialScore(fixtureId: number, homeScore: number, awayScore: number,
+                                     homePenaltyScore?: number | null, awayPenaltyScore?: number | null): Promise<void> {
   return request<void>(`/api/v1/admin/fixtures/${fixtureId}/score`, {
     method: "PUT",
-    data: { homeScore, awayScore }
+    data: { homeScore, awayScore, homePenaltyScore, awayPenaltyScore }
   });
 }
 
-export function finishFixture(fixtureId: number, homeScore: number, awayScore: number): Promise<void> {
+export function finishFixture(fixtureId: number, homeScore: number, awayScore: number,
+                              homePenaltyScore?: number | null, awayPenaltyScore?: number | null): Promise<void> {
   return request<void>(`/api/v1/admin/fixtures/${fixtureId}/finish`, {
     method: "POST",
-    data: { homeScore, awayScore }
+    data: { homeScore, awayScore, homePenaltyScore, awayPenaltyScore }
   });
 }
 
@@ -94,4 +101,8 @@ export function setFixtureLocked(fixtureId: number, locked: boolean): Promise<vo
     method: "PUT",
     data: { locked }
   });
+}
+
+export function fetchBracket(stageId: number): Promise<import("../types/domain").BracketView> {
+  return request(`/api/v1/brackets?stageId=${stageId}`);
 }

@@ -40,3 +40,10 @@
   flex-direction: column;
   gap: 14rpx;
 }
+
+.hierarchy-card { margin: 20rpx 0 4rpx; overflow: hidden; border-radius: 18rpx; background: #fff; border: 1rpx solid #E4E2D9; }
+.hierarchy-row { display: flex; align-items: center; justify-content: space-between; padding: 18rpx 22rpx; border-bottom: 1rpx solid #EEECE5; }
+.hierarchy-row:last-child { border-bottom: 0; }
+.hierarchy-row--action { color: #0B6B4B; font-weight: 700; }
+.hierarchy-label { color: #7C8983; font-size: 21rpx; }
+.hierarchy-value { max-width: 70%; font-size: 24rpx; font-weight: 600; text-align: right; }

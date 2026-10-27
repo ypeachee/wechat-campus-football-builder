@@ -114,6 +114,14 @@
           <view class="form-label">客队比分</view>
           <input class="form-input" type="number" value="{{scoreAway}}" data-field="scoreAway" bindinput="handleScoreInput" />
         </view>
+        <view wx:if="{{scoreMode === 'finish'}}" class="form-field">
+          <view class="form-label">主队点球</view>
+          <input class="form-input" type="number" value="{{scoreHomePenalty}}" data-field="scoreHomePenalty" bindinput="handleScoreInput" placeholder="平局时填写" />
+        </view>
+        <view wx:if="{{scoreMode === 'finish'}}" class="form-field">
+          <view class="form-label">客队点球</view>
+          <input class="form-input" type="number" value="{{scoreAwayPenalty}}" data-field="scoreAwayPenalty" bindinput="handleScoreInput" placeholder="平局时填写" />
+        </view>
       </view>
       <view class="score-dialog__actions">
         <t-button theme="default" variant="outline" block bind:tap="closeScoreDialog">取消</t-button>

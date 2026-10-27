@@ -1,0 +1,44 @@
+<view class="page-shell bracket-page">
+  <app-header title="淘汰赛对阵" subtitle="单场决胜 · 胜者自动晋级" season-name="{{bracket ? bracket.stageName : 'KNOCKOUT'}}" />
+
+  <view wx:if="{{loading}}" class="bracket-loading">
+    <t-loading theme="circular" size="44rpx" text="加载决赛树" />
+  </view>
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="决赛树加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+  <view wx:elif="{{!bracket || bracket.rounds.length === 0}}" class="surface-card">
+    <empty-state title="暂无淘汰赛" description="管理员生成淘汰赛对阵后会显示在这里。" />
+  </view>
+  <block wx:else>
+    <view wx:if="{{bracket.champion}}" class="champion-card">
+      <view class="champion-card__label">冠军</view>
+      <view class="champion-card__name">{{bracket.champion.name}}</view>
+    </view>
+
+    <scroll-view class="bracket-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="bracket-columns">
+        <view wx:for="{{bracket.rounds}}" wx:key="id" class="bracket-round">
+          <view class="bracket-round__title">{{item.name}}</view>
+          <view wx:for="{{item.ties}}" wx:for-item="tie" wx:key="id" class="bracket-tie {{tie.thirdPlace ? 'bracket-tie--third' : ''}}">
+            <view class="bracket-tie__team {{tie.winnerTeam && tie.homeTeam && tie.winnerTeam.id === tie.homeTeam.id ? 'bracket-tie__team--winner' : ''}}">
+              <text>{{tie.homeTeam ? tie.homeTeam.name : "待定"}}</text>
+              <text class="numeric">{{tie.homeScore === null ? "-" : tie.homeScore}}</text>
+            </view>
+            <view class="bracket-tie__team {{tie.winnerTeam && tie.awayTeam && tie.winnerTeam.id === tie.awayTeam.id ? 'bracket-tie__team--winner' : ''}}">
+              <text>{{tie.awayTeam ? tie.awayTeam.name : "待定"}}</text>
+              <text class="numeric">{{tie.awayScore === null ? "-" : tie.awayScore}}</text>
+            </view>
+            <view wx:if="{{tie.homePenaltyScore !== null}}" class="bracket-tie__penalty">点球 {{tie.homePenaltyScore}} : {{tie.awayPenaltyScore}}</view>
+            <view class="bracket-tie__status">{{tie.status}}</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{bracket.thirdPlace}}" class="surface-card third-place">
+      <view class="third-place__title">三四名决赛</view>
+      <view>{{bracket.thirdPlace.homeTeam ? bracket.thirdPlace.homeTeam.name : "待定"}} vs {{bracket.thirdPlace.awayTeam ? bracket.thirdPlace.awayTeam.name : "待定"}}</view>
+    </view>
+  </block>
+</view>
