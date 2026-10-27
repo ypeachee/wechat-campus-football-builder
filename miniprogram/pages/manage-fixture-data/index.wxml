@@ -42,7 +42,8 @@
           </view>
           <view class="fixture-banner__away">{{fixture.awayTeam.name}}</view>
         </view>
-        <view wx:if="{{!canWriteData}}" class="fixture-banner__notice">当前状态或锁定状态不允许录入比赛数据。</view>
+        <view wx:if="{{fixture.dataLocked}}" class="fixture-banner__notice">比赛已锁定，请管理员先解锁。</view>
+        <view wx:elif="{{!canWriteData}}" class="fixture-banner__notice">当前比赛状态不允许录入数据。</view>
       </view>
 
       <view class="section-head">

@@ -95,7 +95,7 @@
           <t-button wx:if="{{item.status === 'LIVE'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="finish" bind:tap="handleFixtureAction">完赛</t-button>
           <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="edit" bind:tap="handleFixtureAction">编辑</t-button>
           <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="score" bind:tap="handleFixtureAction">比分</t-button>
-          <t-button wx:if="{{item.status === 'DRAFT' || item.status === 'SCHEDULED' || item.status === 'LIVE'}}" size="small" theme="warning" variant="outline" data-id="{{item.id}}" data-action="cancelled" bind:tap="handleFixtureAction">取消</t-button>
+          <t-button wx:if="{{item.status === 'DRAFT' || item.status === 'SCHEDULED' || item.status === 'LIVE'}}" size="small" theme="danger" variant="outline" data-id="{{item.id}}" data-action="cancelled" bind:tap="handleFixtureAction">取消</t-button>
           <t-button size="small" theme="{{item.dataLocked ? 'success' : 'danger'}}" variant="outline" data-id="{{item.id}}" data-action="lock" bind:tap="handleFixtureAction">{{item.dataLocked ? "解锁" : "锁定"}}</t-button>
         </view>
       </view>
@@ -122,3 +122,4 @@
     </view>
   </t-popup>
 </view>
+
