@@ -103,6 +103,10 @@ Page({
     wx.navigateTo({ url: "/pages/manage-fixture-data/index" });
   },
 
+  goAdminRatings() {
+    wx.navigateTo({ url: "/pages/admin-ratings/index" });
+  },
+
   goProfile() {
     wx.switchTab({ url: "/pages/profile/index" });
   }

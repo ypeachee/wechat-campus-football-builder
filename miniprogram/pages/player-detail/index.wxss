@@ -40,3 +40,10 @@
   font-size: 23rpx;
   line-height: 1.7;
 }
+
+
+.section-head { margin-top: 30rpx; }
+.player-rating-card { margin-top: 14rpx; padding: 28rpx; text-align: center; }
+.player-rating-card__score { color: #0B6B4B; font-size: 52rpx; font-weight: 800; }
+.player-rating-card__stars { margin-top: 8rpx; color: #E5B53F; font-size: 38rpx; letter-spacing: 4rpx; }
+.player-rating-card__count { margin-top: 8rpx; color: #7C8983; font-size: 21rpx; }

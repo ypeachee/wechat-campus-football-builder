@@ -45,6 +45,11 @@
         <view class="admin-card__title">比赛数据</view>
         <view class="admin-card__copy">录入出场、进球与红黄牌</view>
       </view>
+      <view class="admin-card" bindtap="goAdminRatings">
+        <view class="admin-card__index">R</view>
+        <view class="admin-card__title">评分审核</view>
+        <view class="admin-card__copy">审核评价与敏感词</view>
+      </view>
       <view class="admin-card" bindtap="goAdminCompetition">
         <view class="admin-card__index">C</view>
         <view class="admin-card__title">赛事层级</view>

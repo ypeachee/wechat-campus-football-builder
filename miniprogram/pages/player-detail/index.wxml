@@ -29,8 +29,20 @@
       </view>
     </view>
 
+    <view class="section-head">
+      <view>
+        <view class="section-title">赛季评分</view>
+        <view class="section-subtitle">赛后球迷评分</view>
+      </view>
+    </view>
+    <view class="surface-card player-rating-card">
+      <view class="player-rating-card__score numeric">{{ratingScoreLabel}}</view>
+      <view class="player-rating-card__stars">{{ratingStarsLabel}}</view>
+      <view class="player-rating-card__count">{{ratingSummary && ratingSummary.ratingCount ? ratingSummary.ratingCount + " 人参与评分" : "暂无评分"}}</view>
+    </view>
+
     <view class="surface-card player-tip">
-      单球员完整赛季统计将在后续接入；当前可通过榜单查看射手、助攻与出场排名。
+      当前可通过比赛详情查看单场球员评价，评分采用 5 星输入、10 分制展示。
     </view>
   </block>
 </view>
