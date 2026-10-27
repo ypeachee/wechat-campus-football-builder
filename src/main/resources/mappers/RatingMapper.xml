@@ -48,4 +48,12 @@
             updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
+    <select id="countRecentReports" resultType="int">
+        SELECT COUNT(*) FROM rating_report
+        WHERE reporter_user_id = #{userId} AND created_at &gt;= #{since}
+    </select>
+    <insert id="insertReport" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rating_report (rating_id, reporter_user_id, reason, status)
+        VALUES (#{ratingId}, #{reporterUserId}, #{reason}, #{status})
+    </insert>
 </mapper>

@@ -38,6 +38,11 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/wechat-login").permitAll()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/v1/fixtures/*/players/*/rating/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/fixtures/*/players/*/rating").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ratings/*/report").authenticated()
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/seasons", "/api/v1/teams/**", "/api/v1/players/**",
                                 "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**",
                                 "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**", "/api/v1/brackets").permitAll()

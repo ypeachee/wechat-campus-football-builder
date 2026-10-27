@@ -96,6 +96,43 @@ public class RatingService {
         return ratingMapper.findByTarget(fixtureId, playerId, userId);
     }
 
+    public boolean canEdit(PlayerMatchRating rating) {
+        return (rating.getEditsUsed() == null || rating.getEditsUsed() < 1)
+                && rating.getUpdatedAt() != null
+                && rating.getUpdatedAt().plus(EDIT_WINDOW).isAfter(LocalDateTime.now(clock));
+    }
+
+    @Transactional
+    public void report(long userId, long ratingId, String reason) {
+        PlayerMatchRating rating = ratingMapper.findById(ratingId).orElseThrow(() -> notFound("评分不存在"));
+        if (rating.getUserId() == userId) {
+            throw conflict("不能举报自己的评价");
+        }
+        if (rating.getStatus() != RatingStatus.VISIBLE || rating.getComment() == null) {
+            throw conflict("该评价当前不可举报");
+        }
+        String cleanedReason = reason == null ? "" : reason.trim();
+        if (cleanedReason.isEmpty() || cleanedReason.length() > 100) {
+            throw badRequest("举报原因长度必须为 1–100 个字符");
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (ratingMapper.countRecentReports(userId, now.minus(SUBMISSION_WINDOW)) >= 10) {
+            throw new AppException(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.RATE_LIMITED,
+                    "举报过于频繁，请稍后再试");
+        }
+        RatingReport report = new RatingReport();
+        report.setRatingId(ratingId);
+        report.setReporterUserId(userId);
+        report.setReason(cleanedReason);
+        report.setStatus(RatingReportStatus.OPEN);
+        report.setCreatedAt(now);
+        try {
+            ratingMapper.insertReport(report);
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            throw conflict("你已举报过该评价");
+        }
+    }
+
     private void applyModeratedContent(PlayerMatchRating rating, long userId, String comment) {
         rating.setComment(comment);
         if (comment == null) {

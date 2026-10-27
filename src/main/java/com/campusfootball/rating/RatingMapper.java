@@ -18,4 +18,6 @@ public interface RatingMapper {
                                @Param("since") LocalDateTime since);
     int insert(PlayerMatchRating rating);
     int updateSubmission(PlayerMatchRating rating);
+    int countRecentReports(@Param("userId") long userId, @Param("since") LocalDateTime since);
+    int insertReport(RatingReport report);
 }

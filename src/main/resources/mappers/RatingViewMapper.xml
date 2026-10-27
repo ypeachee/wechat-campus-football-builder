@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.rating.RatingViewMapper">
+    <select id="fixtureSummaries" resultType="com.campusfootball.rating.PlayerRatingSummary">
+        SELECT fa.player_id, p.name AS player_name, p.jersey_no, fa.team_id, t.name AS team_name,
+               COALESCE(AVG(CASE WHEN r.status = 'VISIBLE' THEN r.stars END), 0) * 2 AS average_score,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' THEN 1 ELSE 0 END), 0) AS rating_count,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' AND r.stars = 1 THEN 1 ELSE 0 END), 0) AS star1_count,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' AND r.stars = 2 THEN 1 ELSE 0 END), 0) AS star2_count,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' AND r.stars = 3 THEN 1 ELSE 0 END), 0) AS star3_count,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' AND r.stars = 4 THEN 1 ELSE 0 END), 0) AS star4_count,
+               COALESCE(SUM(CASE WHEN r.status = 'VISIBLE' AND r.stars = 5 THEN 1 ELSE 0 END), 0) AS star5_count
+        FROM fixture_appearance fa
+        JOIN player p ON p.id = fa.player_id
+        JOIN team t ON t.id = fa.team_id
+        LEFT JOIN player_match_rating r
+               ON r.fixture_id = fa.fixture_id AND r.player_id = fa.player_id
+        WHERE fa.fixture_id = #{fixtureId}
+        GROUP BY fa.player_id, p.name, p.jersey_no, fa.team_id, t.name, t.id
+        ORDER BY t.id, p.jersey_no IS NULL, p.jersey_no, p.name
+    </select>
+
+    <select id="playerSeasonSummary" resultType="com.campusfootball.rating.PlayerSeasonRatingSummary">
+        SELECT #{playerId} AS player_id, #{seasonId} AS season_id,
+               COALESCE(AVG(r.stars), 0) * 2 AS average_score,
+               COUNT(*) AS rating_count
+        FROM player_match_rating r
+        JOIN fixture f ON f.id = r.fixture_id
+        WHERE r.player_id = #{playerId} AND r.status = 'VISIBLE'
+        <if test="seasonId != null">AND f.season_id = #{seasonId}</if>
+    </select>
+
+    <select id="countComments" resultType="long">
+        SELECT COUNT(*) FROM player_match_rating
+        WHERE fixture_id = #{fixtureId} AND player_id = #{playerId}
+          AND status = 'VISIBLE' AND comment IS NOT NULL
+    </select>
+
+    <select id="comments" resultType="com.campusfootball.rating.RatingCommentView">
+        SELECT r.id, COALESCE(u.nickname, '微信用户') AS nickname, r.stars,
+               r.stars * 2 AS score, r.comment, r.created_at
+        FROM player_match_rating r
+        JOIN app_user u ON u.id = r.user_id
+        WHERE r.fixture_id = #{fixtureId} AND r.player_id = #{playerId}
+          AND r.status = 'VISIBLE' AND r.comment IS NOT NULL
+        ORDER BY r.created_at DESC, r.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+</mapper>
