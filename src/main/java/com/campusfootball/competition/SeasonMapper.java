@@ -1,0 +1,24 @@
+package com.campusfootball.competition;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+@Mapper
+public interface SeasonMapper {
+    int insert(Season season);
+
+    Optional<Season> findById(@Param("id") long id);
+
+    List<Season> findPublic();
+
+    List<Season> findAll();
+
+    int countSeasonTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
+
+    int addTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
+
+    int removeTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
+}

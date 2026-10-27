@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.FixtureMapper">
+    <resultMap id="FixtureMap" type="com.campusfootball.competition.Fixture">
+        <id property="id" column="id"/>
+        <result property="seasonId" column="season_id"/>
+        <result property="roundNo" column="round_no"/>
+        <result property="homeTeamId" column="home_team_id"/>
+        <result property="awayTeamId" column="away_team_id"/>
+        <result property="kickoffAt" column="kickoff_at"/>
+        <result property="venue" column="venue"/>
+        <result property="status" column="status"/>
+        <result property="homeScore" column="home_score"/>
+        <result property="awayScore" column="away_score"/>
+        <result property="dataLocked" column="data_locked"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fixture (season_id, round_no, home_team_id, away_team_id, kickoff_at, venue,
+                             status, home_score, away_score, data_locked, created_by)
+        VALUES (#{seasonId}, #{roundNo}, #{homeTeamId}, #{awayTeamId}, #{kickoffAt}, #{venue},
+                #{status}, #{homeScore}, #{awayScore}, #{dataLocked}, #{createdBy})
+    </insert>
+
+    <select id="findById" resultMap="FixtureMap">
+        SELECT * FROM fixture WHERE id = #{id}
+    </select>
+
+    <select id="findPublicBySeason" resultMap="FixtureMap">
+        SELECT * FROM fixture
+        WHERE season_id = #{seasonId} AND status &lt;&gt; 'DRAFT'
+        ORDER BY kickoff_at, id
+    </select>
+
+    <select id="findAllBySeason" resultMap="FixtureMap">
+        SELECT * FROM fixture WHERE season_id = #{seasonId} ORDER BY kickoff_at, id
+    </select>
+
+    <update id="updateSchedule">
+        UPDATE fixture
+        SET season_id = #{seasonId},
+            round_no = #{roundNo},
+            home_team_id = #{homeTeamId},
+            away_team_id = #{awayTeamId},
+            kickoff_at = #{kickoffAt},
+            venue = #{venue},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE fixture SET status = #{status}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <update id="updateScore">
+        UPDATE fixture
+        SET home_score = #{homeScore}, away_score = #{awayScore}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="finish">
+        UPDATE fixture
+        SET home_score = #{homeScore},
+            away_score = #{awayScore},
+            status = 'FINISHED',
+            data_locked = 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateLock">
+        UPDATE fixture SET data_locked = #{locked}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <select id="countEvents" resultType="int">
+        SELECT COUNT(*) FROM fixture_event WHERE fixture_id = #{fixtureId}
+    </select>
+
+    <select id="countAppearances" resultType="int">
+        SELECT COUNT(*) FROM fixture_appearance WHERE fixture_id = #{fixtureId}
+    </select>
+
+    <select id="countBySeasonAndTeam" resultType="int">
+        SELECT COUNT(*) FROM fixture
+        WHERE season_id = #{seasonId} AND (home_team_id = #{teamId} OR away_team_id = #{teamId})
+    </select>
+</mapper>

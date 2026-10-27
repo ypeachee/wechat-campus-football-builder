@@ -1,6 +1,8 @@
 package com.campusfootball;
 
 import com.campusfootball.auth.AdminBootstrap;
+import com.campusfootball.competition.FixtureStatus;
+import com.campusfootball.competition.SeasonStatus;
 import com.campusfootball.team.PlayerStatus;
 import com.campusfootball.team.TeamStatus;
 import com.campusfootball.user.UserRole;
@@ -58,6 +60,31 @@ public class TestDataFactory {
         jdbc.update("INSERT INTO player (team_id, name, jersey_no, status) VALUES (?, ?, ?, ?)",
                 teamId, name, jerseyNo, PlayerStatus.ACTIVE.name());
         return jdbc.queryForObject("SELECT id FROM player WHERE name = ?", Long.class, name);
+    }
+
+
+    public long createSeason(String namePrefix, SeasonStatus status) {
+        String name = namePrefix + "-" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.update("INSERT INTO season (name, status) VALUES (?, ?)", name, status.name());
+        return jdbc.queryForObject("SELECT id FROM season WHERE name = ?", Long.class, name);
+    }
+
+    public void addSeasonTeam(long seasonId, long teamId) {
+        jdbc.update("INSERT INTO season_team (season_id, team_id) VALUES (?, ?)", seasonId, teamId);
+    }
+
+    public long createFixture(long seasonId, long homeTeamId, long awayTeamId, FixtureStatus status,
+                              long createdBy, Integer homeScore, Integer awayScore, boolean dataLocked) {
+        jdbc.update("""
+                INSERT INTO fixture (season_id, home_team_id, away_team_id, status, home_score, away_score,
+                                     data_locked, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, seasonId, homeTeamId, awayTeamId, status.name(), homeScore, awayScore, dataLocked, createdBy);
+        return jdbc.queryForObject("""
+                SELECT id FROM fixture
+                WHERE season_id = ? AND home_team_id = ? AND away_team_id = ?
+                ORDER BY id DESC LIMIT 1
+                """, Long.class, seasonId, homeTeamId, awayTeamId);
     }
 
     public void grantTeamManager(long userId, long teamId, long grantedBy) {
