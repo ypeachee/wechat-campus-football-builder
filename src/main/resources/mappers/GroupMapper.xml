@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.GroupMapper">
+    <resultMap id="GroupMap" type="com.campusfootball.competition.CompetitionGroup">
+        <id property="id" column="id"/>
+        <result property="stageId" column="stage_id"/>
+        <result property="name" column="name"/>
+        <result property="sortOrder" column="sort_order"/>
+    </resultMap>
+    <resultMap id="GroupTeamMap" type="com.campusfootball.competition.GroupTeam">
+        <id property="id" column="id"/>
+        <result property="groupId" column="group_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="seedNo" column="seed_no"/>
+    </resultMap>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO competition_group (stage_id, name, sort_order)
+        VALUES (#{stageId}, #{name}, #{sortOrder})
+    </insert>
+    <select id="findById" resultMap="GroupMap">
+        SELECT * FROM competition_group WHERE id = #{id}
+    </select>
+    <select id="findByStage" resultMap="GroupMap">
+        SELECT * FROM competition_group WHERE stage_id = #{stageId} ORDER BY sort_order, id
+    </select>
+    <select id="countGroupTeam" resultType="int">
+        SELECT COUNT(*) FROM group_team WHERE group_id = #{groupId} AND team_id = #{teamId}
+    </select>
+    <select id="countTeamInStage" resultType="int">
+        SELECT COUNT(*) FROM group_team gt
+        JOIN competition_group g ON g.id = gt.group_id
+        WHERE g.stage_id = #{stageId} AND gt.team_id = #{teamId}
+    </select>
+    <insert id="addTeam">
+        INSERT INTO group_team (group_id, team_id, seed_no) VALUES (#{groupId}, #{teamId}, #{seedNo})
+    </insert>
+    <delete id="removeTeam">
+        DELETE FROM group_team WHERE group_id = #{groupId} AND team_id = #{teamId}
+    </delete>
+    <select id="findTeams" resultMap="GroupTeamMap">
+        SELECT * FROM group_team WHERE group_id = #{groupId} ORDER BY seed_no, id
+    </select>
+    <select id="findTeamIds" resultType="long">
+        SELECT team_id FROM group_team WHERE group_id = #{groupId} ORDER BY seed_no, id
+    </select>
+</mapper>

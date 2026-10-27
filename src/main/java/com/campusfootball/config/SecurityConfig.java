@@ -39,7 +39,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/wechat-login").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/seasons", "/api/v1/teams/**", "/api/v1/players/**",
-                                "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**").permitAll()
+                                "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**",
+                                "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**", "/api/v1/brackets").permitAll()
                         .requestMatchers("/api/v1/me").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/manage/**").hasAnyRole("ADMIN", "TEAM_MANAGER")

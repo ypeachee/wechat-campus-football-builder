@@ -14,8 +14,9 @@ import java.util.UUID;
 
 public class TestDataFactory {
     private static final String[] DELETE_ORDER = {
-            "audit_log", "fixture_event", "fixture_appearance", "fixture", "season_team", "season",
-            "team_manager", "player", "team", "app_user"
+            "audit_log", "knockout_seed", "fixture_event", "fixture_appearance", "fixture",
+            "knockout_tie", "knockout_round", "group_team", "competition_group", "stage",
+            "season_team", "season", "competition", "team_manager", "player", "team", "app_user"
     };
 
     private final JdbcTemplate jdbc;
@@ -30,6 +31,8 @@ public class TestDataFactory {
         for (String table : DELETE_ORDER) {
             jdbc.update("DELETE FROM " + table);
         }
+        jdbc.update("INSERT INTO competition (name, type, status) VALUES (?, 'LEAGUE', 'ACTIVE')",
+                "CUGB校园足球联赛");
         adminBootstrap.ensureAdmin();
     }
 
@@ -64,10 +67,43 @@ public class TestDataFactory {
     }
 
 
+    public long createCompetition(String namePrefix, String type) {
+        String name = namePrefix + "-" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.update("INSERT INTO competition (name, type, status) VALUES (?, ?, 'ACTIVE')", name, type);
+        return jdbc.queryForObject("SELECT id FROM competition WHERE name = ?", Long.class, name);
+    }
+
+    public long defaultCompetitionId() {
+        return jdbc.queryForObject("SELECT id FROM competition WHERE type = 'LEAGUE' ORDER BY id LIMIT 1", Long.class);
+    }
+
     public long createSeason(String namePrefix, SeasonStatus status) {
         String name = namePrefix + "-" + UUID.randomUUID().toString().substring(0, 8);
-        jdbc.update("INSERT INTO season (name, status) VALUES (?, ?)", name, status.name());
-        return jdbc.queryForObject("SELECT id FROM season WHERE name = ?", Long.class, name);
+        jdbc.update("INSERT INTO season (competition_id, name, status) VALUES (?, ?, ?)",
+                defaultCompetitionId(), name, status.name());
+        long seasonId = jdbc.queryForObject("SELECT id FROM season WHERE name = ?", Long.class, name);
+        jdbc.update("INSERT INTO stage (season_id, name, type, sort_order, status) VALUES (?, '联赛阶段', 'LEAGUE', 0, 'ACTIVE')", seasonId);
+        return seasonId;
+    }
+
+    public long createStage(long seasonId, String name, String type) {
+        jdbc.update("INSERT INTO stage (season_id, name, type, sort_order, status) VALUES (?, ?, ?, 99, 'ACTIVE')",
+                seasonId, name, type);
+        return jdbc.queryForObject("SELECT id FROM stage WHERE season_id = ? AND name = ?", Long.class, seasonId, name);
+    }
+
+    public long createGroup(long stageId, String name) {
+        jdbc.update("INSERT INTO competition_group (stage_id, name, sort_order) VALUES (?, ?, 0)", stageId, name);
+        return jdbc.queryForObject("SELECT id FROM competition_group WHERE stage_id = ? AND name = ?", Long.class, stageId, name);
+    }
+
+    public void addGroupTeam(long groupId, long teamId) {
+        jdbc.update("INSERT INTO group_team (group_id, team_id) VALUES (?, ?)", groupId, teamId);
+    }
+
+    public long leagueStageId(long seasonId) {
+        return jdbc.queryForObject("SELECT id FROM stage WHERE season_id = ? AND type = 'LEAGUE' ORDER BY id LIMIT 1",
+                Long.class, seasonId);
     }
 
     public void addSeasonTeam(long seasonId, long teamId) {
@@ -76,11 +112,13 @@ public class TestDataFactory {
 
     public long createFixture(long seasonId, long homeTeamId, long awayTeamId, FixtureStatus status,
                               long createdBy, Integer homeScore, Integer awayScore, boolean dataLocked) {
+        long stageId = leagueStageId(seasonId);
         jdbc.update("""
-                INSERT INTO fixture (season_id, home_team_id, away_team_id, status, home_score, away_score,
-                                     data_locked, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, seasonId, homeTeamId, awayTeamId, status.name(), homeScore, awayScore, dataLocked, createdBy);
+                INSERT INTO fixture (season_id, stage_id, home_team_id, away_team_id, status,
+                                     home_score, away_score, data_locked, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, seasonId, stageId, homeTeamId, awayTeamId, status.name(), homeScore, awayScore,
+                dataLocked, createdBy);
         return jdbc.queryForObject("""
                 SELECT id FROM fixture
                 WHERE season_id = ? AND home_team_id = ? AND away_team_id = ?

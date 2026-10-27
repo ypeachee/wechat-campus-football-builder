@@ -4,6 +4,9 @@
     <resultMap id="FixtureMap" type="com.campusfootball.competition.Fixture">
         <id property="id" column="id"/>
         <result property="seasonId" column="season_id"/>
+        <result property="stageId" column="stage_id"/>
+        <result property="groupId" column="group_id"/>
+        <result property="knockoutTieId" column="knockout_tie_id"/>
         <result property="roundNo" column="round_no"/>
         <result property="homeTeamId" column="home_team_id"/>
         <result property="awayTeamId" column="away_team_id"/>
@@ -12,6 +15,8 @@
         <result property="status" column="status"/>
         <result property="homeScore" column="home_score"/>
         <result property="awayScore" column="away_score"/>
+        <result property="homePenaltyScore" column="home_penalty_score"/>
+        <result property="awayPenaltyScore" column="away_penalty_score"/>
         <result property="dataLocked" column="data_locked"/>
         <result property="createdBy" column="created_by"/>
         <result property="createdAt" column="created_at"/>
@@ -19,10 +24,14 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO fixture (season_id, round_no, home_team_id, away_team_id, kickoff_at, venue,
-                             status, home_score, away_score, data_locked, created_by)
-        VALUES (#{seasonId}, #{roundNo}, #{homeTeamId}, #{awayTeamId}, #{kickoffAt}, #{venue},
-                #{status}, #{homeScore}, #{awayScore}, #{dataLocked}, #{createdBy})
+        INSERT INTO fixture (season_id, stage_id, group_id, knockout_tie_id, round_no,
+                             home_team_id, away_team_id, kickoff_at, venue, status,
+                             home_score, away_score, home_penalty_score, away_penalty_score,
+                             data_locked, created_by)
+        VALUES (#{seasonId}, #{stageId}, #{groupId}, #{knockoutTieId}, #{roundNo},
+                #{homeTeamId}, #{awayTeamId}, #{kickoffAt}, #{venue}, #{status},
+                #{homeScore}, #{awayScore}, #{homePenaltyScore}, #{awayPenaltyScore},
+                #{dataLocked}, #{createdBy})
     </insert>
 
     <select id="findById" resultMap="FixtureMap">
@@ -42,6 +51,8 @@
     <update id="updateSchedule">
         UPDATE fixture
         SET season_id = #{seasonId},
+            stage_id = #{stageId},
+            group_id = #{groupId},
             round_no = #{roundNo},
             home_team_id = #{homeTeamId},
             away_team_id = #{awayTeamId},
@@ -57,7 +68,9 @@
 
     <update id="updateScore">
         UPDATE fixture
-        SET home_score = #{homeScore}, away_score = #{awayScore}, updated_at = CURRENT_TIMESTAMP
+        SET home_score = #{homeScore}, away_score = #{awayScore},
+            home_penalty_score = #{homePenaltyScore}, away_penalty_score = #{awayPenaltyScore},
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 
@@ -65,6 +78,8 @@
         UPDATE fixture
         SET home_score = #{homeScore},
             away_score = #{awayScore},
+            home_penalty_score = #{homePenaltyScore},
+            away_penalty_score = #{awayPenaltyScore},
             status = 'FINISHED',
             data_locked = 1,
             updated_at = CURRENT_TIMESTAMP
@@ -86,5 +101,23 @@
     <select id="countBySeasonAndTeam" resultType="int">
         SELECT COUNT(*) FROM fixture
         WHERE season_id = #{seasonId} AND (home_team_id = #{teamId} OR away_team_id = #{teamId})
+    </select>
+
+    <select id="findPublicByStage" resultMap="FixtureMap">
+        SELECT * FROM fixture
+        WHERE stage_id = #{stageId} AND status &lt;&gt; 'DRAFT'
+        <if test="groupId != null">AND group_id = #{groupId}</if>
+        ORDER BY kickoff_at, id
+    </select>
+
+    <select id="findAllByStage" resultMap="FixtureMap">
+        SELECT * FROM fixture
+        WHERE stage_id = #{stageId}
+        <if test="groupId != null">AND group_id = #{groupId}</if>
+        ORDER BY kickoff_at, id
+    </select>
+
+    <select id="findByKnockoutTieId" resultMap="FixtureMap">
+        SELECT * FROM fixture WHERE knockout_tie_id = #{tieId} LIMIT 1
     </select>
 </mapper>

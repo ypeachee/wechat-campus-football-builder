@@ -15,8 +15,10 @@ public interface SeasonMapper {
     Optional<Season> findById(@Param("id") long id);
 
     List<Season> findPublic();
+    List<Season> findPublicByCompetition(@Param("competitionId") long competitionId);
 
     List<Season> findAll();
+    List<Season> findAllByCompetition(@Param("competitionId") long competitionId);
 
     int countSeasonTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
 

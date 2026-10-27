@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -31,14 +32,14 @@ public class SeasonAdminController {
 
     @PostMapping("/seasons")
     public IdResponse createSeason(@Valid @RequestBody CreateSeasonRequest request) {
-        long id = seasonService.createSeason(currentUser.require().userId(), request.name(),
+        long id = seasonService.createSeason(currentUser.require().userId(), request.competitionId(), request.name(),
                 request.startDate(), request.endDate(), request.status());
         return new IdResponse(id);
     }
 
     @GetMapping("/seasons")
-    public List<SeasonController.SeasonResponse> seasons() {
-        return seasonService.findAll().stream().map(SeasonController.SeasonResponse::from).toList();
+    public List<SeasonController.SeasonResponse> seasons(@RequestParam(required = false) Long competitionId) {
+        return seasonService.findAll(competitionId).stream().map(SeasonController.SeasonResponse::from).toList();
     }
 
     @GetMapping("/seasons/{seasonId}/teams")
@@ -56,7 +57,8 @@ public class SeasonAdminController {
         seasonService.removeTeam(currentUser.require().userId(), seasonId, teamId);
     }
 
-    public record CreateSeasonRequest(@NotBlank @Size(max = 64) String name,
+    public record CreateSeasonRequest(Long competitionId,
+                                      @NotBlank @Size(max = 64) String name,
                                       LocalDate startDate,
                                       LocalDate endDate,
                                       @NotNull SeasonStatus status) {

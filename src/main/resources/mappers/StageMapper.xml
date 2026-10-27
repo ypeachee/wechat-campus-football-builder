@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.StageMapper">
+    <resultMap id="StageMap" type="com.campusfootball.competition.Stage">
+        <id property="id" column="id"/>
+        <result property="seasonId" column="season_id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stage (season_id, name, type, sort_order, status)
+        VALUES (#{seasonId}, #{name}, #{type}, #{sortOrder}, #{status})
+    </insert>
+    <update id="update">
+        UPDATE stage SET name = #{name}, type = #{type}, sort_order = #{sortOrder},
+            status = #{status}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+    <select id="findById" resultMap="StageMap">
+        SELECT * FROM stage WHERE id = #{id}
+    </select>
+    <select id="findBySeason" resultMap="StageMap">
+        SELECT * FROM stage WHERE season_id = #{seasonId} ORDER BY sort_order, id
+    </select>
+    <select id="findFirstLeagueStage" resultMap="StageMap">
+        SELECT * FROM stage WHERE season_id = #{seasonId} AND type = 'LEAGUE'
+        ORDER BY sort_order, id LIMIT 1
+    </select>
+    <select id="findFirstByType" resultMap="StageMap">
+        SELECT * FROM stage WHERE season_id = #{seasonId} AND type = #{type}
+        ORDER BY sort_order, id LIMIT 1
+    </select>
+</mapper>

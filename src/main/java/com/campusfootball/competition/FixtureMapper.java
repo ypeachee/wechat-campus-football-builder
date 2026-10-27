@@ -18,6 +18,8 @@ public interface FixtureMapper {
 
     int updateSchedule(@Param("id") long id,
                        @Param("seasonId") long seasonId,
+                       @Param("stageId") long stageId,
+                       @Param("groupId") Long groupId,
                        @Param("roundNo") Integer roundNo,
                        @Param("homeTeamId") long homeTeamId,
                        @Param("awayTeamId") long awayTeamId,
@@ -26,9 +28,13 @@ public interface FixtureMapper {
 
     int updateStatus(@Param("id") long id, @Param("status") FixtureStatus status);
 
-    int updateScore(@Param("id") long id, @Param("homeScore") int homeScore, @Param("awayScore") int awayScore);
+    int updateScore(@Param("id") long id, @Param("homeScore") int homeScore, @Param("awayScore") int awayScore,
+                    @Param("homePenaltyScore") Integer homePenaltyScore,
+                    @Param("awayPenaltyScore") Integer awayPenaltyScore);
 
-    int finish(@Param("id") long id, @Param("homeScore") int homeScore, @Param("awayScore") int awayScore);
+    int finish(@Param("id") long id, @Param("homeScore") int homeScore, @Param("awayScore") int awayScore,
+               @Param("homePenaltyScore") Integer homePenaltyScore,
+               @Param("awayPenaltyScore") Integer awayPenaltyScore);
 
     int updateLock(@Param("id") long id, @Param("locked") boolean locked);
 
@@ -37,4 +43,10 @@ public interface FixtureMapper {
     int countAppearances(@Param("fixtureId") long fixtureId);
 
     int countBySeasonAndTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
+
+    List<Fixture> findPublicByStage(@Param("stageId") long stageId, @Param("groupId") Long groupId);
+
+    List<Fixture> findAllByStage(@Param("stageId") long stageId, @Param("groupId") Long groupId);
+
+    Optional<Fixture> findByKnockoutTieId(@Param("tieId") long tieId);
 }

@@ -3,6 +3,7 @@
 <mapper namespace="com.campusfootball.competition.SeasonMapper">
     <resultMap id="SeasonMap" type="com.campusfootball.competition.Season">
         <id property="id" column="id"/>
+        <result property="competitionId" column="competition_id"/>
         <result property="name" column="name"/>
         <result property="startDate" column="start_date"/>
         <result property="endDate" column="end_date"/>
@@ -12,8 +13,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO season (name, start_date, end_date, status)
-        VALUES (#{name}, #{startDate}, #{endDate}, #{status})
+        INSERT INTO season (competition_id, name, start_date, end_date, status)
+        VALUES (#{competitionId}, #{name}, #{startDate}, #{endDate}, #{status})
     </insert>
 
     <select id="findById" resultMap="SeasonMap">
@@ -26,6 +27,13 @@
 
     <select id="findAll" resultMap="SeasonMap">
         SELECT * FROM season ORDER BY start_date DESC, id DESC
+    </select>
+    <select id="findPublicByCompetition" resultMap="SeasonMap">
+        SELECT * FROM season WHERE competition_id = #{competitionId}
+          AND status IN ('ACTIVE', 'FINISHED') ORDER BY start_date DESC, id DESC
+    </select>
+    <select id="findAllByCompetition" resultMap="SeasonMap">
+        SELECT * FROM season WHERE competition_id = #{competitionId} ORDER BY start_date DESC, id DESC
     </select>
 
     <select id="countSeasonTeam" resultType="int">

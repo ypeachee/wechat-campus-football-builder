@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 public class Fixture {
     private Long id;
     private Long seasonId;
+    private Long stageId;
+    private Long groupId;
+    private Long knockoutTieId;
     private Integer roundNo;
     private Long homeTeamId;
     private Long awayTeamId;
@@ -13,6 +16,8 @@ public class Fixture {
     private FixtureStatus status;
     private Integer homeScore;
     private Integer awayScore;
+    private Integer homePenaltyScore;
+    private Integer awayPenaltyScore;
     private boolean dataLocked;
     private Long createdBy;
     private LocalDateTime createdAt;
@@ -22,6 +27,12 @@ public class Fixture {
     public void setId(Long id) { this.id = id; }
     public Long getSeasonId() { return seasonId; }
     public void setSeasonId(Long seasonId) { this.seasonId = seasonId; }
+    public Long getStageId() { return stageId; }
+    public void setStageId(Long stageId) { this.stageId = stageId; }
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getKnockoutTieId() { return knockoutTieId; }
+    public void setKnockoutTieId(Long knockoutTieId) { this.knockoutTieId = knockoutTieId; }
     public Integer getRoundNo() { return roundNo; }
     public void setRoundNo(Integer roundNo) { this.roundNo = roundNo; }
     public Long getHomeTeamId() { return homeTeamId; }
@@ -38,6 +49,10 @@ public class Fixture {
     public void setHomeScore(Integer homeScore) { this.homeScore = homeScore; }
     public Integer getAwayScore() { return awayScore; }
     public void setAwayScore(Integer awayScore) { this.awayScore = awayScore; }
+    public Integer getHomePenaltyScore() { return homePenaltyScore; }
+    public void setHomePenaltyScore(Integer homePenaltyScore) { this.homePenaltyScore = homePenaltyScore; }
+    public Integer getAwayPenaltyScore() { return awayPenaltyScore; }
+    public void setAwayPenaltyScore(Integer awayPenaltyScore) { this.awayPenaltyScore = awayPenaltyScore; }
     public boolean isDataLocked() { return dataLocked; }
     public void setDataLocked(boolean dataLocked) { this.dataLocked = dataLocked; }
     public Long getCreatedBy() { return createdBy; }

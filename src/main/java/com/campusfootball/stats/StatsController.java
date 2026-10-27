@@ -17,22 +17,38 @@ public class StatsController {
     }
 
     @GetMapping("/stats/scorers")
-    public List<ScorerRow> scorers(@RequestParam long seasonId) {
-        return statsService.scorers(seasonId);
+    public List<ScorerRow> scorers(@RequestParam(required = false) Long seasonId,
+                                   @RequestParam(required = false) Long competitionId,
+                                   @RequestParam(required = false) Long stageId,
+                                   @RequestParam(required = false) Long groupId) {
+        return statsService.scorers(filter(competitionId, seasonId, stageId, groupId));
     }
 
     @GetMapping("/stats/assists")
-    public List<AssistRow> assists(@RequestParam long seasonId) {
-        return statsService.assists(seasonId);
+    public List<AssistRow> assists(@RequestParam(required = false) Long seasonId,
+                                   @RequestParam(required = false) Long competitionId,
+                                   @RequestParam(required = false) Long stageId,
+                                   @RequestParam(required = false) Long groupId) {
+        return statsService.assists(filter(competitionId, seasonId, stageId, groupId));
     }
 
     @GetMapping("/stats/appearances")
-    public List<AppearanceRow> appearances(@RequestParam long seasonId) {
-        return statsService.appearances(seasonId);
+    public List<AppearanceRow> appearances(@RequestParam(required = false) Long seasonId,
+                                           @RequestParam(required = false) Long competitionId,
+                                           @RequestParam(required = false) Long stageId,
+                                           @RequestParam(required = false) Long groupId) {
+        return statsService.appearances(filter(competitionId, seasonId, stageId, groupId));
     }
 
     @GetMapping("/standings")
-    public List<StandingRow> standings(@RequestParam long seasonId) {
-        return statsService.standings(seasonId);
+    public List<StandingRow> standings(@RequestParam(required = false) Long seasonId,
+                                       @RequestParam(required = false) Long competitionId,
+                                       @RequestParam(required = false) Long stageId,
+                                       @RequestParam(required = false) Long groupId) {
+        return statsService.standings(filter(competitionId, seasonId, stageId, groupId));
+    }
+
+    private StatsFilter filter(Long competitionId, Long seasonId, Long stageId, Long groupId) {
+        return new StatsFilter(competitionId, seasonId, stageId, groupId);
     }
 }

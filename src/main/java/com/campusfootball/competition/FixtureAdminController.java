@@ -30,8 +30,13 @@ public class FixtureAdminController {
     }
 
     @GetMapping("/fixtures")
-    public List<FixtureController.FixtureResponse> fixtures(@RequestParam long seasonId) {
-        return fixtureService.findAllBySeason(seasonId).stream().map(FixtureController.FixtureResponse::from).toList();
+    public List<FixtureController.FixtureResponse> fixtures(@RequestParam(required = false) Long seasonId,
+                                                            @RequestParam(required = false) Long stageId,
+                                                            @RequestParam(required = false) Long groupId) {
+        List<Fixture> fixtures = stageId != null
+                ? fixtureService.findAllByStage(stageId, groupId)
+                : fixtureService.findAllBySeason(seasonId == null ? 0 : seasonId);
+        return fixtures.stream().map(FixtureController.FixtureResponse::from).toList();
     }
 
     @GetMapping("/fixtures/{fixtureId}")
@@ -41,15 +46,17 @@ public class FixtureAdminController {
 
     @PostMapping("/fixtures")
     public IdResponse createFixture(@Valid @RequestBody CreateFixtureRequest request) {
-        long id = fixtureService.createFixture(currentUser.require().userId(), request.seasonId(), request.roundNo(),
-                request.homeTeamId(), request.awayTeamId(), request.kickoffAt(), request.venue());
+        long id = fixtureService.createFixture(currentUser.require().userId(), request.seasonId(), request.stageId(),
+                request.groupId(), request.roundNo(), request.homeTeamId(), request.awayTeamId(),
+                request.kickoffAt(), request.venue());
         return new IdResponse(id);
     }
 
     @PutMapping("/fixtures/{fixtureId}")
     public void updateSchedule(@PathVariable long fixtureId, @Valid @RequestBody UpdateFixtureRequest request) {
-        fixtureService.updateSchedule(currentUser.require().userId(), fixtureId, request.seasonId(), request.roundNo(),
-                request.homeTeamId(), request.awayTeamId(), request.kickoffAt(), request.venue());
+        fixtureService.updateSchedule(currentUser.require().userId(), fixtureId, request.seasonId(), request.stageId(),
+                request.groupId(), request.roundNo(), request.homeTeamId(), request.awayTeamId(),
+                request.kickoffAt(), request.venue());
     }
 
     @PutMapping("/fixtures/{fixtureId}/status")
@@ -59,12 +66,14 @@ public class FixtureAdminController {
 
     @PutMapping("/fixtures/{fixtureId}/score")
     public void updateScore(@PathVariable long fixtureId, @Valid @RequestBody ScoreRequest request) {
-        fixtureService.updateScore(currentUser.require().userId(), fixtureId, request.homeScore(), request.awayScore());
+        fixtureService.updateScore(currentUser.require().userId(), fixtureId, request.homeScore(), request.awayScore(),
+                request.homePenaltyScore(), request.awayPenaltyScore());
     }
 
     @PostMapping("/fixtures/{fixtureId}/finish")
     public void finish(@PathVariable long fixtureId, @Valid @RequestBody ScoreRequest request) {
-        fixtureService.finish(currentUser.require().userId(), fixtureId, request.homeScore(), request.awayScore());
+        fixtureService.finish(currentUser.require().userId(), fixtureId, request.homeScore(), request.awayScore(),
+                request.homePenaltyScore(), request.awayPenaltyScore());
     }
 
     @PutMapping("/fixtures/{fixtureId}/lock")
@@ -73,6 +82,8 @@ public class FixtureAdminController {
     }
 
     public record CreateFixtureRequest(@NotNull Long seasonId,
+                                       Long stageId,
+                                       Long groupId,
                                        @Min(1) Integer roundNo,
                                        @NotNull Long homeTeamId,
                                        @NotNull Long awayTeamId,
@@ -81,6 +92,8 @@ public class FixtureAdminController {
     }
 
     public record UpdateFixtureRequest(@NotNull Long seasonId,
+                                       Long stageId,
+                                       Long groupId,
                                        @Min(1) Integer roundNo,
                                        @NotNull Long homeTeamId,
                                        @NotNull Long awayTeamId,
@@ -91,7 +104,10 @@ public class FixtureAdminController {
     public record ChangeStatusRequest(@NotNull FixtureStatus status) {
     }
 
-    public record ScoreRequest(@NotNull @Min(0) Integer homeScore, @NotNull @Min(0) Integer awayScore) {
+    public record ScoreRequest(@NotNull @Min(0) Integer homeScore,
+                               @NotNull @Min(0) Integer awayScore,
+                               @Min(0) Integer homePenaltyScore,
+                               @Min(0) Integer awayPenaltyScore) {
     }
 
     public record LockRequest(@NotNull Boolean locked) {

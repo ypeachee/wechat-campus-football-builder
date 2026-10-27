@@ -24,7 +24,9 @@ class SchemaMigrationTest extends IntegrationTestBase {
 
         assertThat(tables).contains(
                 "app_user", "team_manager", "team", "player", "season",
-                "season_team", "fixture", "fixture_appearance", "fixture_event", "audit_log");
+                "season_team", "fixture", "fixture_appearance", "fixture_event", "audit_log",
+                "competition", "stage", "competition_group", "group_team", "knockout_round",
+                "knockout_tie", "knockout_seed");
         assertThat(tables).doesNotContain("league_standing");
     }
 
@@ -93,15 +95,22 @@ class SchemaMigrationTest extends IntegrationTestBase {
 
     private long insertSeason(String prefix) {
         String name = prefix + "-" + UUID.randomUUID().toString().substring(0, 8);
-        jdbc.update("INSERT INTO season (name, status) VALUES (?, 'ACTIVE')", name);
-        return jdbc.queryForObject("SELECT id FROM season WHERE name = ?", Long.class, name);
+        Long competitionId = jdbc.queryForObject(
+                "SELECT id FROM competition WHERE type = 'LEAGUE' ORDER BY id LIMIT 1", Long.class);
+        jdbc.update("INSERT INTO season (competition_id, name, status) VALUES (?, ?, 'ACTIVE')", competitionId, name);
+        long seasonId = jdbc.queryForObject("SELECT id FROM season WHERE name = ?", Long.class, name);
+        jdbc.update("INSERT INTO stage (season_id, name, type, sort_order, status) VALUES (?, '联赛阶段', 'LEAGUE', 0, 'ACTIVE')", seasonId);
+        return seasonId;
     }
 
     private long insertFixture(long seasonId, long homeTeamId, long awayTeamId, long userId, String status) {
+        Long stageId = jdbc.queryForObject(
+                "SELECT id FROM stage WHERE season_id = ? AND type = 'LEAGUE' ORDER BY id LIMIT 1",
+                Long.class, seasonId);
         jdbc.update("""
-                INSERT INTO fixture (season_id, home_team_id, away_team_id, status, data_locked, created_by)
-                VALUES (?, ?, ?, ?, 0, ?)
-                """, seasonId, homeTeamId, awayTeamId, status, userId);
+                INSERT INTO fixture (season_id, stage_id, home_team_id, away_team_id, status, data_locked, created_by)
+                VALUES (?, ?, ?, ?, ?, 0, ?)
+                """, seasonId, stageId, homeTeamId, awayTeamId, status, userId);
         return jdbc.queryForObject("""
                 SELECT id FROM fixture
                 WHERE season_id = ? AND home_team_id = ? AND away_team_id = ?

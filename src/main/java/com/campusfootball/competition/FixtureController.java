@@ -28,8 +28,13 @@ public class FixtureController {
     }
 
     @GetMapping("/fixtures")
-    public List<FixtureResponse> fixtures(@RequestParam long seasonId) {
-        return fixtureService.findPublicBySeason(seasonId).stream().map(FixtureResponse::from).toList();
+    public List<FixtureResponse> fixtures(@RequestParam(required = false) Long seasonId,
+                                          @RequestParam(required = false) Long stageId,
+                                          @RequestParam(required = false) Long groupId) {
+        List<Fixture> fixtures = stageId != null
+                ? fixtureService.findPublicByStage(stageId, groupId)
+                : fixtureService.findPublicBySeason(seasonId == null ? 0 : seasonId);
+        return fixtures.stream().map(FixtureResponse::from).toList();
     }
 
     @GetMapping("/fixtures/{fixtureId}")
@@ -46,13 +51,17 @@ public class FixtureController {
                 events, appearances);
     }
 
-    public record FixtureResponse(long id, long seasonId, Integer roundNo, long homeTeamId, long awayTeamId,
+    public record FixtureResponse(long id, long seasonId, long stageId, Long groupId, Long knockoutTieId,
+                                  Integer roundNo, long homeTeamId, long awayTeamId,
                                   LocalDateTime kickoffAt, String venue, FixtureStatus status,
-                                  Integer homeScore, Integer awayScore, boolean dataLocked) {
+                                  Integer homeScore, Integer awayScore,
+                                  Integer homePenaltyScore, Integer awayPenaltyScore, boolean dataLocked) {
         static FixtureResponse from(Fixture fixture) {
-            return new FixtureResponse(fixture.getId(), fixture.getSeasonId(), fixture.getRoundNo(),
+            return new FixtureResponse(fixture.getId(), fixture.getSeasonId(), fixture.getStageId(),
+                    fixture.getGroupId(), fixture.getKnockoutTieId(), fixture.getRoundNo(),
                     fixture.getHomeTeamId(), fixture.getAwayTeamId(), fixture.getKickoffAt(), fixture.getVenue(),
-                    fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(), fixture.isDataLocked());
+                    fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(),
+                    fixture.getHomePenaltyScore(), fixture.getAwayPenaltyScore(), fixture.isDataLocked());
         }
     }
 

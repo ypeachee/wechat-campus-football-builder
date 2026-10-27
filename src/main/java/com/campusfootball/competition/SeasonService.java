@@ -17,26 +17,31 @@ import java.util.List;
 @Service
 public class SeasonService {
     private final SeasonMapper seasonMapper;
+    private final CompetitionMapper competitionMapper;
+    private final StageMapper stageMapper;
     private final FixtureMapper fixtureMapper;
     private final TeamMapper teamMapper;
     private final AuthorizationService authorizationService;
     private final AuditService auditService;
 
-    public SeasonService(SeasonMapper seasonMapper, FixtureMapper fixtureMapper, TeamMapper teamMapper,
+    public SeasonService(SeasonMapper seasonMapper, CompetitionMapper competitionMapper, StageMapper stageMapper,
+                         FixtureMapper fixtureMapper, TeamMapper teamMapper,
                          AuthorizationService authorizationService, AuditService auditService) {
         this.seasonMapper = seasonMapper;
+        this.competitionMapper = competitionMapper;
+        this.stageMapper = stageMapper;
         this.fixtureMapper = fixtureMapper;
         this.teamMapper = teamMapper;
         this.authorizationService = authorizationService;
         this.auditService = auditService;
     }
 
-    public List<Season> findPublic() {
-        return seasonMapper.findPublic();
+    public List<Season> findPublic(Long competitionId) {
+        return competitionId == null ? seasonMapper.findPublic() : seasonMapper.findPublicByCompetition(competitionId);
     }
 
-    public List<Season> findAll() {
-        return seasonMapper.findAll();
+    public List<Season> findAll(Long competitionId) {
+        return competitionId == null ? seasonMapper.findAll() : seasonMapper.findAllByCompetition(competitionId);
     }
 
     public Season get(long seasonId) {
@@ -51,13 +56,35 @@ public class SeasonService {
     @Transactional
     public long createSeason(long actorUserId, String name, LocalDate startDate, LocalDate endDate,
                              SeasonStatus status) {
+        return createSeason(actorUserId, null, name, startDate, endDate, status);
+    }
+
+    @Transactional
+    public long createSeason(long actorUserId, Long competitionId, String name, LocalDate startDate,
+                             LocalDate endDate, SeasonStatus status) {
         authorizationService.requireAdmin(actorUserId);
+        Competition competition = competitionId == null
+                ? competitionMapper.findFirstByType(CompetitionType.LEAGUE)
+                    .orElseThrow(() -> notFound("默认联赛赛事不存在"))
+                : competitionMapper.findById(competitionId)
+                    .orElseThrow(() -> notFound("赛事不存在"));
         Season season = new Season();
+        season.setCompetitionId(competition.getId());
         season.setName(name);
         season.setStartDate(startDate);
         season.setEndDate(endDate);
         season.setStatus(status == null ? SeasonStatus.DRAFT : status);
         seasonMapper.insert(season);
+        if (competition.getType() == CompetitionType.LEAGUE) {
+            Stage stage = new Stage();
+            stage.setSeasonId(season.getId());
+            stage.setName("联赛阶段");
+            stage.setType(StageType.LEAGUE);
+            stage.setSortOrder(0);
+            stage.setStatus(status == SeasonStatus.FINISHED ? StageStatus.FINISHED
+                    : status == SeasonStatus.ACTIVE ? StageStatus.ACTIVE : StageStatus.DRAFT);
+            stageMapper.insert(stage);
+        }
         auditService.record(actorUserId, null, AuditAction.CREATE, "SEASON", season.getId(), null, season);
         return season.getId();
     }
