@@ -1,7 +1,8 @@
 {
   "description": "Campus football mini program",
   "packOptions": {
-    "ignore": []
+    "ignore": [],
+    "include": []
   },
   "setting": {
     "urlCheck": false,
@@ -10,13 +11,32 @@
     "postcss": true,
     "minified": true,
     "nodeModules": false,
-    "useCompilerPlugins": ["typescript"]
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "compileType": "miniprogram",
   "libVersion": "trial",
-  "appid": "touristappid",
-  "projectname": "campus-football-miniprogram",
+  "appid": "wxef6cd8328ddfa239",
+  "projectname": "CUGB校园足球",
   "miniprogramRoot": "./",
   "srcMiniprogramRoot": "./",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
 }
