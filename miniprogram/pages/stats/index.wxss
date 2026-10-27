@@ -1,2 +1,66 @@
-/* Page-specific styles are added with the page implementation. */
+.stats-page {
+  padding-top: 22rpx;
+}
 
+.stats-loading {
+  display: flex;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.stats-empty {
+  margin-top: 24rpx;
+}
+
+.standings-scroll {
+  margin-top: 20rpx;
+  width: 100%;
+}
+
+.standings-table {
+  min-width: 760rpx;
+  overflow: hidden;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.standings-row {
+  display: grid;
+  grid-template-columns: 54rpx 220rpx repeat(5, 64rpx) 74rpx;
+  align-items: center;
+  min-height: 74rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.standings-row:last-child {
+  border-bottom: 0;
+}
+
+.standings-row--head {
+  min-height: 62rpx;
+  background: #F8F6F0;
+  color: #7C8983;
+  font-size: 20rpx;
+}
+
+.standings-cell {
+  padding: 0 8rpx;
+  text-align: center;
+  font-size: 23rpx;
+}
+
+.standings-cell--rank {
+  color: #0B6B4B;
+  font-weight: 700;
+}
+
+.standings-cell--team {
+  text-align: left;
+  font-weight: 600;
+}
+
+.standings-cell--points {
+  color: #0B6B4B;
+  font-weight: 800;
+}

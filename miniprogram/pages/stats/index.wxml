@@ -1,11 +1,64 @@
-<view class="page-shell">
-  <view class="brand-card">
-    <view class="brand-accent"></view>
-    <view class="placeholder-page">
-      <view>
-        <view class="placeholder-page__title">{{heading}}</view>
-        <view class="placeholder-page__copy">{{copy}}</view>
-      </view>
-    </view>
+<view class="page-shell stats-page">
+  <app-header title="联赛榜单" subtitle="积分、射手、助攻与出场数据" season-name="{{selectedSeasonName}}" />
+  <season-picker
+    seasons="{{seasons}}"
+    selected-id="{{selectedSeasonId}}"
+    bind:change="handleSeasonChange"
+  />
+
+  <view wx:if="{{loading}}" class="stats-loading">
+    <t-loading theme="circular" size="48rpx" text="加载榜单" />
   </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="榜单加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+
+  <view wx:elif="{{seasons.length === 0}}" class="surface-card">
+    <empty-state title="暂无赛季" description="管理员创建赛季后，这里会展示联赛榜单。" />
+  </view>
+
+  <t-tabs value="{{activeTab}}" bind:change="handleTabChange">
+    <t-tab-panel label="积分榜" value="standings">
+      <view wx:if="{{standings.length === 0}}" class="surface-card stats-empty">
+        <empty-state title="暂无积分数据" description="比赛完赛后会自动生成积分榜。" />
+      </view>
+      <scroll-view wx:else class="standings-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="standings-table">
+          <view class="standings-row standings-row--head">
+            <view class="standings-cell standings-cell--rank">#</view>
+            <view class="standings-cell standings-cell--team">球队</view>
+            <view class="standings-cell">场</view>
+            <view class="standings-cell">胜</view>
+            <view class="standings-cell">平</view>
+            <view class="standings-cell">负</view>
+            <view class="standings-cell">净胜</view>
+            <view class="standings-cell standings-cell--points">分</view>
+          </view>
+          <view wx:for="{{standings}}" wx:key="teamId" class="standings-row">
+            <view class="standings-cell standings-cell--rank numeric">{{index + 1}}</view>
+            <view class="standings-cell standings-cell--team">{{item.teamName}}</view>
+            <view class="standings-cell numeric">{{item.played}}</view>
+            <view class="standings-cell numeric">{{item.won}}</view>
+            <view class="standings-cell numeric">{{item.drawn}}</view>
+            <view class="standings-cell numeric">{{item.lost}}</view>
+            <view class="standings-cell numeric">{{item.goalDifference}}</view>
+            <view class="standings-cell standings-cell--points numeric">{{item.points}}</view>
+          </view>
+        </view>
+      </scroll-view>
+    </t-tab-panel>
+
+    <t-tab-panel label="射手榜" value="scorers">
+      <ranking-list items="{{scorerItems}}" metric-label="进球" />
+    </t-tab-panel>
+
+    <t-tab-panel label="助攻榜" value="assists">
+      <ranking-list items="{{assistItems}}" metric-label="助攻" />
+    </t-tab-panel>
+
+    <t-tab-panel label="出场榜" value="appearances">
+      <ranking-list items="{{appearanceItems}}" metric-label="出场" />
+    </t-tab-panel>
+  </t-tabs>
 </view>
