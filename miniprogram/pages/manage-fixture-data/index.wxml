@@ -11,13 +11,13 @@
 
   <block wx:else>
     <view class="selector-card">
-      <picker mode="selector" range="{{seasons}}" range-key="name" bindchange="selectSeason">
+      <picker mode="selector" range="{{seasons}}" range-key="name" value="{{selectedSeasonIndex}}" bindchange="selectSeason">
         <view class="selector-row">
           <view class="selector-label">赛季</view>
           <view class="selector-value">{{selectedSeasonName || "选择赛季"}}</view>
         </view>
       </picker>
-      <picker mode="selector" range="{{fixtureOptions}}" range-key="label" bindchange="selectFixture">
+      <picker mode="selector" range="{{fixtureOptions}}" range-key="label" value="{{selectedFixtureIndex}}" bindchange="selectFixture">
         <view class="selector-row">
           <view class="selector-label">比赛</view>
           <view class="selector-value">{{selectedFixtureLabel || "暂无比赛"}}</view>

@@ -47,13 +47,13 @@
         </view>
         <view class="form-field">
           <view class="form-label">主队</view>
-          <picker range="{{seasonTeams}}" range-key="name" bindchange="handleHomeTeamChange">
+          <picker range="{{seasonTeams}}" range-key="name" value="{{createForm.homeTeamIndex}}" bindchange="handleHomeTeamChange">
             <view class="picker-value">{{homeTeamName || "选择主队"}}</view>
           </picker>
         </view>
         <view class="form-field">
           <view class="form-label">客队</view>
-          <picker range="{{seasonTeams}}" range-key="name" bindchange="handleAwayTeamChange">
+          <picker range="{{seasonTeams}}" range-key="name" value="{{createForm.awayTeamIndex}}" bindchange="handleAwayTeamChange">
             <view class="picker-value">{{awayTeamName || "选择客队"}}</view>
           </picker>
         </view>

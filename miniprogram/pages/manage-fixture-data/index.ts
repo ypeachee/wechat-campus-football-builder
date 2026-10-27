@@ -56,6 +56,7 @@ Page({
     seasons: [] as Season[],
     selectedSeasonId: 0,
     selectedSeasonName: "",
+    selectedSeasonIndex: 0,
     fixtureOptions: [] as Array<{ id: number; label: string }>,
     selectedFixtureIndex: 0,
     selectedFixtureLabel: "",
@@ -109,7 +110,8 @@ Page({
         isAdmin: session.role === "ADMIN",
         seasons,
         selectedSeasonId,
-        selectedSeasonName: seasons.find((season) => season.id === selectedSeasonId)?.name ?? ""
+        selectedSeasonName: seasons.find((season) => season.id === selectedSeasonId)?.name ?? "",
+        selectedSeasonIndex: Math.max(0, seasons.findIndex((season) => season.id === selectedSeasonId))
       });
       if (selectedSeasonId) {
         await this.loadFixtures(selectedSeasonId, session);
@@ -210,6 +212,7 @@ Page({
     this.setData({
       selectedSeasonId: seasonId,
       selectedSeasonName: this.data.seasons.find((season) => season.id === seasonId)?.name ?? "",
+      selectedSeasonIndex: index,
       loading: true
     });
     void refreshSession()
