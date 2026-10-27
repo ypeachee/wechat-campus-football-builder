@@ -4,7 +4,7 @@ import type { BracketView } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 
 Page({
-  data: { verified: false, loading: true, error: "", knockoutStageId: "", groupStageId: "", qualifiersPerGroup: "2", thirdPlace: true, bracket: null as BracketView | null },
+  data: { verified: false, loading: true, error: "", knockoutStageId: "", groupStageId: "", qualifiersPerGroup: "2", thirdPlace: true, referee: "", bracket: null as BracketView | null },
   onLoad() { void this.verify(); },
   async verify() {
     this.setData({ loading: true, error: "" });
@@ -36,7 +36,7 @@ Page({
   async createFixture(event: WechatMiniprogram.BaseEvent) {
     const tieId = Number(event.currentTarget.dataset.id);
     if (!tieId) return;
-    try { await createTieFixture(tieId, null, null); wx.showToast({ title: "比赛已创建", icon: "success" }); await this.loadBracket(); }
+    try { await createTieFixture(tieId, null, null, this.data.referee.trim() || null); wx.showToast({ title: "比赛已创建", icon: "success" }); await this.loadBracket(); }
     catch (error) { wx.showToast({ title: errorMessage(error), icon: "none" }); }
   },
   goBack() { wx.navigateBack(); }

@@ -292,6 +292,15 @@ INSERT INTO fixture_event (fixture_id, team_id, player_id, event_type, related_p
 (@f_final, @fra, @mbappe, 'GOAL', @griezmann, 81, 0, @admin_id),
 (@f_final, @fra, @mbappe, 'GOAL', @thuram, 118, 0, @admin_id);
 
+UPDATE fixture
+SET referee = CASE
+    WHEN group_id = @group_a_id THEN '马宁'
+    WHEN group_id = @group_b_id THEN '傅明'
+    WHEN round_no = 2 THEN '马宁'
+    ELSE '张雷'
+END
+WHERE season_id = @season_id;
+
 INSERT INTO fixture_appearance (fixture_id, team_id, player_id, is_starter, minutes_played, created_by)
 SELECT f.id, p.team_id, p.id, 1, 90, @admin_id
 FROM fixture f

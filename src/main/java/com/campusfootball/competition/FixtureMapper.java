@@ -24,7 +24,8 @@ public interface FixtureMapper {
                        @Param("homeTeamId") long homeTeamId,
                        @Param("awayTeamId") long awayTeamId,
                        @Param("kickoffAt") java.time.LocalDateTime kickoffAt,
-                       @Param("venue") String venue);
+                       @Param("venue") String venue,
+                       @Param("referee") String referee);
 
     int updateStatus(@Param("id") long id, @Param("status") FixtureStatus status);
 

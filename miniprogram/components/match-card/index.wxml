@@ -11,5 +11,5 @@
     </view>
     <view class="match-card__team match-card__team--away">{{match.awayTeamName}}</view>
   </view>
-  <view class="match-card__venue">{{match.venue || "场地待定"}}</view>
+  <view class="match-card__venue">{{match.venue || "场地待定"}} · 主裁 {{match.referee || "待定"}}</view>
 </view>

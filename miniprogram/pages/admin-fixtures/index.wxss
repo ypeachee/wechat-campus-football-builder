@@ -131,6 +131,12 @@
   text-align: right;
 }
 
+.fixture-admin-card__meta {
+  margin: -8rpx 0 16rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
 .fixture-admin-card__actions {
   display: flex;
   flex-wrap: wrap;

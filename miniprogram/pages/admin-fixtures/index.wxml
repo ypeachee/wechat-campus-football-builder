@@ -58,6 +58,10 @@
           <input class="form-input" value="{{createForm.venue}}" data-field="venue" bindinput="handleFormInput" placeholder="可选" />
         </view>
         <view class="form-field">
+          <view class="form-label">当值主裁</view>
+          <input class="form-input" value="{{createForm.referee}}" data-field="referee" bindinput="handleFormInput" maxlength="64" placeholder="主裁判姓名" />
+        </view>
+        <view class="form-field">
           <view class="form-label">主队</view>
           <picker range="{{seasonTeams}}" range-key="name" value="{{createForm.homeTeamIndex}}" bindchange="handleHomeTeamChange">
             <view class="picker-value">{{homeTeamName || "选择主队"}}</view>
@@ -101,6 +105,7 @@
           </view>
           <view class="fixture-admin-card__away">{{item.awayTeamName}}</view>
         </view>
+        <view class="fixture-admin-card__meta">当值主裁：{{item.referee || "待定"}}</view>
         <view class="fixture-admin-card__actions">
           <t-button wx:if="{{item.status === 'DRAFT'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="scheduled" bind:tap="handleFixtureAction">发布</t-button>
           <t-button wx:if="{{item.status === 'SCHEDULED'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="live" bind:tap="handleFixtureAction">开赛</t-button>

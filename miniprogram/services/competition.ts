@@ -57,6 +57,7 @@ export type FixturePayload = {
   awayTeamId: number;
   kickoffAt?: string | null;
   venue?: string | null;
+  referee?: string | null;
 };
 
 export function fetchAdminFixtures(seasonId: number): Promise<FixtureSummary[]> {

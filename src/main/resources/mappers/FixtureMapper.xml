@@ -12,6 +12,7 @@
         <result property="awayTeamId" column="away_team_id"/>
         <result property="kickoffAt" column="kickoff_at"/>
         <result property="venue" column="venue"/>
+        <result property="referee" column="referee"/>
         <result property="status" column="status"/>
         <result property="homeScore" column="home_score"/>
         <result property="awayScore" column="away_score"/>
@@ -25,11 +26,11 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO fixture (season_id, stage_id, group_id, knockout_tie_id, round_no,
-                             home_team_id, away_team_id, kickoff_at, venue, status,
+                             home_team_id, away_team_id, kickoff_at, venue, referee, status,
                              home_score, away_score, home_penalty_score, away_penalty_score,
                              data_locked, created_by)
         VALUES (#{seasonId}, #{stageId}, #{groupId}, #{knockoutTieId}, #{roundNo},
-                #{homeTeamId}, #{awayTeamId}, #{kickoffAt}, #{venue}, #{status},
+                #{homeTeamId}, #{awayTeamId}, #{kickoffAt}, #{venue}, #{referee}, #{status},
                 #{homeScore}, #{awayScore}, #{homePenaltyScore}, #{awayPenaltyScore},
                 #{dataLocked}, #{createdBy})
     </insert>
@@ -58,6 +59,7 @@
             away_team_id = #{awayTeamId},
             kickoff_at = #{kickoffAt},
             venue = #{venue},
+            referee = #{referee},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>

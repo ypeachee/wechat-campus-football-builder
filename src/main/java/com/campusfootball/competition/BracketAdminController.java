@@ -62,7 +62,7 @@ public class BracketAdminController {
     @PostMapping("/ties/{tieId}/fixture")
     public IdResponse createFixture(@PathVariable long tieId, @Valid @RequestBody TieFixtureRequest request) {
         return new IdResponse(bracketService.createTieFixture(currentUser.require().userId(), tieId,
-                request.kickoffAt(), request.venue()));
+                request.kickoffAt(), request.venue(), request.referee()));
     }
 
     public record RoundRequest(@Min(1) int roundNo, @NotBlank @Size(max = 64) String name, int sortOrder) {}
@@ -73,5 +73,6 @@ public class BracketAdminController {
                               @NotNull Long targetTieId, @NotNull BracketSlot targetSlot) {}
     public record GenerateBracketRequest(@NotNull Long groupStageId, @Min(1) int qualifiersPerGroup,
                                          boolean thirdPlace) {}
-    public record TieFixtureRequest(LocalDateTime kickoffAt, @Size(max = 128) String venue) {}
+    public record TieFixtureRequest(LocalDateTime kickoffAt, @Size(max = 128) String venue,
+                                    @Size(max = 64) String referee) {}
 }

@@ -42,6 +42,29 @@ class SeasonFixtureIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void storesAndUpdatesRefereeOnFixtureDetail() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long seasonId = TestApiSupport.createSeason(mockMvc, admin, "RefereeSeason", "ACTIVE");
+        long home = TestApiSupport.createTeam(mockMvc, admin, "RefereeHome");
+        long away = TestApiSupport.createTeam(mockMvc, admin, "RefereeAway");
+        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, home);
+        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, away);
+        long fixtureId = TestApiSupport.createFixture(mockMvc, admin, seasonId, home, away, "校内球场", "马宁");
+
+        mockMvc.perform(put("/api/v1/admin/fixtures/" + fixtureId)
+                        .header("Authorization", "Bearer " + admin)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"seasonId\":" + seasonId + ",\"homeTeamId\":" + home
+                                + ",\"awayTeamId\":" + away + ",\"venue\":\"校内球场\",\"referee\":\"张雷\"}"))
+                .andExpect(status().isOk());
+        TestApiSupport.changeStatus(mockMvc, admin, fixtureId, "SCHEDULED");
+
+        mockMvc.perform(get("/api/v1/fixtures/" + fixtureId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.referee").value("张雷"));
+    }
+
+    @Test
     void adminCanListSeasonTeams() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long seasonId = TestApiSupport.createSeason(mockMvc, admin, "SeasonTeams", "ACTIVE");

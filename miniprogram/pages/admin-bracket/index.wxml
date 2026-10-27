@@ -8,6 +8,7 @@
       <input class="form-input" type="number" value="{{knockoutStageId}}" data-field="knockoutStageId" bindinput="input" placeholder="淘汰赛阶段 ID" />
       <input class="form-input" type="number" value="{{groupStageId}}" data-field="groupStageId" bindinput="input" placeholder="小组赛阶段 ID" />
       <input class="form-input" type="number" value="{{qualifiersPerGroup}}" data-field="qualifiersPerGroup" bindinput="input" placeholder="每组晋级数 1 或 2" />
+      <input class="form-input" value="{{referee}}" data-field="referee" bindinput="input" maxlength="64" placeholder="新建淘汰赛比赛的当值主裁，可选" />
       <view class="row"><text>包含三四名决赛</text><switch checked="{{thirdPlace}}" color="#0B6B4B" bindchange="switchThirdPlace" /></view>
       <t-button theme="primary" block bind:tap="generate">生成对阵</t-button>
       <t-button theme="default" variant="outline" block bind:tap="loadBracket">刷新对阵</t-button>

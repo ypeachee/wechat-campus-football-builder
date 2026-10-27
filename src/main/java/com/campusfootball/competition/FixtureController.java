@@ -47,20 +47,20 @@ public class FixtureController {
                 .map(AppearanceResponse::from).toList();
         return new FixtureDetailResponse(fixture.getId(), fixture.getSeasonId(), fixture.getRoundNo(),
                 TeamRef.from(home), TeamRef.from(away), fixture.getKickoffAt(), fixture.getVenue(),
-                fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(), fixture.isDataLocked(),
+                fixture.getReferee(), fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(), fixture.isDataLocked(),
                 events, appearances);
     }
 
     public record FixtureResponse(long id, long seasonId, long stageId, Long groupId, Long knockoutTieId,
                                   Integer roundNo, long homeTeamId, long awayTeamId,
-                                  LocalDateTime kickoffAt, String venue, FixtureStatus status,
+                                  LocalDateTime kickoffAt, String venue, String referee, FixtureStatus status,
                                   Integer homeScore, Integer awayScore,
                                   Integer homePenaltyScore, Integer awayPenaltyScore, boolean dataLocked) {
         static FixtureResponse from(Fixture fixture) {
             return new FixtureResponse(fixture.getId(), fixture.getSeasonId(), fixture.getStageId(),
                     fixture.getGroupId(), fixture.getKnockoutTieId(), fixture.getRoundNo(),
                     fixture.getHomeTeamId(), fixture.getAwayTeamId(), fixture.getKickoffAt(), fixture.getVenue(),
-                    fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(),
+                    fixture.getReferee(), fixture.getStatus(), fixture.getHomeScore(), fixture.getAwayScore(),
                     fixture.getHomePenaltyScore(), fixture.getAwayPenaltyScore(), fixture.isDataLocked());
         }
     }
@@ -87,7 +87,7 @@ public class FixtureController {
     }
 
     public record FixtureDetailResponse(long id, long seasonId, Integer roundNo, TeamRef homeTeam, TeamRef awayTeam,
-                                        LocalDateTime kickoffAt, String venue, FixtureStatus status,
+                                        LocalDateTime kickoffAt, String venue, String referee, FixtureStatus status,
                                         Integer homeScore, Integer awayScore, boolean dataLocked,
                                         List<EventResponse> events, List<AppearanceResponse> appearances) {
     }

@@ -13,6 +13,7 @@ public class Fixture {
     private Long awayTeamId;
     private LocalDateTime kickoffAt;
     private String venue;
+    private String referee;
     private FixtureStatus status;
     private Integer homeScore;
     private Integer awayScore;
@@ -43,6 +44,8 @@ public class Fixture {
     public void setKickoffAt(LocalDateTime kickoffAt) { this.kickoffAt = kickoffAt; }
     public String getVenue() { return venue; }
     public void setVenue(String venue) { this.venue = venue; }
+    public String getReferee() { return referee; }
+    public void setReferee(String referee) { this.referee = referee; }
     public FixtureStatus getStatus() { return status; }
     public void setStatus(FixtureStatus status) { this.status = status; }
     public Integer getHomeScore() { return homeScore; }

@@ -1,0 +1,2 @@
+ALTER TABLE fixture
+    ADD COLUMN referee VARCHAR(64) NULL AFTER venue;

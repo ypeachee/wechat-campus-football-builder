@@ -168,6 +168,7 @@ Contains only league and group-stage fixtures. Knockout fixtures are generated f
 | 客队 | Yes | Team name |
 | 开赛时间 | No | `YYYY-MM-DD HH:mm` or ISO date-time |
 | 场地 | No | Venue |
+| 当值主裁 | No | Referee name, maximum 64 characters |
 | 状态 | Yes | `DRAFT`, `SCHEDULED`, `LIVE`, `FINISHED`, `CANCELLED` |
 | 主队比分 | For finished matches | Non-negative integer |
 | 客队比分 | For finished matches | Non-negative integer |
@@ -232,6 +233,7 @@ The qualified-team count must be exactly 4, 8, or 16.
 | 比赛编号 | Yes | Unique package key |
 | 开赛时间 | No | Date-time |
 | 场地 | No | Venue |
+| 当值主裁 | No | Referee name, maximum 64 characters |
 | 主队比分 | Yes for played tie | Non-negative integer |
 | 客队比分 | Yes for played tie | Non-negative integer |
 | 主队点球 | For draws | Non-negative integer |

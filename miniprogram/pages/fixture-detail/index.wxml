@@ -10,7 +10,7 @@
   <block wx:else>
     <app-header
       title="比赛详情"
-      subtitle="{{timeLabel}} · {{fixture.venue || '场地待定'}}"
+      subtitle="{{timeLabel}} · {{fixture.venue || '场地待定'}} · 主裁 {{fixture.referee || '待定'}}"
       season-name="MATCH DAY"
     />
 

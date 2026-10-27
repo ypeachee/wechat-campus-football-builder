@@ -48,7 +48,8 @@ Page({
       awayTeamIndex: -1,
       kickoffDate: "",
       kickoffTime: "19:00",
-      venue: ""
+      venue: "",
+      referee: ""
     },
     homeTeamName: "",
     awayTeamName: "",
@@ -147,7 +148,7 @@ Page({
   },
 
   handleFormInput(event: WechatMiniprogram.Input) {
-    const field = event.currentTarget.dataset.field as "roundNo" | "venue";
+    const field = event.currentTarget.dataset.field as "roundNo" | "venue" | "referee";
     this.setData({ [`createForm.${field}`]: event.detail.value });
   },
 
@@ -222,6 +223,7 @@ Page({
       "createForm.kickoffDate": date,
       "createForm.kickoffTime": time.slice(0, 5) || "19:00",
       "createForm.venue": fixture.venue ?? "",
+      "createForm.referee": fixture.referee ?? "",
       homeTeamName: fixture.homeTeamName,
       awayTeamName: fixture.awayTeamName
     });
@@ -235,6 +237,7 @@ Page({
       "createForm.homeTeamIndex": -1,
       "createForm.awayTeamIndex": -1,
       "createForm.venue": "",
+      "createForm.referee": "",
       homeTeamName: "",
       awayTeamName: ""
     });
@@ -278,7 +281,8 @@ Page({
           homeTeamId: home.id,
           awayTeamId: away.id,
           kickoffAt: form.kickoffDate ? `${form.kickoffDate}T${form.kickoffTime}:00` : null,
-          venue: form.venue.trim() || null
+          venue: form.venue.trim() || null,
+          referee: form.referee.trim() || null
         };
         if (this.data.editingFixtureId) {
           await updateFixture(this.data.editingFixtureId, payload);

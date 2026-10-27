@@ -67,12 +67,13 @@ public class FixtureService {
     @Transactional
     public long createFixture(long actorUserId, long seasonId, Integer roundNo, long homeTeamId,
                               long awayTeamId, LocalDateTime kickoffAt, String venue) {
-        return createFixture(actorUserId, seasonId, null, null, roundNo, homeTeamId, awayTeamId, kickoffAt, venue);
+        return createFixture(actorUserId, seasonId, null, null, roundNo, homeTeamId, awayTeamId, kickoffAt, venue, null);
     }
 
     @Transactional
     public long createFixture(long actorUserId, long seasonId, Long stageId, Long groupId, Integer roundNo,
-                              long homeTeamId, long awayTeamId, LocalDateTime kickoffAt, String venue) {
+                              long homeTeamId, long awayTeamId, LocalDateTime kickoffAt, String venue,
+                              String referee) {
         authorizationService.requireAdmin(actorUserId);
         validateParticipants(seasonId, homeTeamId, awayTeamId);
         Stage stage = resolveStage(seasonId, stageId);
@@ -89,6 +90,7 @@ public class FixtureService {
         fixture.setAwayTeamId(awayTeamId);
         fixture.setKickoffAt(kickoffAt);
         fixture.setVenue(venue);
+        fixture.setReferee(normalizeReferee(referee));
         fixture.setStatus(FixtureStatus.DRAFT);
         fixture.setDataLocked(false);
         fixture.setCreatedBy(actorUserId);
@@ -100,13 +102,14 @@ public class FixtureService {
     @Transactional
     public void updateSchedule(long actorUserId, long fixtureId, long seasonId, Integer roundNo,
                                long homeTeamId, long awayTeamId, LocalDateTime kickoffAt, String venue) {
-        updateSchedule(actorUserId, fixtureId, seasonId, null, null, roundNo, homeTeamId, awayTeamId, kickoffAt, venue);
+        updateSchedule(actorUserId, fixtureId, seasonId, null, null, roundNo, homeTeamId, awayTeamId,
+                kickoffAt, venue, null);
     }
 
     @Transactional
     public void updateSchedule(long actorUserId, long fixtureId, long seasonId, Long stageId, Long groupId,
                                Integer roundNo, long homeTeamId, long awayTeamId,
-                               LocalDateTime kickoffAt, String venue) {
+                               LocalDateTime kickoffAt, String venue, String referee) {
         authorizationService.requireAdmin(actorUserId);
         Fixture existing = get(fixtureId);
         boolean participantsChanged = existing.getSeasonId() != seasonId
@@ -123,7 +126,7 @@ public class FixtureService {
         }
         validateGroupPlacement(stage, groupId, homeTeamId, awayTeamId);
         fixtureMapper.updateSchedule(fixtureId, seasonId, stage.getId(), groupId, roundNo,
-                homeTeamId, awayTeamId, kickoffAt, venue);
+                homeTeamId, awayTeamId, kickoffAt, venue, normalizeReferee(referee));
         Fixture updated = get(fixtureId);
         auditService.record(actorUserId, null, AuditAction.UPDATE, "FIXTURE", fixtureId, existing, updated);
     }
@@ -192,6 +195,10 @@ public class FixtureService {
         fixtureMapper.updateLock(fixtureId, locked);
         auditService.record(actorUserId, null, locked ? AuditAction.LOCK : AuditAction.UNLOCK,
                 "FIXTURE", fixtureId, existing, get(fixtureId));
+    }
+
+    private String normalizeReferee(String referee) {
+        return referee == null || referee.isBlank() ? null : referee.trim();
     }
 
     private void validateParticipants(long seasonId, long homeTeamId, long awayTeamId) {

@@ -31,6 +31,16 @@ class SchemaMigrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void exposesRefereeColumnOnFixture() {
+        List<String> columns = jdbc.queryForList("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = DATABASE() AND table_name = 'fixture'
+                """, String.class);
+
+        assertThat(columns).contains("referee");
+    }
+
+    @Test
     void rejectsDuplicateTeamManagerGrant() {
         long admin = insertUser("admin");
         long manager = insertUser("manager");

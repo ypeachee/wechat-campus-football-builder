@@ -48,7 +48,7 @@ public class FixtureAdminController {
     public IdResponse createFixture(@Valid @RequestBody CreateFixtureRequest request) {
         long id = fixtureService.createFixture(currentUser.require().userId(), request.seasonId(), request.stageId(),
                 request.groupId(), request.roundNo(), request.homeTeamId(), request.awayTeamId(),
-                request.kickoffAt(), request.venue());
+                request.kickoffAt(), request.venue(), request.referee());
         return new IdResponse(id);
     }
 
@@ -56,7 +56,7 @@ public class FixtureAdminController {
     public void updateSchedule(@PathVariable long fixtureId, @Valid @RequestBody UpdateFixtureRequest request) {
         fixtureService.updateSchedule(currentUser.require().userId(), fixtureId, request.seasonId(), request.stageId(),
                 request.groupId(), request.roundNo(), request.homeTeamId(), request.awayTeamId(),
-                request.kickoffAt(), request.venue());
+                request.kickoffAt(), request.venue(), request.referee());
     }
 
     @PutMapping("/fixtures/{fixtureId}/status")
@@ -88,7 +88,8 @@ public class FixtureAdminController {
                                        @NotNull Long homeTeamId,
                                        @NotNull Long awayTeamId,
                                        LocalDateTime kickoffAt,
-                                       @Size(max = 128) String venue) {
+                                       @Size(max = 128) String venue,
+                                       @Size(max = 64) String referee) {
     }
 
     public record UpdateFixtureRequest(@NotNull Long seasonId,
@@ -98,7 +99,8 @@ public class FixtureAdminController {
                                        @NotNull Long homeTeamId,
                                        @NotNull Long awayTeamId,
                                        LocalDateTime kickoffAt,
-                                       @Size(max = 128) String venue) {
+                                       @Size(max = 128) String venue,
+                                       @Size(max = 64) String referee) {
     }
 
     public record ChangeStatusRequest(@NotNull FixtureStatus status) {

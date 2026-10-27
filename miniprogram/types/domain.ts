@@ -55,6 +55,7 @@ export interface FixtureSummary {
   awayTeamId: number;
   kickoffAt: string | null;
   venue: string | null;
+  referee: string | null;
   status: FixtureStatus;
   homeScore: number | null;
   awayScore: number | null;
@@ -96,6 +97,7 @@ export interface FixtureDetail {
   awayTeam: TeamRef;
   kickoffAt: string | null;
   venue: string | null;
+  referee: string | null;
   status: FixtureStatus;
   homeScore: number | null;
   awayScore: number | null;

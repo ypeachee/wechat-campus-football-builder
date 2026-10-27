@@ -103,7 +103,8 @@ public class BracketService {
     }
 
     @Transactional
-    public long createTieFixture(long actorUserId, long tieId, LocalDateTime kickoffAt, String venue) {
+    public long createTieFixture(long actorUserId, long tieId, LocalDateTime kickoffAt, String venue,
+                                 String referee) {
         authorizationService.requireAdmin(actorUserId);
         KnockoutTie tie = knockoutMapper.findTieById(tieId).orElseThrow(() -> notFound("对阵不存在"));
         if (tie.getHomeTeamId() == null || tie.getAwayTeamId() == null) {
@@ -123,6 +124,7 @@ public class BracketService {
         fixture.setAwayTeamId(tie.getAwayTeamId());
         fixture.setKickoffAt(kickoffAt);
         fixture.setVenue(venue);
+        fixture.setReferee(referee == null || referee.isBlank() ? null : referee.trim());
         fixture.setStatus(FixtureStatus.DRAFT);
         fixture.setDataLocked(false);
         fixture.setCreatedBy(actorUserId);

@@ -41,12 +41,19 @@ public final class TestApiSupport {
 
     public static long createFixture(MockMvc mockMvc, String token, long seasonId, long homeTeamId, long awayTeamId)
             throws Exception {
+        return createFixture(mockMvc, token, seasonId, homeTeamId, awayTeamId, null, null);
+    }
+
+    public static long createFixture(MockMvc mockMvc, String token, long seasonId, long homeTeamId,
+                                     long awayTeamId, String venue, String referee) throws Exception {
+        String venueJson = venue == null ? "null" : "\"" + venue + "\"";
+        String refereeJson = referee == null ? "null" : "\"" + referee + "\"";
         return id(mockMvc.perform(post("/api/v1/admin/fixtures")
                         .header("Authorization", "Bearer " + token)
                         .contentType(APPLICATION_JSON)
                         .content("""
-                                {"seasonId":%d,"homeTeamId":%d,"awayTeamId":%d}
-                                """.formatted(seasonId, homeTeamId, awayTeamId)))
+                                {"seasonId":%d,"homeTeamId":%d,"awayTeamId":%d,"venue":%s,"referee":%s}
+                                """.formatted(seasonId, homeTeamId, awayTeamId, venueJson, refereeJson)))
                 .andExpect(status().isOk())
                 .andReturn());
     }
