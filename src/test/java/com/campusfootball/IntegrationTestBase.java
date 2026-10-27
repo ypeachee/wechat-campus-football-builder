@@ -2,6 +2,7 @@ package com.campusfootball;
 
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -10,6 +11,7 @@ import org.testcontainers.containers.MySQLContainer;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestWechatConfig.class)
 public abstract class IntegrationTestBase {
 
     private static final String EXTERNAL_DB_URL = System.getenv("TEST_DB_URL");
