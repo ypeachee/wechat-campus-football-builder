@@ -18,4 +18,6 @@ public interface AppearanceMapper {
                @Param("minutesPlayed") Integer minutesPlayed);
 
     int delete(@Param("id") long id);
+
+    java.util.List<FixtureAppearance> findByFixtureId(@Param("fixtureId") long fixtureId);
 }

@@ -34,6 +34,14 @@ public class FixtureService {
         return fixtureMapper.findById(fixtureId).orElseThrow(this::notFound);
     }
 
+    public Fixture getPublic(long fixtureId) {
+        Fixture fixture = get(fixtureId);
+        if (fixture.getStatus() == FixtureStatus.DRAFT) {
+            throw notFound();
+        }
+        return fixture;
+    }
+
     public List<Fixture> findPublicBySeason(long seasonId) {
         return fixtureMapper.findPublicBySeason(seasonId);
     }

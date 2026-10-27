@@ -29,6 +29,10 @@ public class AppearanceService {
         this.auditService = auditService;
     }
 
+    public java.util.List<FixtureAppearance> findByFixture(long fixtureId) {
+        return appearanceMapper.findByFixtureId(fixtureId);
+    }
+
     @Transactional
     public long create(long actorUserId, long fixtureId, long teamId, long playerId,
                        boolean starter, Integer minutesPlayed) {

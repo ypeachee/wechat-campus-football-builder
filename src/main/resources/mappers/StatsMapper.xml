@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.stats.StatsMapper">
+    <select id="scorers" resultType="com.campusfootball.stats.ScorerRow">
+        SELECT p.id AS player_id,
+               p.name AS player_name,
+               e.team_id AS team_id,
+               t.name AS team_name,
+               COUNT(*) AS goals
+        FROM fixture_event e
+        JOIN fixture f ON f.id = e.fixture_id
+        JOIN player p ON p.id = e.player_id
+        JOIN team t ON t.id = e.team_id
+        WHERE f.season_id = #{seasonId}
+          AND f.status = 'FINISHED'
+          AND e.event_type = 'GOAL'
+        GROUP BY p.id, p.name, e.team_id, t.name
+        ORDER BY goals DESC, p.name ASC
+    </select>
+
+    <select id="assists" resultType="com.campusfootball.stats.AssistRow">
+        SELECT p.id AS player_id,
+               p.name AS player_name,
+               e.team_id AS team_id,
+               t.name AS team_name,
+               COUNT(*) AS assists
+        FROM fixture_event e
+        JOIN fixture f ON f.id = e.fixture_id
+        JOIN player p ON p.id = e.related_player_id
+        JOIN team t ON t.id = e.team_id
+        WHERE f.season_id = #{seasonId}
+          AND f.status = 'FINISHED'
+          AND e.event_type = 'GOAL'
+          AND e.related_player_id IS NOT NULL
+        GROUP BY p.id, p.name, e.team_id, t.name
+        ORDER BY assists DESC, p.name ASC
+    </select>
+
+    <select id="appearances" resultType="com.campusfootball.stats.AppearanceRow">
+        SELECT p.id AS player_id,
+               p.name AS player_name,
+               a.team_id AS team_id,
+               t.name AS team_name,
+               COUNT(DISTINCT a.fixture_id) AS appearances
+        FROM fixture_appearance a
+        JOIN fixture f ON f.id = a.fixture_id
+        JOIN player p ON p.id = a.player_id
+        JOIN team t ON t.id = a.team_id
+        WHERE f.season_id = #{seasonId}
+          AND f.status = 'FINISHED'
+        GROUP BY p.id, p.name, a.team_id, t.name
+        ORDER BY appearances DESC, p.name ASC
+    </select>
+
+    <select id="standings" resultType="com.campusfootball.stats.StandingRow">
+        WITH results AS (
+            SELECT home_team_id AS team_id,
+                   home_score AS goals_for,
+                   away_score AS goals_against,
+                   CASE WHEN home_score &gt; away_score THEN 1 ELSE 0 END AS won,
+                   CASE WHEN home_score = away_score THEN 1 ELSE 0 END AS drawn,
+                   CASE WHEN home_score &lt; away_score THEN 1 ELSE 0 END AS lost
+            FROM fixture
+            WHERE season_id = #{seasonId}
+              AND status = 'FINISHED'
+              AND home_score IS NOT NULL
+            UNION ALL
+            SELECT away_team_id AS team_id,
+                   away_score AS goals_for,
+                   home_score AS goals_against,
+                   CASE WHEN away_score &gt; home_score THEN 1 ELSE 0 END AS won,
+                   CASE WHEN away_score = home_score THEN 1 ELSE 0 END AS drawn,
+                   CASE WHEN away_score &lt; home_score THEN 1 ELSE 0 END AS lost
+            FROM fixture
+            WHERE season_id = #{seasonId}
+              AND status = 'FINISHED'
+              AND home_score IS NOT NULL
+        )
+        SELECT st.team_id AS team_id,
+               t.name AS team_name,
+               COUNT(r.team_id) AS played,
+               COALESCE(SUM(r.won), 0) AS won,
+               COALESCE(SUM(r.drawn), 0) AS drawn,
+               COALESCE(SUM(r.lost), 0) AS lost,
+               COALESCE(SUM(r.goals_for), 0) AS goals_for,
+               COALESCE(SUM(r.goals_against), 0) AS goals_against,
+               COALESCE(SUM(r.goals_for), 0) - COALESCE(SUM(r.goals_against), 0) AS goal_difference,
+               COALESCE(SUM(r.won), 0) * 3 + COALESCE(SUM(r.drawn), 0) AS points
+        FROM season_team st
+        JOIN team t ON t.id = st.team_id
+        LEFT JOIN results r ON r.team_id = st.team_id
+        WHERE st.season_id = #{seasonId}
+        GROUP BY st.team_id, t.name
+        ORDER BY points DESC, goal_difference DESC, goals_for DESC, won DESC, team_name ASC
+    </select>
+</mapper>

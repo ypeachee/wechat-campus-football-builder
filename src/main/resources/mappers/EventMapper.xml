@@ -42,4 +42,8 @@
     <delete id="delete">
         DELETE FROM fixture_event WHERE id = #{id}
     </delete>
+
+    <select id="findByFixtureId" resultMap="EventMap">
+        SELECT * FROM fixture_event WHERE fixture_id = #{fixtureId} ORDER BY minute, stoppage_minute, id
+    </select>
 </mapper>

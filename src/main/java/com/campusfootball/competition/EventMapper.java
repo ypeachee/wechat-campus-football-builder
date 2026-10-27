@@ -20,4 +20,6 @@ public interface EventMapper {
                @Param("note") String note);
 
     int delete(@Param("id") long id);
+
+    java.util.List<FixtureEvent> findByFixtureId(@Param("fixtureId") long fixtureId);
 }

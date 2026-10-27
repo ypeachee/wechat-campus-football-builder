@@ -35,4 +35,8 @@
     <delete id="delete">
         DELETE FROM fixture_appearance WHERE id = #{id}
     </delete>
+
+    <select id="findByFixtureId" resultMap="AppearanceMap">
+        SELECT * FROM fixture_appearance WHERE fixture_id = #{fixtureId} ORDER BY team_id, id
+    </select>
 </mapper>

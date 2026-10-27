@@ -1,6 +1,7 @@
 package com.campusfootball;
 
 import com.campusfootball.auth.AdminBootstrap;
+import com.campusfootball.competition.EventType;
 import com.campusfootball.competition.FixtureStatus;
 import com.campusfootball.competition.SeasonStatus;
 import com.campusfootball.team.PlayerStatus;
@@ -85,6 +86,30 @@ public class TestDataFactory {
                 WHERE season_id = ? AND home_team_id = ? AND away_team_id = ?
                 ORDER BY id DESC LIMIT 1
                 """, Long.class, seasonId, homeTeamId, awayTeamId);
+    }
+
+
+    public long createAppearance(long fixtureId, long teamId, long playerId, long createdBy) {
+        jdbc.update("""
+                INSERT INTO fixture_appearance (fixture_id, team_id, player_id, is_starter, minutes_played, created_by)
+                VALUES (?, ?, ?, 1, 90, ?)
+                """, fixtureId, teamId, playerId, createdBy);
+        return jdbc.queryForObject("""
+                SELECT id FROM fixture_appearance WHERE fixture_id = ? AND player_id = ? ORDER BY id DESC LIMIT 1
+                """, Long.class, fixtureId, playerId);
+    }
+
+    public long createEvent(long fixtureId, long teamId, long playerId, EventType eventType,
+                            Long relatedPlayerId, int minute, long createdBy) {
+        jdbc.update("""
+                INSERT INTO fixture_event (fixture_id, team_id, player_id, event_type, related_player_id,
+                                           minute, stoppage_minute, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, 0, ?)
+                """, fixtureId, teamId, playerId, eventType.name(), relatedPlayerId, minute, createdBy);
+        return jdbc.queryForObject("""
+                SELECT id FROM fixture_event WHERE fixture_id = ? AND player_id = ? AND event_type = ?
+                ORDER BY id DESC LIMIT 1
+                """, Long.class, fixtureId, playerId, eventType.name());
     }
 
     public void grantTeamManager(long userId, long teamId, long grantedBy) {

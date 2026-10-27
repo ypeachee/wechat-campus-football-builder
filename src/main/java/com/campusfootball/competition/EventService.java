@@ -29,6 +29,10 @@ public class EventService {
         this.auditService = auditService;
     }
 
+    public java.util.List<FixtureEvent> findByFixture(long fixtureId) {
+        return eventMapper.findByFixtureId(fixtureId);
+    }
+
     @Transactional
     public long create(long actorUserId, long fixtureId, long teamId, long playerId, EventType eventType,
                        Long relatedPlayerId, int minute, int stoppageMinute, String note) {
