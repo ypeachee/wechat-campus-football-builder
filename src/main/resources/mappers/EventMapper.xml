@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.EventMapper">
+    <resultMap id="EventMap" type="com.campusfootball.competition.FixtureEvent">
+        <id property="id" column="id"/>
+        <result property="fixtureId" column="fixture_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="playerId" column="player_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="relatedPlayerId" column="related_player_id"/>
+        <result property="minute" column="minute"/>
+        <result property="stoppageMinute" column="stoppage_minute"/>
+        <result property="note" column="note"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fixture_event (fixture_id, team_id, player_id, event_type, related_player_id,
+                                   minute, stoppage_minute, note, created_by)
+        VALUES (#{fixtureId}, #{teamId}, #{playerId}, #{eventType}, #{relatedPlayerId},
+                #{minute}, #{stoppageMinute}, #{note}, #{createdBy})
+    </insert>
+
+    <select id="findById" resultMap="EventMap">
+        SELECT * FROM fixture_event WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE fixture_event
+        SET player_id = #{playerId},
+            event_type = #{eventType},
+            related_player_id = #{relatedPlayerId},
+            minute = #{minute},
+            stoppage_minute = #{stoppageMinute},
+            note = #{note},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM fixture_event WHERE id = #{id}
+    </delete>
+</mapper>

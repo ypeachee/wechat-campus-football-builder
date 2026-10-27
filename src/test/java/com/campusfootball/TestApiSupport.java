@@ -82,6 +82,21 @@ public final class TestApiSupport {
                 .andReturn());
     }
 
+
+    public static long addEvent(MockMvc mockMvc, String token, long fixtureId, long teamId, long playerId,
+                                String eventType, Long relatedPlayerId, int minute, int stoppageMinute)
+            throws Exception {
+        String relatedJson = relatedPlayerId == null ? "null" : relatedPlayerId.toString();
+        return id(mockMvc.perform(post("/api/v1/manage/fixtures/" + fixtureId + "/events")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"teamId\":" + teamId + ",\"playerId\":" + playerId
+                                + ",\"eventType\":\"" + eventType + "\",\"relatedPlayerId\":" + relatedJson
+                                + ",\"minute\":" + minute + ",\"stoppageMinute\":" + stoppageMinute + "}"))
+                .andExpect(status().isOk())
+                .andReturn());
+    }
+
     public static void setLocked(MockMvc mockMvc, String token, long fixtureId, boolean locked) throws Exception {
         mockMvc.perform(put("/api/v1/admin/fixtures/" + fixtureId + "/lock")
                         .header("Authorization", "Bearer " + token)
