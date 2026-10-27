@@ -26,6 +26,18 @@
       <view class="create-card__title">{{editingFixtureId ? "编辑赛程" : "创建比赛"}}</view>
       <view class="form-grid">
         <view class="form-field">
+          <view class="form-label">阶段</view>
+          <picker range="{{stages}}" range-key="name" value="{{stageIndex}}" bindchange="handleStageChange">
+            <view class="picker-value">{{stageName || "选择阶段"}}</view>
+          </picker>
+        </view>
+        <view wx:if="{{groups.length > 0}}" class="form-field">
+          <view class="form-label">小组</view>
+          <picker range="{{groups}}" range-key="name" value="{{groupIndex}}" bindchange="handleGroupChange">
+            <view class="picker-value">{{groupName || "选择小组"}}</view>
+          </picker>
+        </view>
+        <view class="form-field">
           <view class="form-label">轮次</view>
           <input class="form-input" type="number" value="{{createForm.roundNo}}" data-field="roundNo" bindinput="handleFormInput" placeholder="可选" />
         </view>
@@ -93,7 +105,7 @@
           <t-button wx:if="{{item.status === 'DRAFT'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="scheduled" bind:tap="handleFixtureAction">发布</t-button>
           <t-button wx:if="{{item.status === 'SCHEDULED'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="live" bind:tap="handleFixtureAction">开赛</t-button>
           <t-button wx:if="{{item.status === 'LIVE'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="finish" bind:tap="handleFixtureAction">完赛</t-button>
-          <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="edit" bind:tap="handleFixtureAction">编辑</t-button>
+          <t-button wx:if="{{item.status !== 'CANCELLED' && !item.knockoutTieId}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="edit" bind:tap="handleFixtureAction">编辑</t-button>
           <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="score" bind:tap="handleFixtureAction">比分</t-button>
           <t-button wx:if="{{item.status === 'DRAFT' || item.status === 'SCHEDULED' || item.status === 'LIVE'}}" size="small" theme="danger" variant="outline" data-id="{{item.id}}" data-action="cancelled" bind:tap="handleFixtureAction">取消</t-button>
           <t-button size="small" theme="{{item.dataLocked ? 'success' : 'danger'}}" variant="outline" data-id="{{item.id}}" data-action="lock" bind:tap="handleFixtureAction">{{item.dataLocked ? "解锁" : "锁定"}}</t-button>

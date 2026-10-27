@@ -34,7 +34,9 @@
       <input class="form-input" value="{{groupName}}" data-field="groupName" bindinput="input" placeholder="新小组名称，例如 A组" />
       <t-button theme="primary" block bindtap="submitGroup">创建小组</t-button>
       <view class="form-title form-title--small">加入球队</view>
-      <input class="form-input" type="number" value="{{groupTeamId}}" data-field="groupTeamId" bindinput="input" placeholder="球队 ID" />
+      <picker range="{{teams}}" range-key="name" value="{{groupTeamIndex}}" bindchange="handleGroupTeamChange">
+        <view class="picker-value">{{groupTeamName || "选择球队"}}</view>
+      </picker>
       <t-button theme="default" variant="outline" block bindtap="addTeam">加入当前小组</t-button>
     </view>
   </block>

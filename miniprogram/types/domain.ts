@@ -47,6 +47,9 @@ export interface PlayerSummary {
 export interface FixtureSummary {
   id: number;
   seasonId: number;
+  stageId: number;
+  groupId: number | null;
+  knockoutTieId: number | null;
   roundNo: number | null;
   homeTeamId: number;
   awayTeamId: number;

@@ -21,12 +21,12 @@ describe("fixture management", () => {
 
   it("creates fixtures and finishes with scores", async () => {
     requestMock.mockResolvedValue({ id: 10 });
-    await createFixture({ seasonId: 1, homeTeamId: 2, awayTeamId: 3 });
+    await createFixture({ seasonId: 1, stageId: 4, groupId: 5, homeTeamId: 2, awayTeamId: 3 });
     requestMock.mockResolvedValueOnce(undefined);
     await finishFixture(10, 2, 1);
     expect(requestMock).toHaveBeenNthCalledWith(1, "/api/v1/admin/fixtures", {
       method: "POST",
-      data: { seasonId: 1, homeTeamId: 2, awayTeamId: 3 }
+      data: { seasonId: 1, stageId: 4, groupId: 5, homeTeamId: 2, awayTeamId: 3 }
     });
     expect(requestMock).toHaveBeenNthCalledWith(2, "/api/v1/admin/fixtures/10/finish", {
       method: "POST",

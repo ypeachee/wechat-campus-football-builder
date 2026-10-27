@@ -8,8 +8,8 @@ Page({
   data: {
     verified: false, loading: true, error: "",
     competitions: [] as Competition[], seasons: [] as Season[], stages: [] as Stage[], groups: [] as CompetitionGroup[], teams: [] as TeamSummary[],
-    competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0,
-    competitionName: "", competitionType: "CUP", seasonName: "", stageName: "", stageType: "GROUP", groupName: "", groupTeamId: ""
+    competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0, groupTeamIndex: 0,
+    competitionName: "", competitionType: "CUP", seasonName: "", stageName: "", stageType: "GROUP", groupName: "", groupTeamName: ""
   },
   onLoad() { void this.load(); },
   onPullDownRefresh() { void this.load(); },
@@ -19,7 +19,7 @@ Page({
       const session = await refreshSession();
       if (!session || session.role !== "ADMIN") { this.setData({ verified: false, error: "仅管理员可配置赛事" }); return; }
       const [competitions, teams] = await Promise.all([fetchAllCompetitions(), fetchAdminTeams()]);
-      this.setData({ verified: true, competitions, teams, competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0 });
+      this.setData({ verified: true, competitions, teams, competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0, groupTeamIndex: 0, groupTeamName: teams[0]?.name ?? "" });
       await this.loadSeasons();
     } catch (error) { this.setData({ error: errorMessage(error) }); }
     finally { this.setData({ loading: false }); wx.stopPullDownRefresh(); }
@@ -45,6 +45,10 @@ Page({
   async handleSeasonChange(e: WechatMiniprogram.PickerChange) { this.setData({ seasonIndex: Number(e.detail.value) }); await this.loadStages(); },
   async handleStageChange(e: WechatMiniprogram.PickerChange) { this.setData({ stageIndex: Number(e.detail.value) }); await this.loadGroups(); },
   handleGroupChange(e: WechatMiniprogram.PickerChange) { this.setData({ groupIndex: Number(e.detail.value) }); },
+  handleGroupTeamChange(e: WechatMiniprogram.PickerChange) {
+    const groupTeamIndex = Number(e.detail.value);
+    this.setData({ groupTeamIndex, groupTeamName: this.data.teams[groupTeamIndex]?.name ?? "" });
+  },
   input(e: WechatMiniprogram.Input) { this.setData({ [String(e.currentTarget.dataset.field)]: e.detail.value }); },
   selectCompetitionType(e: WechatMiniprogram.BaseEvent) { this.setData({ competitionType: String(e.currentTarget.dataset.value) }); },
   selectStageType(e: WechatMiniprogram.BaseEvent) { this.setData({ stageType: String(e.currentTarget.dataset.value) }); },
@@ -73,9 +77,9 @@ Page({
   },
   async addTeam() {
     const group = this.data.groups[this.data.groupIndex];
-    const teamId = Number(this.data.groupTeamId);
-    if (!group || !teamId) return;
-    try { await addGroupTeam(group.id, teamId); this.setData({ groupTeamId: "" }); wx.showToast({ title: "球队已加入小组", icon: "success" }); }
+    const team = this.data.teams[this.data.groupTeamIndex];
+    if (!group || !team) return;
+    try { await addGroupTeam(group.id, team.id); wx.showToast({ title: "球队已加入小组", icon: "success" }); }
     catch (error) { wx.showToast({ title: errorMessage(error), icon: "none" }); }
   },
   goBack() { wx.navigateBack(); }

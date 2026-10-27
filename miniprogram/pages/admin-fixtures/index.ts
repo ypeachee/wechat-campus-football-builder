@@ -11,8 +11,9 @@ import {
   updateOfficialScore
 } from "../../services/competition";
 import { fetchAdminTeams } from "../../services/manage";
+import { fetchGroups, fetchStages } from "../../services/competition-hierarchy";
 import { SubmitLock, withSubmitLock } from "../../state/submit-lock";
-import type { FixtureCard, FixtureStatus, FixtureSummary, Season, TeamSummary } from "../../types/domain";
+import type { CompetitionGroup, FixtureCard, FixtureStatus, FixtureSummary, Season, Stage, TeamSummary } from "../../types/domain";
 import { formatMatchTime } from "../../utils/date";
 import { errorMessage } from "../../utils/error";
 import { fixtureStatusLabel } from "../../utils/status";
@@ -33,6 +34,12 @@ Page({
     selectedSeasonId: 0,
     seasonTeams: [] as TeamSummary[],
     allTeams: [] as TeamSummary[],
+    stages: [] as Stage[],
+    groups: [] as CompetitionGroup[],
+    stageIndex: 0,
+    groupIndex: 0,
+    stageName: "",
+    groupName: "",
     fixtureViews: [] as AdminFixtureView[],
     editingFixtureId: 0,
     createForm: {
@@ -92,13 +99,29 @@ Page({
   },
 
   async loadSeason(seasonId: number) {
-    const [seasonTeams, fixtures] = await Promise.all([
+    const [seasonTeams, fixtures, stages] = await Promise.all([
       fetchSeasonTeams(seasonId),
-      fetchAdminFixtures(seasonId)
+      fetchAdminFixtures(seasonId),
+      fetchStages(seasonId)
     ]);
     const teamMap = new Map(this.data.allTeams.map((team) => [team.id, team.name]));
     const fixtureViews = fixtures.map((fixture) => toView(fixture, teamMap));
-    this.setData({ seasonTeams, fixtureViews });
+    const preferredStageIndex = stages.findIndex((stage) => stage.type === "GROUP");
+    const stageIndex = preferredStageIndex >= 0
+      ? preferredStageIndex
+      : Math.max(0, stages.findIndex((stage) => stage.type === "LEAGUE"));
+    const stage = stages[stageIndex];
+    const groups = stage?.type === "GROUP" ? await fetchGroups(stage.id) : [];
+    this.setData({
+      seasonTeams,
+      fixtureViews,
+      stages,
+      groups,
+      stageIndex,
+      groupIndex: 0,
+      stageName: stage?.name ?? "",
+      groupName: groups[0]?.name ?? ""
+    });
   },
 
   selectSeason(event: WechatMiniprogram.BaseEvent) {
@@ -111,7 +134,13 @@ Page({
       "createForm.homeTeamIndex": -1,
       "createForm.awayTeamIndex": -1,
       homeTeamName: "",
-      awayTeamName: ""
+      awayTeamName: "",
+      stages: [],
+      groups: [],
+      stageIndex: 0,
+      groupIndex: 0,
+      stageName: "",
+      groupName: ""
     });
     void this.loadSeason(seasonId).catch((error) =>
       wx.showToast({ title: errorMessage(error), icon: "none" }));
@@ -130,6 +159,27 @@ Page({
     this.setData({ "createForm.kickoffTime": String(event.detail.value) });
   },
 
+  async handleStageChange(event: WechatMiniprogram.PickerChange) {
+    const stageIndex = Number(event.detail.value);
+    const stage = this.data.stages[stageIndex];
+    const groups = stage?.type === "GROUP" ? await fetchGroups(stage.id) : [];
+    this.setData({
+      stageIndex,
+      groups,
+      groupIndex: 0,
+      stageName: stage?.name ?? "",
+      groupName: groups[0]?.name ?? ""
+    });
+  },
+
+  handleGroupChange(event: WechatMiniprogram.PickerChange) {
+    const groupIndex = Number(event.detail.value);
+    this.setData({
+      groupIndex,
+      groupName: this.data.groups[groupIndex]?.name ?? ""
+    });
+  },
+
   handleHomeTeamChange(event: WechatMiniprogram.PickerChange) {
     const index = Number(event.detail.value);
     this.setData({
@@ -146,12 +196,26 @@ Page({
     });
   },
 
-  openEditFixture(fixture: AdminFixtureView) {
+  async openEditFixture(fixture: AdminFixtureView) {
+    if (fixture.knockoutTieId) {
+      wx.showToast({ title: "淘汰赛比赛请在对阵树中维护", icon: "none" });
+      return;
+    }
     const homeIndex = this.data.seasonTeams.findIndex((team) => team.id === fixture.homeTeamId);
     const awayIndex = this.data.seasonTeams.findIndex((team) => team.id === fixture.awayTeamId);
+    const stageIndex = this.data.stages.findIndex((stage) => stage.id === fixture.stageId);
+    const stage = this.data.stages[stageIndex];
+    const groups = stage?.type === "GROUP" ? await fetchGroups(stage.id) : [];
+    const groupIndex = Math.max(0, groups.findIndex((group) => group.id === fixture.groupId));
     const [date, time = ""] = (fixture.kickoffAt ?? "").split("T");
     this.setData({
       editingFixtureId: fixture.id,
+      stages: this.data.stages,
+      groups,
+      stageIndex: Math.max(0, stageIndex),
+      groupIndex,
+      stageName: stage?.name ?? "",
+      groupName: groups[groupIndex]?.name ?? "",
       "createForm.roundNo": fixture.roundNo === null ? "" : String(fixture.roundNo),
       "createForm.homeTeamIndex": homeIndex,
       "createForm.awayTeamIndex": awayIndex,
@@ -180,8 +244,22 @@ Page({
     const form = this.data.createForm;
     const home = this.data.seasonTeams[form.homeTeamIndex];
     const away = this.data.seasonTeams[form.awayTeamIndex];
+    const stage = this.data.stages[this.data.stageIndex];
+    const group = this.data.groups[this.data.groupIndex];
     if (!this.data.selectedSeasonId || !home || !away) {
       wx.showToast({ title: "请选择赛季和主客队", icon: "none" });
+      return;
+    }
+    if (!stage) {
+      wx.showToast({ title: "请选择比赛阶段", icon: "none" });
+      return;
+    }
+    if (stage.type === "KNOCKOUT") {
+      wx.showToast({ title: "淘汰赛请到淘汰赛管理创建", icon: "none" });
+      return;
+    }
+    if (stage.type === "GROUP" && !group) {
+      wx.showToast({ title: "请选择比赛小组", icon: "none" });
       return;
     }
     if (home.id === away.id) {
@@ -194,6 +272,8 @@ Page({
       const saved = await withSubmitLock(submitLock, async () => {
         const payload = {
           seasonId: this.data.selectedSeasonId,
+          stageId: stage.id,
+          groupId: stage.type === "GROUP" ? group?.id ?? null : null,
           roundNo: form.roundNo ? Number(form.roundNo) : null,
           homeTeamId: home.id,
           awayTeamId: away.id,
@@ -228,7 +308,7 @@ Page({
       return;
     }
     if (action === "edit") {
-      this.openEditFixture(fixture);
+      void this.openEditFixture(fixture);
       return;
     }
     if (action === "score") {

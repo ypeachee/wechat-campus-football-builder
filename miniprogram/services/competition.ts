@@ -50,6 +50,8 @@ export function removeSeasonTeam(seasonId: number, teamId: number): Promise<void
 
 export type FixturePayload = {
   seasonId: number;
+  stageId?: number | null;
+  groupId?: number | null;
   roundNo?: number | null;
   homeTeamId: number;
   awayTeamId: number;
