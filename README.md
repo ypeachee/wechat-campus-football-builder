@@ -156,3 +156,15 @@ npm run verify
 使用微信开发者工具打开 `miniprogram/`，将 `project.config.json` 中的 `touristappid` 替换为你的小程序 AppID，然后执行“工具 -> 构建 npm”。
 
 开发环境默认请求 `http://127.0.0.1:8080`。生产或体验环境 API 地址在 `miniprogram/config/env.ts` 中配置，并需要加入微信后台 request 合法域名。
+
+
+## 球员评分与内容审核
+
+- 已完赛比赛的出场球员支持 5 星评分，按 `stars × 2` 展示为 10 分制
+- 评分用户每场每球员仅一条记录，24 小时内可修改一次
+- 短评最多 100 字，经过本地敏感词和微信 `msgSecCheck` 审核
+- 待审核、拒绝和隐藏评价不计入公开均分
+- 管理员可审核评价、处理举报和维护敏感词
+- 验收清单：[docs/acceptance/ratings-moderation-acceptance.md](docs/acceptance/ratings-moderation-acceptance.md)
+
+> 启用评价功能后，小程序属于包含用户生成内容的服务。基础信息、服务内容、隐私保护指引和举报能力必须同步更新。

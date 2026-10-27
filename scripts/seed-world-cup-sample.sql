@@ -12,10 +12,22 @@ SELECT 'sample-seed-admin', '样本管理员', 'ADMIN', 'ACTIVE'
 WHERE NOT EXISTS (SELECT 1 FROM app_user WHERE role_code = 'ADMIN');
 SET @admin_id = (SELECT id FROM app_user WHERE role_code = 'ADMIN' ORDER BY id LIMIT 1);
 
+INSERT INTO app_user (wechat_openid, nickname, role_code, status)
+SELECT 'sample-fan-1', '球迷一号', 'VIEWER', 'ACTIVE'
+WHERE NOT EXISTS (SELECT 1 FROM app_user WHERE wechat_openid = 'sample-fan-1');
+INSERT INTO app_user (wechat_openid, nickname, role_code, status)
+SELECT 'sample-fan-2', '球迷二号', 'VIEWER', 'ACTIVE'
+WHERE NOT EXISTS (SELECT 1 FROM app_user WHERE wechat_openid = 'sample-fan-2');
+SET @fan1 = (SELECT id FROM app_user WHERE wechat_openid = 'sample-fan-1' LIMIT 1);
+SET @fan2 = (SELECT id FROM app_user WHERE wechat_openid = 'sample-fan-2' LIMIT 1);
+
 SET @sample_name = '2022 卡塔尔世界杯（样本）';
 SET @old_competition_id = (SELECT id FROM competition WHERE name = @sample_name ORDER BY id LIMIT 1);
 SET @old_season_id = (SELECT id FROM season WHERE competition_id = @old_competition_id ORDER BY id LIMIT 1);
 
+DELETE rr FROM rating_report rr JOIN player_match_rating r ON r.id = rr.rating_id
+JOIN fixture f ON f.id = r.fixture_id WHERE f.season_id = @old_season_id;
+DELETE r FROM player_match_rating r JOIN fixture f ON f.id = r.fixture_id WHERE f.season_id = @old_season_id;
 DELETE e FROM fixture_event e JOIN fixture f ON f.id = e.fixture_id WHERE f.season_id = @old_season_id;
 DELETE a FROM fixture_appearance a JOIN fixture f ON f.id = a.fixture_id WHERE f.season_id = @old_season_id;
 DELETE ks FROM knockout_seed ks JOIN stage st ON st.id = ks.stage_id WHERE st.season_id = @old_season_id;
@@ -300,6 +312,20 @@ SET referee = CASE
     ELSE '张雷'
 END
 WHERE season_id = @season_id;
+
+INSERT INTO player_match_rating
+    (fixture_id, player_id, team_id, user_id, stars, comment, status, edits_used)
+VALUES
+(@f_a1, @mbappe, @fra, @fan1, 5, '速度冲击力太强，决赛表现令人难忘', 'VISIBLE', 0),
+(@f_a1, @mbappe, @fra, @fan2, 5, '关键比赛的决定性球员', 'VISIBLE', 0),
+(@f_a1, @griezmann, @fra, @fan1, 4, '串联进攻非常稳定', 'VISIBLE', 0),
+(@f_a1, @saka, @eng, @fan2, 4, '边路突破很有威胁', 'VISIBLE', 0),
+(@f_a2, @messi, @arg, @fan1, 5, '节奏控制和关键传球都是顶级', 'VISIBLE', 0),
+(@f_a2, @messi, @arg, @fan2, 4, '整届赛事表现非常稳定', 'VISIBLE', 0),
+(@f_b1, @gakpo, @ned, @fan1, 5, '门前把握机会能力出色', 'VISIBLE', 0),
+(@f_b1, @valencia, @ecu, @fan2, 4, '厄瓜多尔最可靠的进攻点', 'VISIBLE', 0),
+(@f_b2, @richarlison, @bra, @fan1, 4, '禁区内反应很快', 'VISIBLE', 0),
+(@f_b2, @morata, @esp, @fan2, 3, '跑位不错，但机会转化一般', 'VISIBLE', 0);
 
 INSERT INTO fixture_appearance (fixture_id, team_id, player_id, is_starter, minutes_played, created_by)
 SELECT f.id, p.team_id, p.id, 1, 90, @admin_id
