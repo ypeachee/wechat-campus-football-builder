@@ -1,6 +1,6 @@
 # Campus Football MVP Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the Spring Boot + MyBatis + MySQL 8 backend for browsing teams/players, viewing match statistics and standings, and safely editing league data through role-scoped authorization.
 
@@ -176,31 +176,31 @@ src/test/java/com/campusfootball/MvpAcceptanceIntegrationTest.java
 - Consumes: the approved schema and workflow in the spec.
 - Produces: a bootable Spring Boot application, Maven Wrapper, Testcontainers MySQL base class, and Flyway-managed schema containing `app_user`, `team_manager`, `team`, `player`, `season`, `season_team`, `fixture`, `fixture_appearance`, `fixture_event`, and `audit_log`.
 
-- [ ] **Step 1: Scaffold the project**
+- [x] **Step 1: Scaffold the project**
 
 Create a Java 17 Maven project with Spring Boot 3.4.5 using Spring Initializr with groupId `com.campusfootball`, artifactId `campus-football-api`, and package `com.campusfootball`. Include Web, Validation, Security, JDBC, Flyway, MySQL Driver, and Testcontainers dependencies. Add MyBatis Spring Boot Starter 3.0.4, `flyway-mysql`, `spring-boot-testcontainers`, Testcontainers JUnit 5/MySQL, `spring-security-test`, and JJWT 0.12.6 API/impl/Jackson artifacts to `pom.xml`. Configure `maven-compiler-plugin` to release Java 17.
 
-- [ ] **Step 2: Write the failing schema test**
+- [x] **Step 2: Write the failing schema test**
 
 Create `IntegrationTestBase` with `@SpringBootTest`, `@AutoConfigureMockMvc`, `@ActiveProfiles("test")`, `@Testcontainers`, and a shared `@ServiceConnection` `MySQLContainer<>("mysql:8.0.36")`. Create `SchemaMigrationTest.migratesAllTablesAndNeverCreatesLeagueStanding()` asserting the ten required tables exist and `league_standing` does not. Add `rejectsDuplicateTeamManagerGrant()`, `rejectsDuplicateAppearanceForSameFixtureAndPlayer()`, and `rejectsSameHomeAndAwayTeam()` using `JdbcTemplate` and wrapping each invalid insert with `assertThrows(DataIntegrityViolationException.class)`.
 
-- [ ] **Step 3: Run the schema test to verify it fails**
+- [x] **Step 3: Run the schema test to verify it fails**
 
 Run: `.\mvnw.cmd -Dtest=SchemaMigrationTest test`
 
 Expected: FAIL because the schema migration and required tables are absent.
 
-- [ ] **Step 4: Add configuration and the complete V1 migration**
+- [x] **Step 4: Add configuration and the complete V1 migration**
 
 Add `@MapperScan("com.campusfootball")` to the application class. Add datasource, Flyway, MyBatis with underscore-to-camel-case mapping, mapper locations, JWT secret and 2-hour TTL, WeChat credentials, and admin bootstrap to `application.yml` using environment-variable placeholders. Add a test-only JWT secret in `src/test/resources/application-test.yml`. Write `V1__create_schema.sql` with every table, foreign key, unique constraint, check constraint, and index from the spec. Use `DATETIME`, `TINYINT(1)`, `JSON`, `RESTRICT` foreign keys, and `BIGINT` identity keys. Add `.gitignore`, a MySQL 8 `compose.yaml`, and `.env.example`.
 
-- [ ] **Step 5: Run the schema test to verify it passes**
+- [x] **Step 5: Run the schema test to verify it passes**
 
 Run: `.\mvnw.cmd -Dtest=SchemaMigrationTest test`
 
 Expected: PASS with four tests and a successful Flyway migration.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add pom.xml mvnw mvnw.cmd .mvn .gitignore compose.yaml .env.example src/main src/test
@@ -249,7 +249,7 @@ git commit -m "chore: bootstrap Spring Boot API and schema"
 - Produces: `WechatAuthClient.exchange(String code): WechatIdentity`, `AuthService.login(String code): AuthResponse`, `JwtService.createToken(long userId): String`, `JwtService.parseUserId(String token): long`, `CurrentUser.require(): UserPrincipal`, `AdminBootstrap.ensureAdmin(): void`, and `UserPrincipal(long userId, UserRole role)`.
 - Record contracts: `WechatIdentity(String openid, String unionid)`, `AuthResponse(String token, long userId, String nickname, UserRole role, List<Long> managedTeamIds)`, `MeResponse(long userId, String nickname, UserRole role, List<Long> managedTeamIds)`, and `ApiError(String code, String message, String requestId)`.
 
-- [ ] **Step 1: Write failing authentication and security tests**
+- [x] **Step 1: Write failing authentication and security tests**
 
 Before each test, delete `team_manager` and `app_user` rows, then call `AdminBootstrap.ensureAdmin()` so user fixtures are deterministic. Create `TestWechatConfig` with a primary `WechatAuthClient` stub mapping `manager-code` to `openid-manager`, `viewer-code` to `openid-viewer`, `admin-code` to `openid-admin`, and throwing `AppException(401, UNAUTHORIZED)` for any other code. Configure the test admin bootstrap openid as `openid-admin`. Create `TestAuthSupport.login(MockMvc, String code)` returning the bearer token value.
 
@@ -267,13 +267,13 @@ Before each test, delete `team_manager` and `app_user` rows, then call `AdminBoo
 - A malformed bearer token returns `401`.
 - A valid token returns the current user from `/api/v1/me`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=AuthIntegrationTest,SecurityIntegrationTest test`
 
 Expected: FAIL because authentication, security, and error response classes are absent.
 
-- [ ] **Step 3: Implement the authentication slice**
+- [x] **Step 3: Implement the authentication slice**
 
 Define `ErrorCode` constants `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_FAILED`, `CONFLICT`, `FIXTURE_LOCKED`, and `WECHAT_LOGIN_FAILED`. Implement a JSON error envelope with `code`, `message`, and `requestId`. Add a highest-precedence request-ID filter that runs before Spring Security, a global exception handler, and JSON 401/403 handlers that read the request ID from that filter.
 
@@ -281,13 +281,13 @@ Implement `AppUserMapper.findByOpenId`, `findById`, `insert`, `updateRole`, and 
 
 Configure stateless Spring Security. Permit `POST /api/v1/auth/wechat-login` and only these public GET matchers: `/api/v1/seasons`, `/api/v1/teams/**`, `/api/v1/players/**`, `/api/v1/fixtures/**`, `/api/v1/standings`, and `/api/v1/stats/**`. Require authentication for `/api/v1/me`, `ADMIN` for `/api/v1/admin/**`, and `ADMIN` or `TEAM_MANAGER` for `/api/v1/manage/**`. Deny every unmatched request. The JWT filter must parse only the user ID, load the current user from the database, reject disabled users, and attach `ROLE_<role>`. Implement `TeamManagerMapper.findTeamIdsByUserId(long userId): List<Long>` so both auth responses can populate `managedTeamIds`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=AuthIntegrationTest,SecurityIntegrationTest test`
 
 Expected: PASS with all authentication, role-reload, disabled-user, and error-contract assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/common src/main/java/com/campusfootball/config src/main/java/com/campusfootball/user src/main/java/com/campusfootball/team/TeamManagerMapper.java src/main/java/com/campusfootball/auth src/main/resources/mappers/AppUserMapper.xml src/main/resources/mappers/TeamManagerMapper.xml src/test/java/com/campusfootball
@@ -342,7 +342,7 @@ git commit -m "feat: add WeChat auth and JWT security"
   - `TeamManagerService.revoke(long actorUserId, long teamId, long targetUserId): void`
   - Nested controller records: `CreateTeamRequest(name, shortName, logoUrl, coachName, homeVenue)`, `UpdateTeamRequest(name, shortName, logoUrl, coachName, homeVenue, status)`, `CreatePlayerRequest(name, jerseyNo, position, birthDate, photoUrl)`, `UpdatePlayerRequest(name, jerseyNo, position, birthDate, photoUrl, status)`, and `GrantManagerRequest(userId)`.
 
-- [ ] **Step 1: Write failing team, player, grant, and audit tests**
+- [x] **Step 1: Write failing team, player, grant, and audit tests**
 
 `TeamManagementIntegrationTest` must assert:
 
@@ -363,13 +363,13 @@ git commit -m "feat: add WeChat auth and JWT security"
 
 `AuditRollbackIntegrationTest` must replace `AuditService` with `@MockitoBean`, make `record(long, Long, AuditAction, String, long, Object, Object)` throw `IllegalStateException`, call a successful player update path, and assert the player row is unchanged.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=TeamManagementIntegrationTest,TeamManagerGrantIntegrationTest,AuditRollbackIntegrationTest test`
 
 Expected: FAIL because team, player, authorization, and audit components are absent.
 
-- [ ] **Step 3: Implement the team and audit slice**
+- [x] **Step 3: Implement the team and audit slice**
 
 Implement mapper methods for active/all team lists, single-team lookup, player creation/update, active jersey lookup, team-manager existence, managed-team IDs, grant insert, and grant delete.
 
@@ -377,13 +377,13 @@ Update `IntegrationTestBase` to call `TestDataFactory.reset()` before each test.
 
 Create `TestDataFactory` for reusable user, grant, team, player, season, fixture, appearance, and event inserts used by later integration tests. Its `reset()` method must delete mutable rows in foreign-key-safe order and re-run `AdminBootstrap` so every test starts from a deterministic state. Implement public team/player GET endpoints, scoped management endpoints, and admin team/player/grant endpoints. All management writes must be `@Transactional` and call `AuditService.record(long, Long, AuditAction, String, long, Object, Object)` after the database mutation. `AuditService` serializes before/after values to JSON and inserts inside the caller's transaction. A team manager request that includes `TeamStatus.INACTIVE` must return `403`; an administrator may change it.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=TeamManagementIntegrationTest,TeamManagerGrantIntegrationTest,AuditRollbackIntegrationTest test`
 
 Expected: PASS, including cross-team `403`, role transitions, public visibility, duplicate jersey, and rollback assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/audit src/main/java/com/campusfootball/team src/main/resources/mappers/AuditMapper.xml src/main/resources/mappers/TeamMapper.xml src/main/resources/mappers/PlayerMapper.xml src/main/resources/mappers/TeamManagerMapper.xml src/test/java/com/campusfootball/IntegrationTestBase.java src/test/java/com/campusfootball/TestDataFactory.java src/test/java/com/campusfootball/TeamManagementIntegrationTest.java src/test/java/com/campusfootball/TeamManagerGrantIntegrationTest.java src/test/java/com/campusfootball/AuditRollbackIntegrationTest.java
@@ -428,7 +428,7 @@ git commit -m "feat: add team management authorization and audit"
   - `FixtureWriteGuard.requireWritable(long fixtureId): Fixture`
   - Nested controller records: `CreateSeasonRequest(name, startDate, endDate, status)`, `CreateFixtureRequest(seasonId, roundNo, homeTeamId, awayTeamId, kickoffAt, venue)`, `UpdateFixtureRequest(seasonId, roundNo, homeTeamId, awayTeamId, kickoffAt, venue)`, `ChangeStatusRequest(status)`, `ScoreRequest(homeScore, awayScore)`, and `LockRequest(locked)`.
 
-- [ ] **Step 1: Write failing season and fixture tests**
+- [x] **Step 1: Write failing season and fixture tests**
 
 `SeasonFixtureIntegrationTest` must assert:
 
@@ -446,25 +446,25 @@ git commit -m "feat: add team management authorization and audit"
 - `finish` from `SCHEDULED` returns `409`, missing scores return `400`, and negative scores return `400`.
 - The status endpoint rejects target `FINISHED`; finishing must use the finish endpoint.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=SeasonFixtureIntegrationTest test`
 
 Expected: FAIL because season and fixture components are absent.
 
-- [ ] **Step 3: Implement the competition slice**
+- [x] **Step 3: Implement the competition slice**
 
 Implement season, season-team, and fixture mapper methods, including `countEvents(long)` and `countAppearances(long)` for the participant-freeze rule. Use boxed `Integer` fields with `@NotNull @Min(0)` in `ScoreRequest`, then pass primitive scores to services. Enforce season-team membership before fixture writes. Implement the allowed status graph and terminal cancellation. Implement `finish` only from `LIVE`; reject other source states with `409`. Validate non-negative scores, update score, set `FINISHED`, and set `data_locked=1` in one transaction. Implement `FixtureWriteGuard.requireWritable` so any locked write returns `AppException` with status 403 and `FIXTURE_LOCKED`.
 
 Implement `SeasonController` public reads that exclude `DRAFT`, `FixtureController` public fixture lists that exclude `DRAFT`, admin reads that include draft data, and all admin write endpoints. `PUT /admin/fixtures/{fixtureId}` may change season or participants only while the fixture has no events or appearances; those attempts return `409` afterward. The same endpoint must always reject score, status, and lock changes; dedicated score, status, finish, and lock endpoints own those transitions.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=SeasonFixtureIntegrationTest test`
 
 Expected: PASS with all status, visibility, membership, lock, and audit assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/competition src/main/resources/mappers/SeasonMapper.xml src/main/resources/mappers/FixtureMapper.xml src/test/java/com/campusfootball/SeasonFixtureIntegrationTest.java
@@ -492,7 +492,7 @@ git commit -m "feat: add season and fixture lifecycle"
   - Nested records: `CreateAppearanceRequest(teamId, playerId, isStarter, minutesPlayed)` and `UpdateAppearanceRequest(isStarter, minutesPlayed)`.
   - `minutesPlayed` is nullable; when present it must be between 0 and 130.
 
-- [ ] **Step 1: Write failing appearance tests**
+- [x] **Step 1: Write failing appearance tests**
 
 `AppearanceIntegrationTest` must assert:
 
@@ -509,23 +509,23 @@ git commit -m "feat: add season and fixture lifecycle"
 - Appearance creation creates a team-scoped audit row.
 - After an appearance exists, changing fixture participants or season returns `409`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=AppearanceIntegrationTest test`
 
 Expected: FAIL because appearance components are absent.
 
-- [ ] **Step 3: Implement appearance management**
+- [x] **Step 3: Implement appearance management**
 
 Implement mapper insert, findById, update, delete, and uniqueness checks for appearances. In `AppearanceService`, resolve the fixture, verify that `team_id` is one of the fixture teams, verify the player's current team equals `team_id`, call `FixtureWriteGuard.requireWritable`, and enforce the manager status rule. Allow administrators to write in `SCHEDULED`, `LIVE`, or `FINISHED`; allow team managers only in `LIVE` or `FINISHED`. Keep fixture, team, and player identifiers immutable on update. Wrap mutations and audit writes in one transaction.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=AppearanceIntegrationTest test`
 
 Expected: PASS with cross-team, lock, state, duplicate, immutability, and audit assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/competition/FixtureAppearance.java src/main/java/com/campusfootball/competition/AppearanceMapper.java src/main/java/com/campusfootball/competition/AppearanceService.java src/main/java/com/campusfootball/competition/AppearanceManagementController.java src/main/resources/mappers/AppearanceMapper.xml src/test/java/com/campusfootball/AppearanceIntegrationTest.java
@@ -553,7 +553,7 @@ git commit -m "feat: add fixture appearance management"
   - `EventService.delete(long actorUserId, long eventId): void`
   - Nested records: `CreateEventRequest(teamId, playerId, eventType, relatedPlayerId, minute, stoppageMinute, note)` and `UpdateEventRequest(playerId, eventType, relatedPlayerId, minute, stoppageMinute, note)`.
 
-- [ ] **Step 1: Write failing event tests**
+- [x] **Step 1: Write failing event tests**
 
 `EventIntegrationTest` must assert:
 
@@ -573,23 +573,23 @@ git commit -m "feat: add fixture appearance management"
 - Event creation creates an audit row.
 - After an event exists, changing fixture participants or season returns `409`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=EventIntegrationTest test`
 
 Expected: FAIL because event components are absent.
 
-- [ ] **Step 3: Implement event management**
+- [x] **Step 3: Implement event management**
 
 Implement mapper insert, findById, update, delete, and fixture/team/player lookups needed by validation. Implement `EventService` with immutable fixture and team identifiers on update, exact event-type semantics from the spec, team-scoped authorization, lock checks, and transactional audit writes. Administrators may write events in `SCHEDULED`, `LIVE`, or `FINISHED`; team managers only in `LIVE` or `FINISHED`. Validate that the event player belongs to one of the fixture teams; enforce same-team scorer/assist and opposite-team own-goal rules.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=EventIntegrationTest test`
 
 Expected: PASS with all event semantics, authorization, lock, score-independence, and audit assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/competition/FixtureEvent.java src/main/java/com/campusfootball/competition/EventType.java src/main/java/com/campusfootball/competition/EventMapper.java src/main/java/com/campusfootball/competition/EventService.java src/main/java/com/campusfootball/competition/EventManagementController.java src/main/resources/mappers/EventMapper.xml src/test/java/com/campusfootball/EventIntegrationTest.java
@@ -624,7 +624,7 @@ git commit -m "feat: add fixture event management"
   - `AppearanceRow(long playerId, String playerName, long teamId, String teamName, long appearances)`
   - `StandingRow(long teamId, String teamName, int played, int won, int drawn, int lost, int goalsFor, int goalsAgainst, int goalDifference, int points)`
 
-- [ ] **Step 1: Write failing stats and standings tests**
+- [x] **Step 1: Write failing stats and standings tests**
 
 `StatsIntegrationTest` must assert:
 
@@ -640,25 +640,25 @@ git commit -m "feat: add fixture event management"
 
 Use a deterministic dataset with at least four teams, finished wins/draws, one cancelled fixture, one own goal, one assisted goal, and one zero-game team.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=StatsIntegrationTest test`
 
 Expected: FAIL because public detail and stats queries are absent.
 
-- [ ] **Step 3: Implement aggregate queries and public read models**
+- [x] **Step 3: Implement aggregate queries and public read models**
 
 Write MyBatis XML aggregates that join through `fixture` and filter `fixture.status='FINISHED'` and the requested season. Use `fixture_event.team_id` for scorer/assist team identity so later player transfers do not rewrite history. Compute standings with a union of home and away perspectives, then left join `season_team` so zero-game teams remain. Apply `ORDER BY points DESC, goal_difference DESC, goals_for DESC, wins DESC, team_name ASC`.
 
 Extend `FixtureController` to return a public detail DTO containing fixture metadata, teams, score, appearances, and events, while hiding `DRAFT` fixtures. Implement season filtering and stable response DTOs for all stats endpoints.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=StatsIntegrationTest test`
 
 Expected: PASS with exact scorer, assist, appearance, standing, tie-break, zero-game, cancellation, and public-detail assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/stats src/main/resources/mappers/StatsMapper.xml src/main/java/com/campusfootball/competition/FixtureController.java src/test/java/com/campusfootball/StatsIntegrationTest.java
@@ -679,7 +679,7 @@ git commit -m "feat: add public stats and standings"
 - Consumes: `CurrentUser`, `AuthorizationService`, `AuditMapper`, and persisted audit rows.
 - Produces: `GET /api/v1/manage/audit-logs` returning only the caller's permitted audit rows.
 
-- [ ] **Step 1: Write failing audit query tests**
+- [x] **Step 1: Write failing audit query tests**
 
 `AuditQueryIntegrationTest` must assert:
 
@@ -690,23 +690,23 @@ git commit -m "feat: add public stats and standings"
 - A team manager does not see another team's player log.
 - A viewer receives `403`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `.\mvnw.cmd -Dtest=AuditQueryIntegrationTest test`
 
 Expected: FAIL because the audit query endpoint and scoped mapper query are absent.
 
-- [ ] **Step 3: Implement scoped audit retrieval**
+- [x] **Step 3: Implement scoped audit retrieval**
 
 Add an audit query ordered by `created_at DESC, id DESC`. For admins, return all rows. For team managers, return rows with `team_id` in their managed team IDs plus fixture-level rows whose `entity_type='FIXTURE'` and `entity_id` belongs to a fixture containing one of their teams. Do not accept a client-supplied scope parameter that can broaden access.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `.\mvnw.cmd -Dtest=AuditQueryIntegrationTest test`
 
 Expected: PASS with admin, team-scope, fixture-participation, global-log, and viewer assertions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/main/java/com/campusfootball/audit/AuditController.java src/main/java/com/campusfootball/audit/AuditMapper.java src/main/resources/mappers/AuditMapper.xml src/test/java/com/campusfootball/AuditQueryIntegrationTest.java
@@ -727,7 +727,7 @@ git commit -m "feat: add scoped audit log queries"
 - Consumes: every public and management endpoint produced by Tasks 1-8.
 - Produces: a repeatable end-to-end acceptance test and operator instructions for local startup and verification.
 
-- [ ] **Step 1: Write the end-to-end acceptance test**
+- [x] **Step 1: Write the end-to-end acceptance test**
 
 `MvpAcceptanceIntegrationTest.completeLeagueFlow()` must perform one HTTP flow:
 
@@ -742,23 +742,23 @@ git commit -m "feat: add scoped audit log queries"
 
 Add a second assertion that every error response has `code`, `message`, and `requestId`.
 
-- [ ] **Step 2: Run the acceptance test**
+- [x] **Step 2: Run the acceptance test**
 
 Run: `.\mvnw.cmd -Dtest=MvpAcceptanceIntegrationTest test`
 
 Expected: PASS if Tasks 1-8 are correctly integrated. If it fails, fix only the real integration mismatch in Step 3 and rerun; do not weaken assertions.
 
-- [ ] **Step 3: Implement only the missing integration wiring and documentation**
+- [x] **Step 3: Implement only the missing integration wiring and documentation**
 
 Resolve any mismatched DTO fields, route mappings, transaction boundaries, or security rules exposed by the acceptance flow; if the test already passes, make no production-code changes. Write `README.md` with Docker Desktop, MySQL container, environment variables, `.\mvnw.cmd spring-boot:run`, test, and build commands. Ensure `.env.example` contains placeholders but no real secrets.
 
-- [ ] **Step 4: Run the full verification suite**
+- [x] **Step 4: Run the full verification suite**
 
 Run: `.\mvnw.cmd verify`
 
 Expected: PASS with all unit and integration tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add README.md compose.yaml .env.example src
@@ -788,3 +788,12 @@ The plan is complete after its self-review. Implementation must not begin until 
 
 
 
+
+
+## Completion Record
+
+- Completed: 2026-10-27
+- Verification: `.\mvnw.cmd -q verify`
+- Result: 61 tests, 0 failures, 0 errors, 0 skipped
+- Test database: external MySQL 8.4.9 on port 3307 while the host had Docker Desktop installed but WSL2/Virtual Machine Platform not enabled
+- Testcontainers path remains the default when `TEST_DB_URL` is not set
