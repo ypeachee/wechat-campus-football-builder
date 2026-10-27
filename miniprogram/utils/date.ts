@@ -15,3 +15,10 @@ export function formatDate(value: string | null | undefined): string {
   }
   return value.slice(0, 10);
 }
+
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) {
+    return "时间未知";
+  }
+  return value.replace("T", " ").slice(0, 16);
+}

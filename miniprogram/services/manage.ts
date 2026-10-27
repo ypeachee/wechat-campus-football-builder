@@ -1,6 +1,6 @@
 import { request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { PlayerStatus, PlayerSummary, TeamStatus, TeamSummary } from "../types/domain";
+import type { EventType, PlayerStatus, PlayerSummary, TeamStatus, TeamSummary } from "../types/domain";
 
 export type CreateTeamPayload = {
   name: string;
@@ -67,4 +67,51 @@ export function grantTeamManager(teamId: number, userId: number): Promise<void> 
 
 export function revokeTeamManager(teamId: number, userId: number): Promise<void> {
   return request<void>(`/api/v1/admin/teams/${teamId}/managers/${userId}`, { method: "DELETE" });
+}
+
+export type AppearancePayload = {
+  teamId?: number;
+  playerId?: number;
+  isStarter: boolean;
+  minutesPlayed?: number | null;
+};
+
+export type EventPayload = {
+  teamId?: number;
+  playerId: number;
+  eventType: EventType;
+  relatedPlayerId?: number | null;
+  minute: number;
+  stoppageMinute: number;
+  note?: string | null;
+};
+
+export function createAppearance(fixtureId: number, payload: AppearancePayload): Promise<IdResponse> {
+  return request<IdResponse>(`/api/v1/manage/fixtures/${fixtureId}/appearances`, {
+    method: "POST",
+    data: payload
+  });
+}
+
+export function updateAppearance(appearanceId: number, payload: AppearancePayload): Promise<void> {
+  return request<void>(`/api/v1/manage/appearances/${appearanceId}`, { method: "PUT", data: payload });
+}
+
+export function deleteAppearance(appearanceId: number): Promise<void> {
+  return request<void>(`/api/v1/manage/appearances/${appearanceId}`, { method: "DELETE" });
+}
+
+export function createEvent(fixtureId: number, payload: EventPayload): Promise<IdResponse> {
+  return request<IdResponse>(`/api/v1/manage/fixtures/${fixtureId}/events`, {
+    method: "POST",
+    data: payload
+  });
+}
+
+export function updateEvent(eventId: number, payload: EventPayload): Promise<void> {
+  return request<void>(`/api/v1/manage/events/${eventId}`, { method: "PUT", data: payload });
+}
+
+export function deleteEvent(eventId: number): Promise<void> {
+  return request<void>(`/api/v1/manage/events/${eventId}`, { method: "DELETE" });
 }

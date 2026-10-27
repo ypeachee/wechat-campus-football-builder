@@ -1,0 +1,171 @@
+<view class="page-shell fixture-data-page">
+  <app-header title="比赛数据" subtitle="维护出场、进球、助攻与红黄牌" season-name="MATCH DATA" />
+
+  <view wx:if="{{loading}}" class="data-loading">
+    <t-loading theme="circular" size="44rpx" text="加载比赛数据" />
+  </view>
+
+  <view wx:elif="{{!verified}}" class="surface-card">
+    <empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" />
+  </view>
+
+  <block wx:else>
+    <view class="selector-card">
+      <picker mode="selector" range="{{seasons}}" range-key="name" bindchange="selectSeason">
+        <view class="selector-row">
+          <view class="selector-label">赛季</view>
+          <view class="selector-value">{{selectedSeasonName || "选择赛季"}}</view>
+        </view>
+      </picker>
+      <picker mode="selector" range="{{fixtureOptions}}" range-key="label" bindchange="selectFixture">
+        <view class="selector-row">
+          <view class="selector-label">比赛</view>
+          <view class="selector-value">{{selectedFixtureLabel || "暂无比赛"}}</view>
+        </view>
+      </picker>
+    </view>
+
+    <view wx:if="{{!fixture}}" class="surface-card no-fixture">
+      <empty-state title="暂无可维护比赛" description="当前赛季没有你权限范围内可维护的比赛。" />
+    </view>
+
+    <block wx:else>
+      <view class="fixture-banner">
+        <view class="fixture-banner__status">
+          <t-tag size="small" variant="light" theme="primary">{{statusLabel}}</t-tag>
+          <t-tag wx:if="{{fixture.dataLocked}}" size="small" variant="light" theme="danger">已锁定</t-tag>
+        </view>
+        <view class="fixture-banner__teams">
+          <view>{{fixture.homeTeam.name}}</view>
+          <view class="fixture-banner__score numeric">
+            {{fixture.homeScore === null ? "VS" : fixture.homeScore + " : " + fixture.awayScore}}
+          </view>
+          <view class="fixture-banner__away">{{fixture.awayTeam.name}}</view>
+        </view>
+        <view wx:if="{{!canWriteData}}" class="fixture-banner__notice">当前状态或锁定状态不允许录入比赛数据。</view>
+      </view>
+
+      <view class="section-head">
+        <view>
+          <view class="section-title">比赛事件</view>
+          <view class="section-subtitle">现有 {{eventViews.length}} 条记录</view>
+        </view>
+      </view>
+
+      <view wx:if="{{eventViews.length === 0}}" class="surface-card">
+        <empty-state title="暂无事件" description="可在下方录入进球、助攻和红黄牌。" />
+      </view>
+      <view wx:else class="record-list">
+        <view wx:for="{{eventViews}}" wx:key="id" class="record-row">
+          <view class="record-row__minute numeric">{{item.minuteLabel}}</view>
+          <view class="record-row__main">
+            <view class="record-row__title">{{item.label}} · {{item.playerName}}</view>
+            <view class="record-row__meta">{{item.relatedName ? "助攻：" + item.relatedName : "无助攻"}}</view>
+          </view>
+          <view data-id="{{item.id}}" class="record-action" bindtap="editEvent">编辑</view>
+          <view data-id="{{item.id}}" class="record-action record-action--danger" bindtap="deleteEventRecord">删除</view>
+        </view>
+      </view>
+
+      <view wx:if="{{canWriteData}}" class="surface-card form-card">
+        <view class="form-card__title">{{eventForm.id === null ? "新增事件" : "编辑事件"}}</view>
+        <view class="form-grid">
+          <view class="form-field">
+            <view class="form-label">事件球队</view>
+            <picker wx:if="{{eventForm.id === null}}" mode="selector" range="{{teamOptions}}" range-key="name" bindchange="handleEventTeamChange">
+              <view class="picker-value">{{eventTeamName || "选择球队"}}</view>
+            </picker>
+            <view wx:else class="picker-value picker-value--readonly">{{eventTeamName}}</view>
+          </view>
+          <view class="form-field">
+            <view class="form-label">事件类型</view>
+            <picker mode="selector" range="{{eventTypeOptions}}" range-key="label" bindchange="handleEventTypeChange">
+              <view class="picker-value">{{eventTypeLabelText}}</view>
+            </picker>
+          </view>
+          <view class="form-field">
+            <view class="form-label">球员</view>
+            <picker mode="selector" range="{{eventTeamPlayers}}" range-key="name" bindchange="handleEventPlayerChange">
+              <view class="picker-value">{{eventPlayerName || "选择球员"}}</view>
+            </picker>
+          </view>
+          <view wx:if="{{eventForm.eventType === 'GOAL'}}" class="form-field">
+            <view class="form-label">助攻球员</view>
+            <picker mode="selector" range="{{eventRelatedPlayers}}" range-key="name" bindchange="handleEventRelatedChange">
+              <view class="picker-value">{{eventRelatedName}}</view>
+            </picker>
+          </view>
+          <view class="form-field">
+            <view class="form-label">分钟</view>
+            <input class="form-input" type="number" value="{{eventForm.minute}}" data-field="minute" bindinput="handleEventInput" />
+          </view>
+          <view class="form-field">
+            <view class="form-label">补时</view>
+            <input class="form-input" type="number" value="{{eventForm.stoppageMinute}}" data-field="stoppageMinute" bindinput="handleEventInput" />
+          </view>
+        </view>
+        <view class="form-field">
+          <view class="form-label">备注</view>
+          <textarea class="form-textarea" value="{{eventForm.note}}" data-field="note" bindinput="handleEventInput" maxlength="255" placeholder="可选" />
+        </view>
+        <view class="form-actions">
+          <t-button theme="primary" block loading="{{submitting}}" bind:tap="saveEvent">保存事件</t-button>
+          <t-button wx:if="{{eventForm.id !== null}}" theme="default" variant="outline" block bind:tap="cancelEventEdit">取消编辑</t-button>
+        </view>
+      </view>
+
+      <view class="section-head">
+        <view>
+          <view class="section-title">出场记录</view>
+          <view class="section-subtitle">现有 {{appearanceViews.length}} 条记录</view>
+        </view>
+      </view>
+
+      <view wx:if="{{appearanceViews.length === 0}}" class="surface-card">
+        <empty-state title="暂无出场" description="可在下方录入首发和替补信息。" />
+      </view>
+      <view wx:else class="record-list">
+        <view wx:for="{{appearanceViews}}" wx:key="id" class="record-row">
+          <view class="record-row__main">
+            <view class="record-row__title">{{item.playerName}}</view>
+            <view class="record-row__meta">{{item.teamName}} · {{item.starterText}} · {{item.minutesText}}</view>
+          </view>
+          <view data-id="{{item.id}}" class="record-action" bindtap="editAppearance">编辑</view>
+          <view data-id="{{item.id}}" class="record-action record-action--danger" bindtap="deleteAppearanceRecord">删除</view>
+        </view>
+      </view>
+
+      <view wx:if="{{canWriteData}}" class="surface-card form-card">
+        <view class="form-card__title">{{appearanceForm.id === null ? "新增出场" : "编辑出场"}}</view>
+        <view class="form-grid">
+          <view class="form-field">
+            <view class="form-label">球队</view>
+            <picker wx:if="{{appearanceForm.id === null}}" mode="selector" range="{{teamOptions}}" range-key="name" bindchange="handleAppearanceTeamChange">
+              <view class="picker-value">{{appearanceTeamName || "选择球队"}}</view>
+            </picker>
+            <view wx:else class="picker-value picker-value--readonly">{{appearanceTeamName}}</view>
+          </view>
+          <view class="form-field">
+            <view class="form-label">球员</view>
+            <picker wx:if="{{appearanceForm.id === null}}" mode="selector" range="{{appearancePlayers}}" range-key="name" bindchange="handleAppearancePlayerChange">
+              <view class="picker-value">{{appearancePlayerName || "选择球员"}}</view>
+            </picker>
+            <view wx:else class="picker-value picker-value--readonly">{{appearancePlayerName}}</view>
+          </view>
+          <view class="form-field">
+            <view class="form-label">出场分钟</view>
+            <input class="form-input" type="number" value="{{appearanceForm.minutesPlayed}}" bindinput="handleAppearanceInput" />
+          </view>
+          <view class="form-field form-field--row">
+            <view class="form-label">首发</view>
+            <switch checked="{{appearanceForm.isStarter}}" color="#0B6B4B" bindchange="handleAppearanceStarter" />
+          </view>
+        </view>
+        <view class="form-actions">
+          <t-button theme="primary" block loading="{{submitting}}" bind:tap="saveAppearance">保存出场</t-button>
+          <t-button wx:if="{{appearanceForm.id !== null}}" theme="default" variant="outline" block bind:tap="cancelAppearanceEdit">取消编辑</t-button>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>

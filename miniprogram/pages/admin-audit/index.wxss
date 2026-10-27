@@ -1,0 +1,88 @@
+.audit-page {
+  padding-top: 22rpx;
+}
+
+.audit-loading {
+  display: flex;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.audit-card {
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.audit-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.audit-card__action {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.audit-card__entity {
+  color: #5E6B65;
+  font-size: 21rpx;
+}
+
+.audit-card__time {
+  flex-shrink: 0;
+  color: #9AA49F;
+  font-size: 19rpx;
+}
+
+.audit-card__meta {
+  margin-top: 12rpx;
+  color: #7C8983;
+  font-size: 20rpx;
+}
+
+.audit-card__details {
+  margin-top: 14rpx;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  background: #F8F6F0;
+}
+
+.audit-detail__label {
+  margin-top: 10rpx;
+  color: #5E6B65;
+  font-size: 19rpx;
+  font-weight: 700;
+}
+
+.audit-detail__label:first-child {
+  margin-top: 0;
+}
+
+.audit-detail__json {
+  display: block;
+  margin-top: 6rpx;
+  color: #14201D;
+  font-family: monospace;
+  font-size: 18rpx;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.audit-card__toggle {
+  margin-top: 12rpx;
+  color: #0B6B4B;
+  font-size: 20rpx;
+  text-align: right;
+}

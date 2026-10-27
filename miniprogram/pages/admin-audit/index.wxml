@@ -1,0 +1,35 @@
+<view class="page-shell audit-page">
+  <app-header title="审计日志" subtitle="按权限范围展示数据变更记录" season-name="AUDIT" />
+
+  <view wx:if="{{loading}}" class="audit-loading">
+    <t-loading theme="circular" size="44rpx" text="加载日志" />
+  </view>
+
+  <view wx:elif="{{!verified}}" class="surface-card">
+    <empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" />
+  </view>
+
+  <view wx:elif="{{logs.length === 0}}" class="surface-card">
+    <empty-state title="暂无日志" description="管理操作发生后会记录在这里。" />
+  </view>
+
+  <view wx:else class="audit-list">
+    <view wx:for="{{logs}}" wx:key="id" class="audit-card">
+      <view class="audit-card__top" data-id="{{item.id}}" bindtap="toggleLog">
+        <view class="audit-card__action">
+          <t-tag size="small" variant="light" theme="primary">{{item.action}}</t-tag>
+          <text class="audit-card__entity">{{item.entityType}} #{{item.entityId}}</text>
+        </view>
+        <view class="audit-card__time">{{item.timeLabel}}</view>
+      </view>
+      <view class="audit-card__meta">操作人 #{{item.actorUserId}}<text wx:if="{{item.teamId}}"> · 球队 #{{item.teamId}}</text></view>
+      <view wx:if="{{item.expanded}}" class="audit-card__details">
+        <view class="audit-detail__label">变更前</view>
+        <text class="audit-detail__json">{{item.beforeJson || "无"}}</text>
+        <view class="audit-detail__label">变更后</view>
+        <text class="audit-detail__json">{{item.afterJson || "无"}}</text>
+      </view>
+      <view class="audit-card__toggle">{{item.expanded ? "收起详情" : "查看详情"}}</view>
+    </view>
+  </view>
+</view>

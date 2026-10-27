@@ -1,0 +1,212 @@
+.fixture-data-page {
+  padding-top: 22rpx;
+}
+
+.data-loading {
+  display: flex;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.selector-card {
+  margin-top: 20rpx;
+  overflow: hidden;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 22rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.selector-row:last-child {
+  border-bottom: 0;
+}
+
+.selector-label {
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.selector-value {
+  max-width: 70%;
+  color: #14201D;
+  font-size: 24rpx;
+  font-weight: 600;
+  text-align: right;
+}
+
+.no-fixture {
+  margin-top: 18rpx;
+}
+
+.fixture-banner {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #0B6B4B;
+  color: #FFFFFF;
+}
+
+.fixture-banner__status {
+  display: flex;
+  gap: 10rpx;
+}
+
+.fixture-banner__teams {
+  display: grid;
+  grid-template-columns: 1fr 140rpx 1fr;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 20rpx;
+  font-size: 27rpx;
+  font-weight: 800;
+}
+
+.fixture-banner__score {
+  color: #B7F34A;
+  font-size: 34rpx;
+  text-align: center;
+}
+
+.fixture-banner__away {
+  text-align: right;
+}
+
+.fixture-banner__notice {
+  margin-top: 16rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.18);
+  font-size: 21rpx;
+  opacity: 0.8;
+}
+
+.section-head {
+  margin-top: 32rpx;
+}
+
+.section-head .section-title {
+  margin: 0;
+}
+
+.record-list {
+  overflow: hidden;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 18rpx 20rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.record-row:last-child {
+  border-bottom: 0;
+}
+
+.record-row__minute {
+  width: 64rpx;
+  flex-shrink: 0;
+  color: #0B6B4B;
+  font-size: 23rpx;
+}
+
+.record-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-row__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.record-row__meta {
+  margin-top: 3rpx;
+  color: #7C8983;
+  font-size: 19rpx;
+}
+
+.record-action {
+  color: #0B6B4B;
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
+.record-action--danger {
+  color: #C7392F;
+}
+
+.form-card {
+  margin-top: 16rpx;
+}
+
+.form-card__title {
+  font-size: 29rpx;
+  font-weight: 800;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.form-field {
+  margin-top: 16rpx;
+}
+
+.form-field--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-label {
+  margin-bottom: 8rpx;
+  color: #5E6B65;
+  font-size: 21rpx;
+}
+
+.form-input,
+.picker-value,
+.form-textarea {
+  min-height: 70rpx;
+  padding: 0 16rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 14rpx;
+  background: #F8F6F0;
+  border: 1rpx solid #E4E2D9;
+  box-sizing: border-box;
+  font-size: 24rpx;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 110rpx;
+  padding-top: 16rpx;
+}
+
+.picker-value--readonly {
+  color: #7C8983;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 22rpx;
+}

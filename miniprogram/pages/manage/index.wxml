@@ -40,6 +40,24 @@
         <view class="admin-card__title">审计日志</view>
         <view class="admin-card__copy">查看数据变更记录</view>
       </view>
+      <view class="admin-card" bindtap="goFixtureData">
+        <view class="admin-card__index">D</view>
+        <view class="admin-card__title">比赛数据</view>
+        <view class="admin-card__copy">录入出场、进球与红黄牌</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!isAdmin}}" class="manager-actions">
+      <view class="admin-card" bindtap="goFixtureData">
+        <view class="admin-card__index">D</view>
+        <view class="admin-card__title">比赛数据</view>
+        <view class="admin-card__copy">录入本队出场与事件</view>
+      </view>
+      <view class="admin-card" bindtap="goAdminAudit">
+        <view class="admin-card__index">L</view>
+        <view class="admin-card__title">审计日志</view>
+        <view class="admin-card__copy">查看本队数据变更</view>
+      </view>
     </view>
 
     <view class="section-head">

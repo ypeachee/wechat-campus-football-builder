@@ -91,6 +91,10 @@ Page({
     wx.navigateTo({ url: "/pages/admin-audit/index" });
   },
 
+  goFixtureData() {
+    wx.navigateTo({ url: "/pages/manage-fixture-data/index" });
+  },
+
   goProfile() {
     wx.switchTab({ url: "/pages/profile/index" });
   }

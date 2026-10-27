@@ -1,6 +1,6 @@
 import { ApiError, request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { FixtureDetail, FixtureSummary, Season, SeasonStatus, TeamSummary } from "../types/domain";
+import type { EventType, FixtureDetail, FixtureStatus, FixtureSummary, Season, SeasonStatus, TeamSummary } from "../types/domain";
 
 export function fetchPublicFixtures(seasonId: number): Promise<FixtureSummary[]> {
   return request<FixtureSummary[]>(`/api/v1/fixtures?seasonId=${seasonId}`);
@@ -41,4 +41,57 @@ export function addSeasonTeam(seasonId: number, teamId: number): Promise<void> {
 
 export function removeSeasonTeam(seasonId: number, teamId: number): Promise<void> {
   return request<void>(`/api/v1/admin/seasons/${seasonId}/teams/${teamId}`, { method: "DELETE" });
+}
+
+export type FixturePayload = {
+  seasonId: number;
+  roundNo?: number | null;
+  homeTeamId: number;
+  awayTeamId: number;
+  kickoffAt?: string | null;
+  venue?: string | null;
+};
+
+export function fetchAdminFixtures(seasonId: number): Promise<FixtureSummary[]> {
+  return request<FixtureSummary[]>(`/api/v1/admin/fixtures?seasonId=${seasonId}`);
+}
+
+export function fetchAdminFixture(fixtureId: number): Promise<FixtureSummary> {
+  return request<FixtureSummary>(`/api/v1/admin/fixtures/${fixtureId}`);
+}
+
+export function createFixture(payload: FixturePayload): Promise<IdResponse> {
+  return request<IdResponse>("/api/v1/admin/fixtures", { method: "POST", data: payload });
+}
+
+export function updateFixture(fixtureId: number, payload: FixturePayload): Promise<void> {
+  return request<void>(`/api/v1/admin/fixtures/${fixtureId}`, { method: "PUT", data: payload });
+}
+
+export function changeFixtureStatus(fixtureId: number, status: FixtureStatus): Promise<void> {
+  return request<void>(`/api/v1/admin/fixtures/${fixtureId}/status`, {
+    method: "PUT",
+    data: { status }
+  });
+}
+
+export function updateOfficialScore(fixtureId: number, homeScore: number, awayScore: number): Promise<void> {
+  return request<void>(`/api/v1/admin/fixtures/${fixtureId}/score`, {
+    method: "PUT",
+    data: { homeScore, awayScore }
+  });
+}
+
+export function finishFixture(fixtureId: number, homeScore: number, awayScore: number): Promise<void> {
+  return request<void>(`/api/v1/admin/fixtures/${fixtureId}/finish`, {
+    method: "POST",
+    data: { homeScore, awayScore }
+  });
+}
+
+export function setFixtureLocked(fixtureId: number, locked: boolean): Promise<void> {
+  return request<void>(`/api/v1/admin/fixtures/${fixtureId}/lock`, {
+    method: "PUT",
+    data: { locked }
+  });
 }

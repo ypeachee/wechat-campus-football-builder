@@ -1,0 +1,124 @@
+<view class="page-shell admin-fixtures-page">
+  <app-header title="赛程管理" subtitle="创建比赛、维护比分并锁定数据" season-name="ADMIN" />
+
+  <view wx:if="{{loading}}" class="admin-loading">
+    <t-loading theme="circular" size="44rpx" text="加载赛程" />
+  </view>
+
+  <view wx:elif="{{!verified}}" class="surface-card">
+    <empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" />
+  </view>
+
+  <block wx:else>
+    <scroll-view class="season-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="season-tabs">
+        <view
+          wx:for="{{seasons}}"
+          wx:key="id"
+          class="season-tab {{selectedSeasonId === item.id ? 'season-tab--active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectSeason"
+        >{{item.name}}</view>
+      </view>
+    </scroll-view>
+
+    <view class="surface-card create-card">
+      <view class="create-card__title">{{editingFixtureId ? "编辑赛程" : "创建比赛"}}</view>
+      <view class="form-grid">
+        <view class="form-field">
+          <view class="form-label">轮次</view>
+          <input class="form-input" type="number" value="{{createForm.roundNo}}" data-field="roundNo" bindinput="handleFormInput" placeholder="可选" />
+        </view>
+        <view class="form-field">
+          <view class="form-label">比赛日期</view>
+          <picker mode="date" value="{{createForm.kickoffDate}}" bindchange="handleDateChange">
+            <view class="picker-value">{{createForm.kickoffDate || "选择日期"}}</view>
+          </picker>
+        </view>
+        <view class="form-field">
+          <view class="form-label">比赛时间</view>
+          <picker mode="time" value="{{createForm.kickoffTime}}" bindchange="handleTimeChange">
+            <view class="picker-value">{{createForm.kickoffTime}}</view>
+          </picker>
+        </view>
+        <view class="form-field">
+          <view class="form-label">场地</view>
+          <input class="form-input" value="{{createForm.venue}}" data-field="venue" bindinput="handleFormInput" placeholder="可选" />
+        </view>
+        <view class="form-field">
+          <view class="form-label">主队</view>
+          <picker range="{{seasonTeams}}" range-key="name" bindchange="handleHomeTeamChange">
+            <view class="picker-value">{{homeTeamName || "选择主队"}}</view>
+          </picker>
+        </view>
+        <view class="form-field">
+          <view class="form-label">客队</view>
+          <picker range="{{seasonTeams}}" range-key="name" bindchange="handleAwayTeamChange">
+            <view class="picker-value">{{awayTeamName || "选择客队"}}</view>
+          </picker>
+        </view>
+      </view>
+      <view class="form-actions">
+        <t-button theme="primary" block loading="{{submitting}}" bind:tap="createFixture">{{editingFixtureId ? "保存修改" : "创建比赛"}}</t-button>
+        <t-button wx:if="{{editingFixtureId}}" theme="default" variant="outline" block bind:tap="cancelEdit">取消编辑</t-button>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view>
+        <view class="section-title">比赛列表</view>
+        <view class="section-subtitle">共 {{fixtureViews.length}} 场</view>
+      </view>
+    </view>
+
+    <view wx:if="{{fixtureViews.length === 0}}" class="surface-card">
+      <empty-state title="暂无比赛" description="选择赛季后创建第一场比赛。" />
+    </view>
+
+    <view wx:else class="fixture-admin-list">
+      <view wx:for="{{fixtureViews}}" wx:key="id" class="fixture-admin-card">
+        <view class="fixture-admin-card__top">
+          <view class="fixture-admin-card__time">{{item.timeLabel}}</view>
+          <t-tag size="small" variant="light" theme="primary">{{item.statusLabel}}</t-tag>
+          <t-tag wx:if="{{item.dataLocked}}" size="small" variant="light" theme="danger">已锁定</t-tag>
+        </view>
+        <view class="fixture-admin-card__teams">
+          <view>{{item.homeTeamName}}</view>
+          <view class="fixture-admin-card__score numeric">
+            {{item.homeScore === null ? "VS" : item.homeScore + " : " + item.awayScore}}
+          </view>
+          <view class="fixture-admin-card__away">{{item.awayTeamName}}</view>
+        </view>
+        <view class="fixture-admin-card__actions">
+          <t-button wx:if="{{item.status === 'DRAFT'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="scheduled" bind:tap="handleFixtureAction">发布</t-button>
+          <t-button wx:if="{{item.status === 'SCHEDULED'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="live" bind:tap="handleFixtureAction">开赛</t-button>
+          <t-button wx:if="{{item.status === 'LIVE'}}" size="small" theme="primary" variant="outline" data-id="{{item.id}}" data-action="finish" bind:tap="handleFixtureAction">完赛</t-button>
+          <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="edit" bind:tap="handleFixtureAction">编辑</t-button>
+          <t-button wx:if="{{item.status !== 'CANCELLED'}}" size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="score" bind:tap="handleFixtureAction">比分</t-button>
+          <t-button wx:if="{{item.status === 'DRAFT' || item.status === 'SCHEDULED' || item.status === 'LIVE'}}" size="small" theme="warning" variant="outline" data-id="{{item.id}}" data-action="cancelled" bind:tap="handleFixtureAction">取消</t-button>
+          <t-button size="small" theme="{{item.dataLocked ? 'success' : 'danger'}}" variant="outline" data-id="{{item.id}}" data-action="lock" bind:tap="handleFixtureAction">{{item.dataLocked ? "解锁" : "锁定"}}</t-button>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <t-popup visible="{{scoreDialogVisible}}" placement="bottom" close-on-overlay-click bind:visible-change="handleScorePopupChange">
+    <view class="score-dialog">
+      <view class="score-dialog__title">{{scoreMode === "finish" ? "完赛并保存比分" : "修改官方比分"}}</view>
+      <view class="score-grid">
+        <view class="form-field">
+          <view class="form-label">主队比分</view>
+          <input class="form-input" type="number" value="{{scoreHome}}" data-field="scoreHome" bindinput="handleScoreInput" />
+        </view>
+        <view class="form-field">
+          <view class="form-label">客队比分</view>
+          <input class="form-input" type="number" value="{{scoreAway}}" data-field="scoreAway" bindinput="handleScoreInput" />
+        </view>
+      </view>
+      <view class="score-dialog__actions">
+        <t-button theme="default" variant="outline" block bind:tap="closeScoreDialog">取消</t-button>
+        <t-button theme="primary" block loading="{{submitting}}" bind:tap="saveScore">保存</t-button>
+      </view>
+    </view>
+  </t-popup>
+</view>

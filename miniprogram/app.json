@@ -11,7 +11,10 @@
     "pages/manage/index",
     "pages/manage-team/index",
     "pages/admin-season/index",
-    "pages/admin-access/index"
+    "pages/admin-access/index",
+    "pages/admin-fixtures/index",
+    "pages/manage-fixture-data/index",
+    "pages/admin-audit/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",
