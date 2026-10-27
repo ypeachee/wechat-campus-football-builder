@@ -3,6 +3,7 @@ import { ApiError } from "../services/http";
 import { clearSession, requireRole, saveSession } from "../state/session";
 import { getSelectedSeasonId, selectDefaultSeason, setSelectedSeasonId } from "../state/season";
 import { SubmitLock, withSubmitLock } from "../state/submit-lock";
+import { resolveSelectedId } from "../state/selection";
 import { errorMessage } from "../utils/error";
 import type { Season } from "../types/domain";
 
@@ -16,6 +17,12 @@ describe("mini program acceptance flows", () => {
     ];
     expect(selectDefaultSeason(seasons)).toBe(2);
     expect(getSelectedSeasonId()).toBe(2);
+  });
+
+  it("drops stale competition hierarchy selections", () => {
+    expect(resolveSelectedId([{ id: 10 }, { id: 11 }], 10)).toBe(10);
+    expect(resolveSelectedId([{ id: 10 }, { id: 11 }], 99)).toBe(10);
+    expect(resolveSelectedId([], 99)).toBe(0);
   });
 
   it("applies viewer, manager and admin visibility rules", () => {

@@ -1,6 +1,7 @@
 import { fetchAppearancesFiltered, fetchAssistsFiltered, fetchScorersFiltered, fetchStandingsFiltered } from "../../services/stats";
 import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages, withAllGroups } from "../../services/competition-hierarchy";
 import type { AppearanceRow, AssistRow, Competition, CompetitionGroup, RankingDisplayItem, ScorerRow, Season, Stage, StandingRow } from "../../types/domain";
+import { resolveSelectedId } from "../../state/selection";
 import { errorMessage } from "../../utils/error";
 
 Page({
@@ -10,20 +11,20 @@ Page({
     selectedCompetitionName: "", selectedSeasonName: "", selectedStageName: "", selectedGroupName: "", selectedStageType: "",
     activeTab: "standings", standings: [] as StandingRow[], scorerItems: [] as RankingDisplayItem[], assistItems: [] as RankingDisplayItem[], appearanceItems: [] as RankingDisplayItem[], canOpenBracket: false
   },
-  onLoad() { void this.bootstrap(); },
+  onShow() { void this.bootstrap(); },
   onPullDownRefresh() { void this.bootstrap(); },
   async bootstrap() {
     this.setData({ loading: true, error: "" });
     try {
       const competitions = await fetchCompetitions();
-      const competitionId = this.data.selectedCompetition || competitions[0]?.id || 0;
+      const competitionId = resolveSelectedId(competitions, this.data.selectedCompetition);
       const seasons = competitionId ? await fetchSeasonsByCompetition(competitionId) : [];
-      const seasonId = this.data.selectedSeason || seasons[0]?.id || 0;
+      const seasonId = resolveSelectedId(seasons, this.data.selectedSeason);
       const stages = seasonId ? await fetchStages(seasonId) : [];
-      const stageId = this.data.selectedStage || stages[0]?.id || 0;
+      const stageId = resolveSelectedId(stages, this.data.selectedStage);
       const stage = stages.find((item) => item.id === stageId);
       const groups = stage?.type === "GROUP" ? withAllGroups(stageId, await fetchGroups(stageId)) : [];
-      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || 0) : 0;
+      const groupId = stage?.type === "GROUP" ? resolveSelectedId(groups, this.data.selectedGroup) : 0;
       this.setData({ competitions, seasons, stages, groups, selectedCompetition: competitionId, selectedSeason: seasonId, selectedStage: stageId, selectedGroup: groupId,
         selectedCompetitionName: competitions.find((item) => item.id === competitionId)?.name ?? "",
         selectedSeasonName: seasons.find((item) => item.id === seasonId)?.name ?? "", selectedStageName: stage?.name ?? "", selectedGroupName: groups.find((item) => item.id === groupId)?.name ?? "", selectedStageType: stage?.type ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });

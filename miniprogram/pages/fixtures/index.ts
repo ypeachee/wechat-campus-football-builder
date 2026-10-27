@@ -3,6 +3,7 @@ import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages,
 import { fetchTeams } from "../../services/teams";
 import type { Competition, CompetitionGroup, FixtureCard, FixtureStatus, FixtureSummary, Season, Stage, TeamSummary } from "../../types/domain";
 import { formatMatchTime } from "../../utils/date";
+import { resolveSelectedId } from "../../state/selection";
 import { errorMessage } from "../../utils/error";
 
 type FixturesData = {
@@ -22,20 +23,20 @@ Page({
     statusFilters: [{value:"ALL",label:"全部"},{value:"SCHEDULED",label:"未开始"},{value:"LIVE",label:"进行中"},{value:"FINISHED",label:"已完赛"},{value:"CANCELLED",label:"已取消"}] as Array<{value:"ALL"|FixtureStatus;label:string}>,
     fixtureViews: [] as FixtureCard[], allFixtures: [] as FixtureCard[], canOpenBracket: false
   } as FixturesData,
-  onLoad() { void this.bootstrap(); },
+  onShow() { void this.bootstrap(); },
   onPullDownRefresh() { void this.bootstrap(); },
   async bootstrap() {
     this.setData({ loading: true, error: "" });
     try {
       const competitions = await fetchCompetitions();
-      const competitionId = this.data.selectedCompetition || competitions[0]?.id || 0;
+      const competitionId = resolveSelectedId(competitions, this.data.selectedCompetition);
       const seasons = competitionId ? await fetchSeasonsByCompetition(competitionId) : [];
-      const seasonId = this.data.selectedSeason || seasons[0]?.id || 0;
+      const seasonId = resolveSelectedId(seasons, this.data.selectedSeason);
       const stages = seasonId ? await fetchStages(seasonId) : [];
-      const stageId = this.data.selectedStage || stages[0]?.id || 0;
+      const stageId = resolveSelectedId(stages, this.data.selectedStage);
       const stage = stages.find((item) => item.id === stageId);
       const groups = stage?.type === "GROUP" ? withAllGroups(stageId, await fetchGroups(stageId)) : [];
-      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || 0) : 0;
+      const groupId = stage?.type === "GROUP" ? resolveSelectedId(groups, this.data.selectedGroup) : 0;
       this.setData({ competitions, seasons, stages, groups, selectedCompetition: competitionId, selectedSeason: seasonId, selectedStage: stageId, selectedGroup: groupId,
         selectedCompetitionName: competitions.find((item) => item.id === competitionId)?.name ?? "",
         selectedSeasonName: seasons.find((item) => item.id === seasonId)?.name ?? "",

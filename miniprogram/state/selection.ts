@@ -41,3 +41,8 @@ export function selectGroup(selection: SelectionState, groupId: number): Selecti
   saveSelection(next);
   return next;
 }
+
+
+export function resolveSelectedId(items: Array<{ id: number }>, selectedId: number): number {
+  return items.some((item) => item.id === selectedId) ? selectedId : (items[0]?.id ?? 0);
+}
