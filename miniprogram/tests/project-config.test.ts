@@ -66,6 +66,16 @@ describe("project.config.json", () => {
     expect(includedBytes(miniprogramRoot)).toBeLessThanOrEqual(1.5 * 1024 * 1024);
   });
 
+  it("registers every page with all required source files", () => {
+    const app = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../app.json"), "utf8"));
+    expect(app.pages).toContain("pages/admin-ratings/index");
+    for (const page of app.pages as string[]) {
+      for (const extension of ["ts", "json", "wxml", "wxss"]) {
+        expect(fs.existsSync(path.resolve(__dirname, `../${page}.${extension}`))).toBe(true);
+      }
+    }
+  });
+
   it("keeps runtime image and audio assets below 200 KB", () => {
     const mediaExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".mp3", ".wav", ".m4a"]);
     const miniprogramRoot = path.resolve(__dirname, "..");
