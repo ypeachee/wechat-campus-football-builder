@@ -104,7 +104,13 @@ Page({
   },
 
   goAdminRatings() {
-    wx.navigateTo({ url: "/pages/admin-ratings/index" });
+    wx.navigateTo({
+      url: "/pages/admin-ratings/index",
+      fail: (error) => {
+        console.error("open admin ratings failed", error);
+        wx.showToast({ title: `无法打开评分审核：${error.errMsg}`, icon: "none" });
+      }
+    });
   },
 
   goProfile() {
