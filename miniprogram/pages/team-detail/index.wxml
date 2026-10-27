@@ -4,7 +4,7 @@
   </view>
 
   <view wx:elif="{{error}}" class="surface-card">
-    <empty-state title="球队加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+    <empty-state title="球队加载失败" description="{{error}}" action-text="{{staleTeam ? '返回球队列表' : '重试'}}" bind:action="retry" />
   </view>
 
   <block wx:else>

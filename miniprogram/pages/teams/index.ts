@@ -19,7 +19,7 @@ Page({
     filteredTeams: [] as TeamSummary[]
   } as TeamsData,
 
-  onLoad() {
+  onShow() {
     void this.loadTeams();
   },
 
