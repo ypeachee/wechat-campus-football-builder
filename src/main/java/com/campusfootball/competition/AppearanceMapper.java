@@ -20,4 +20,9 @@ public interface AppearanceMapper {
     int delete(@Param("id") long id);
 
     java.util.List<FixtureAppearance> findByFixtureId(@Param("fixtureId") long fixtureId);
+    java.util.List<FixtureAppearance> findByFixtureAndTeam(@Param("fixtureId") long fixtureId,
+                                                           @Param("teamId") long teamId);
+    int deleteByFixtureAndTeam(@Param("fixtureId") long fixtureId, @Param("teamId") long teamId);
+    java.util.List<Long> findPlayerIdsWithEvents(@Param("fixtureId") long fixtureId,
+                                                 @Param("teamId") long teamId);
 }

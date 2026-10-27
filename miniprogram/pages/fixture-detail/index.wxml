@@ -62,7 +62,7 @@
         <view wx:for="{{homeRatings}}" wx:key="playerId" class="rating-player-row"
           data-player-id="{{item.playerId}}" bindtap="openRatingDialog">
           <view class="rating-player-row__main">
-            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + "号 "}}{{item.playerName}}</view>
+            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + " "}}{{item.playerName}}</view>
             <view class="rating-player-row__stars">{{item.starsText}}</view>
           </view>
           <view class="rating-player-row__score numeric">{{item.ratingCount === 0 ? "待评分" : item.averageScore + "/10"}}</view>
@@ -74,7 +74,7 @@
         <view wx:for="{{awayRatings}}" wx:key="playerId" class="rating-player-row"
           data-player-id="{{item.playerId}}" bindtap="openRatingDialog">
           <view class="rating-player-row__main">
-            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + "号 "}}{{item.playerName}}</view>
+            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + " "}}{{item.playerName}}</view>
             <view class="rating-player-row__stars">{{item.starsText}}</view>
           </view>
           <view class="rating-player-row__score numeric">{{item.ratingCount === 0 ? "待评分" : item.averageScore + "/10"}}</view>

@@ -3,6 +3,7 @@ import { fetchAdminFixtures, fetchAdminSeasons, fetchFixtureDetail, fetchPublicF
 import {
   createAppearance,
   createEvent,
+  replaceTeamLineup,
   deleteAppearance,
   deleteEvent,
   fetchAdminTeams,
@@ -26,6 +27,19 @@ import { errorMessage } from "../../utils/error";
 import { eventTypeLabel, eventTypeTone, fixtureStatusLabel } from "../../utils/status";
 
 type Option = { id: number; name: string };
+type LineupPlayerView = {
+  playerId: number;
+  label: string;
+  starter: boolean;
+  substitute: boolean;
+  minutesPlayed: string;
+};
+type LineupEditorView = {
+  teamId: number;
+  teamName: string;
+  players: LineupPlayerView[];
+  saving: boolean;
+};
 type EventForm = {
   id: number | null;
   teamIndex: number;
@@ -81,6 +95,7 @@ Page({
     appearanceForm: { id: null, teamIndex: 0, playerIndex: 0, isStarter: true, minutesPlayed: "90" } as AppearanceForm,
     eventTeamName: "",
     appearanceTeamName: "",
+    lineupEditors: [] as LineupEditorView[],
     eventPlayerName: "",
     appearancePlayerName: "",
     eventRelatedName: "无助攻",
@@ -157,7 +172,12 @@ Page({
       : await Promise.all([fetchTeamPlayers(fixture.homeTeam.id), fetchTeamPlayers(fixture.awayTeam.id)]);
     const playerMap = new Map<number, PlayerSummary>();
     [...homePlayers, ...awayPlayers].forEach((player) => playerMap.set(player.id, player));
-    const playerName = (id: number | null) => id === null ? "" : playerMap.get(id)?.name ?? `球员 #${id}`;
+    const playerLabel = (id: number | null) => {
+      if (id === null) return "";
+      const player = playerMap.get(id);
+      if (!player) return `球员 #${id}`;
+      return player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`;
+    };
     const managedIds = new Set(session.managedTeamIds);
     const teamOptions: Option[] = [
       { id: fixture.homeTeam.id, name: fixture.homeTeam.name },
@@ -169,6 +189,29 @@ Page({
         ? ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status)
         : ["LIVE", "FINISHED"].includes(fixture.status)
     );
+    const lineupEditors = teamOptions.map((team) => {
+      const existing = fixture.appearances.filter((appearance) => appearance.teamId === team.id);
+      const roster = [...homePlayers, ...awayPlayers]
+        .filter((player) => player.teamId === team.id && player.status === "ACTIVE")
+        .sort((a, b) => (a.jerseyNo ?? 999) - (b.jerseyNo ?? 999) || a.name.localeCompare(b.name));
+      return {
+        teamId: team.id,
+        teamName: team.name,
+        saving: false,
+        players: roster.map((player) => {
+          const appearance = existing.find((item) => item.playerId === player.id);
+          const starter = Boolean(appearance?.starter);
+          return {
+            playerId: player.id,
+            label: player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`,
+            starter,
+            substitute: starter || Boolean(appearance && !appearance.starter),
+            minutesPlayed: appearance?.minutesPlayed === null || appearance?.minutesPlayed === undefined
+              ? "30" : String(appearance.minutesPlayed)
+          };
+        })
+      };
+    });
     this.setData({
       fixture,
       statusLabel: fixtureStatusLabel(fixture.status),
@@ -181,12 +224,13 @@ Page({
         minuteLabel: `${event.minute}${event.stoppageMinute ? `+${event.stoppageMinute}` : ""}'`,
         label: eventTypeLabel(event.eventType),
         tone: eventTypeTone(event.eventType),
-        playerName: playerName(event.playerId),
-        relatedName: playerName(event.relatedPlayerId)
+        playerName: playerLabel(event.playerId),
+        relatedName: playerLabel(event.relatedPlayerId)
       })),
+      lineupEditors,
       appearanceViews: fixture.appearances.map((appearance) => ({
         id: appearance.id,
-        playerName: playerName(appearance.playerId),
+        playerName: playerLabel(appearance.playerId),
         teamName: appearance.teamId === fixture.homeTeam.id ? fixture.homeTeam.name : fixture.awayTeam.name,
         starterText: appearance.starter ? "首发" : "替补",
         minutesText: appearance.minutesPlayed === null ? "未录分钟" : `${appearance.minutesPlayed} 分钟`
@@ -252,11 +296,13 @@ Page({
     const opponentId = eventTeamId === fixture.homeTeam.id ? fixture.awayTeam.id : fixture.homeTeam.id;
     const playerTeamId = eventType === "OWN_GOAL" ? opponentId : eventTeamId;
     const allPlayers = [...playerMap.values()].filter((player) => player.status === "ACTIVE");
+    const label = (player: PlayerSummary) => player.jerseyNo === null
+      ? player.name : `${player.jerseyNo} ${player.name}`;
     const eventTeamPlayers = allPlayers.filter((player) => player.teamId === playerTeamId)
-      .map((player) => ({ id: player.id, name: player.name }));
+      .map((player) => ({ id: player.id, name: label(player) }));
     const relatedPlayers = [{ id: 0, name: "无助攻" }, ...allPlayers
       .filter((player) => player.teamId === eventTeamId)
-      .map((player) => ({ id: player.id, name: player.name }))];
+      .map((player) => ({ id: player.id, name: label(player) }))];
     this.setData({
       eventTeamPlayers,
       eventRelatedPlayers: relatedPlayers,
@@ -270,7 +316,10 @@ Page({
   refreshAppearancePlayers(fixture: FixtureDetail, playerMap: Map<number, PlayerSummary>, teamId: number, playerIndex: number) {
     const appearancePlayers = [...playerMap.values()]
       .filter((player) => player.teamId === teamId && player.status === "ACTIVE")
-      .map((player) => ({ id: player.id, name: player.name }));
+      .map((player) => ({
+        id: player.id,
+        name: player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`
+      }));
     const nextIndex = Math.min(playerIndex, Math.max(0, appearancePlayers.length - 1));
     this.setData({
       appearancePlayers,
@@ -317,6 +366,73 @@ Page({
       eventRelatedName: this.data.eventRelatedPlayers[index]?.name ?? "无助攻"
     });
   },
+
+  toggleLineupStarter(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    const playerId = Number(event.currentTarget.dataset.playerId);
+    this.updateLineupPlayer(teamId, playerId, (player) => {
+      player.starter = !player.starter;
+      player.substitute = player.starter;
+      if (player.starter) player.minutesPlayed = "90";
+    });
+  },
+
+  toggleLineupSubstitute(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    const playerId = Number(event.currentTarget.dataset.playerId);
+    this.updateLineupPlayer(teamId, playerId, (player) => {
+      if (player.starter) return;
+      player.substitute = !player.substitute;
+      if (player.substitute && !player.minutesPlayed) player.minutesPlayed = "30";
+    });
+  },
+
+  handleLineupMinutes(event: WechatMiniprogram.Input) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    const playerId = Number(event.currentTarget.dataset.playerId);
+    this.updateLineupPlayer(teamId, playerId, (player) => {
+      if (!player.starter) player.minutesPlayed = event.detail.value;
+    });
+  },
+
+  updateLineupPlayer(teamId: number, playerId: number, update: (player: LineupPlayerView) => void) {
+    const editors = this.data.lineupEditors.map((editor) => ({
+      ...editor,
+      players: editor.players.map((player) => ({ ...player }))
+    }));
+    const editor = editors.find((item) => item.teamId === teamId);
+    const player = editor?.players.find((item) => item.playerId === playerId);
+    if (!editor || !player) return;
+    update(player);
+    this.setData({ lineupEditors: editors });
+  },
+
+  async saveLineup(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    const editorIndex = this.data.lineupEditors.findIndex((item) => item.teamId === teamId);
+    const editor = this.data.lineupEditors[editorIndex];
+    if (!this.data.fixture || !editor) return;
+    const starters = editor.players.filter((player) => player.starter).map((player) => player.playerId);
+    const substitutes = editor.players
+      .filter((player) => !player.starter && player.substitute)
+      .map((player) => ({ playerId: player.playerId, minutesPlayed: Number(player.minutesPlayed) || 0 }));
+    if (substitutes.some((item) => item.minutesPlayed < 0 || item.minutesPlayed > 130)) {
+      wx.showToast({ title: "替补出场分钟必须为 0–130", icon: "none" });
+      return;
+    }
+    this.setData({ [`lineupEditors[${editorIndex}].saving`]: true });
+    try {
+      await replaceTeamLineup(this.data.fixture.id, teamId, starters, substitutes);
+      await this.refresh();
+      wx.showToast({ title: "阵容已保存", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: errorMessage(error), icon: "none" });
+    } finally {
+      this.setData({ [`lineupEditors[${editorIndex}].saving`]: false });
+    }
+  },
+
+  noop() {},
 
   handleAppearanceTeamChange(event: WechatMiniprogram.PickerChange) {
     const index = Number(event.detail.value);
@@ -583,6 +699,7 @@ Page({
       awayPlayers: [],
       eventTeamPlayers: [],
       appearancePlayers: [],
+      lineupEditors: [],
       selectedFixtureLabel: ""
     });
   },

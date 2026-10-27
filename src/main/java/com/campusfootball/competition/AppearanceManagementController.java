@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/manage")
 public class AppearanceManagementController {
@@ -33,6 +35,15 @@ public class AppearanceManagementController {
         long id = appearanceService.create(currentUser.require().userId(), fixtureId, request.teamId(),
                 request.playerId(), request.isStarter(), request.minutesPlayed());
         return new IdResponse(id);
+    }
+
+    @PutMapping("/fixtures/{fixtureId}/teams/{teamId}/appearances")
+    public void replaceLineup(@PathVariable long fixtureId, @PathVariable long teamId,
+                              @Valid @RequestBody ReplaceLineupRequest request) {
+        appearanceService.replaceTeamLineup(currentUser.require().userId(), fixtureId, teamId,
+                request.starters(), request.substitutes().stream()
+                        .map(item -> new AppearanceService.LineupSubstitute(item.playerId(), item.minutesPlayed()))
+                        .toList());
     }
 
     @PutMapping("/appearances/{appearanceId}")
@@ -54,6 +65,14 @@ public class AppearanceManagementController {
                                           @NotNull Long playerId,
                                           @NotNull Boolean isStarter,
                                           @Min(0) @Max(130) Integer minutesPlayed) {
+    }
+
+    public record ReplaceLineupRequest(@NotNull List<Long> starters,
+                                       @NotNull List<SubstituteRequest> substitutes) {
+    }
+
+    public record SubstituteRequest(@NotNull Long playerId,
+                                    @Min(0) @Max(130) Integer minutesPlayed) {
     }
 
     public record UpdateAppearanceRequest(@NotNull Boolean isStarter,

@@ -117,56 +117,81 @@
 
       <view class="section-head">
         <view>
-          <view class="section-title">出场记录</view>
-          <view class="section-subtitle">现有 {{appearanceViews.length}} 条记录</view>
+          <view class="section-title">阵容管理</view>
+          <view class="section-subtitle">按球队勾选首发和替补，首发球员会在替补区勾选锁定</view>
         </view>
       </view>
 
-      <view wx:if="{{appearanceViews.length === 0}}" class="surface-card">
-        <empty-state title="暂无出场" description="可在下方录入首发和替补信息。" />
+      <view wx:if="{{canWriteData}}" class="lineup-editor-list">
+        <view wx:for="{{lineupEditors}}" wx:for-item="editor" wx:key="teamId" class="surface-card lineup-editor">
+          <view class="lineup-editor__heading">
+            <view class="lineup-editor__title">{{editor.teamName}}</view>
+            <view class="lineup-editor__hint">保存后整队阵容一次生效</view>
+          </view>
+
+          <block wx:if="{{editor.players.length > 0}}">
+            <view class="lineup-editor__label">
+              <text>首发名单</text>
+              <text class="lineup-editor__label-hint">点击球员勾选</text>
+            </view>
+            <view class="lineup-player-list">
+              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
+                class="lineup-row {{player.starter ? 'lineup-row--selected' : ''}}"
+                data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
+                bindtap="toggleLineupStarter">
+                <view class="lineup-checkbox {{player.starter ? 'lineup-checkbox--checked' : ''}}">
+                  {{player.starter ? "✓" : ""}}
+                </view>
+                <text class="lineup-player-name">{{player.label}}</text>
+                <text wx:if="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
+              </view>
+            </view>
+
+            <view class="lineup-editor__label lineup-editor__label--substitute">
+              <text>替补名单</text>
+              <text class="lineup-editor__label-hint">首发球员已勾选并锁定</text>
+            </view>
+            <view class="lineup-player-list">
+              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
+                class="lineup-row {{player.starter ? 'lineup-row--locked' : player.substitute ? 'lineup-row--selected' : ''}}"
+                data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
+                bindtap="toggleLineupSubstitute">
+                <view class="lineup-checkbox {{player.starter || player.substitute ? 'lineup-checkbox--checked' : ''}} {{player.starter ? 'lineup-checkbox--locked' : ''}}">
+                  {{player.starter || player.substitute ? "✓" : ""}}
+                </view>
+                <text class="lineup-player-name">{{player.label}}</text>
+                <text wx:if="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
+                <view wx:elif="{{player.substitute}}" class="lineup-minutes-wrap" catchtap="noop">
+                  <input class="lineup-minutes" type="number" maxlength="3" value="{{player.minutesPlayed}}"
+                    data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
+                    bindinput="handleLineupMinutes" />
+                  <text class="lineup-minutes-unit">分钟</text>
+                </view>
+                <text wx:else class="lineup-status">未选</text>
+              </view>
+            </view>
+          </block>
+          <view wx:else class="lineup-editor__empty">该球队暂无可选球员，请先维护球队名单。</view>
+
+          <view class="lineup-editor__save">
+            <t-button theme="primary" block loading="{{editor.saving}}"
+              data-team-id="{{editor.teamId}}" bind:tap="saveLineup">保存阵容</t-button>
+          </view>
+        </view>
       </view>
-      <view wx:else class="record-list">
+
+      <view wx:elif="{{appearanceViews.length > 0}}" class="record-list">
         <view wx:for="{{appearanceViews}}" wx:key="id" class="record-row">
           <view class="record-row__main">
             <view class="record-row__title">{{item.playerName}}</view>
             <view class="record-row__meta">{{item.teamName}} · {{item.starterText}} · {{item.minutesText}}</view>
           </view>
-          <view data-id="{{item.id}}" class="record-action" bindtap="editAppearance">编辑</view>
-          <view data-id="{{item.id}}" class="record-action record-action--danger" bindtap="deleteAppearanceRecord">删除</view>
         </view>
+      </view>
+      <view wx:else class="surface-card">
+        <empty-state title="暂无出场" description="当前比赛状态不允许维护阵容。" />
       </view>
 
-      <view wx:if="{{canWriteData}}" class="surface-card form-card">
-        <view class="form-card__title">{{appearanceForm.id === null ? "新增出场" : "编辑出场"}}</view>
-        <view class="form-grid">
-          <view class="form-field">
-            <view class="form-label">球队</view>
-            <picker wx:if="{{appearanceForm.id === null}}" mode="selector" range="{{teamOptions}}" range-key="name" bindchange="handleAppearanceTeamChange">
-              <view class="picker-value">{{appearanceTeamName || "选择球队"}}</view>
-            </picker>
-            <view wx:else class="picker-value picker-value--readonly">{{appearanceTeamName}}</view>
-          </view>
-          <view class="form-field">
-            <view class="form-label">球员</view>
-            <picker wx:if="{{appearanceForm.id === null}}" mode="selector" range="{{appearancePlayers}}" range-key="name" bindchange="handleAppearancePlayerChange">
-              <view class="picker-value">{{appearancePlayerName || "选择球员"}}</view>
-            </picker>
-            <view wx:else class="picker-value picker-value--readonly">{{appearancePlayerName}}</view>
-          </view>
-          <view class="form-field">
-            <view class="form-label">出场分钟</view>
-            <input class="form-input" type="number" value="{{appearanceForm.minutesPlayed}}" bindinput="handleAppearanceInput" />
-          </view>
-          <view class="form-field form-field--row">
-            <view class="form-label">首发</view>
-            <switch checked="{{appearanceForm.isStarter}}" color="#0B6B4B" bindchange="handleAppearanceStarter" />
-          </view>
-        </view>
-        <view class="form-actions">
-          <t-button theme="primary" block loading="{{submitting}}" bind:tap="saveAppearance">保存出场</t-button>
-          <t-button wx:if="{{appearanceForm.id !== null}}" theme="default" variant="outline" block bind:tap="cancelAppearanceEdit">取消编辑</t-button>
-        </view>
-      </view>
     </block>
   </block>
 </view>

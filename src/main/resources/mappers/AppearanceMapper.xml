@@ -39,4 +39,19 @@
     <select id="findByFixtureId" resultMap="AppearanceMap">
         SELECT * FROM fixture_appearance WHERE fixture_id = #{fixtureId} ORDER BY team_id, id
     </select>
+    <select id="findByFixtureAndTeam" resultMap="AppearanceMap">
+        SELECT * FROM fixture_appearance
+        WHERE fixture_id = #{fixtureId} AND team_id = #{teamId}
+        ORDER BY is_starter DESC, id
+    </select>
+    <delete id="deleteByFixtureAndTeam">
+        DELETE FROM fixture_appearance WHERE fixture_id = #{fixtureId} AND team_id = #{teamId}
+    </delete>
+    <select id="findPlayerIdsWithEvents" resultType="long">
+        SELECT player_id FROM fixture_event
+        WHERE fixture_id = #{fixtureId} AND team_id = #{teamId}
+        UNION
+        SELECT related_player_id FROM fixture_event
+        WHERE fixture_id = #{fixtureId} AND team_id = #{teamId} AND related_player_id IS NOT NULL
+    </select>
 </mapper>

@@ -69,6 +69,19 @@ export function revokeTeamManager(teamId: number, userId: number): Promise<void>
   return request<void>(`/api/v1/admin/teams/${teamId}/managers/${userId}`, { method: "DELETE" });
 }
 
+export type LineupSubstitutePayload = {
+  playerId: number;
+  minutesPlayed: number | null;
+};
+
+export function replaceTeamLineup(fixtureId: number, teamId: number, starters: number[],
+                                  substitutes: LineupSubstitutePayload[]): Promise<void> {
+  return request<void>(`/api/v1/manage/fixtures/${fixtureId}/teams/${teamId}/appearances`, {
+    method: "PUT",
+    data: { starters, substitutes }
+  });
+}
+
 export type AppearancePayload = {
   teamId?: number;
   playerId?: number;

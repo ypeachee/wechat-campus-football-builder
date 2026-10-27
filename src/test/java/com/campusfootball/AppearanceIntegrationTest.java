@@ -27,6 +27,132 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void replaceLineupSavesStartersAndSubstitutesInOneRequest() throws Exception {
+        Setup s = setup("live");
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(s.homePlayerId() + "," + s.homePlayer2Id(),
+                                substituteBody(s.homePlayer3Id(), 32))))
+                .andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM fixture_appearance WHERE fixture_id = ? AND team_id = ?",
+                Integer.class, s.fixtureId(), s.homeTeamId())).isEqualTo(3);
+        assertThat(jdbc.queryForObject(
+                "SELECT is_starter FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Boolean.class, s.fixtureId(), s.homePlayerId())).isTrue();
+        assertThat(jdbc.queryForObject(
+                "SELECT minutes_played FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Integer.class, s.fixtureId(), s.homePlayerId())).isEqualTo(90);
+        assertThat(jdbc.queryForObject(
+                "SELECT is_starter FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Boolean.class, s.fixtureId(), s.homePlayer3Id())).isFalse();
+        assertThat(jdbc.queryForObject(
+                "SELECT minutes_played FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Integer.class, s.fixtureId(), s.homePlayer3Id())).isEqualTo(32);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM audit_log WHERE team_id = ? AND entity_type = 'TEAM_LINEUP'",
+                Integer.class, s.homeTeamId())).isEqualTo(1);
+    }
+
+    @Test
+    void replaceLineupRejectsPlayerSelectedAsBothStarterAndSubstitute() throws Exception {
+        Setup s = setup("live");
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.homePlayerId()), substituteBody(s.homePlayerId(), 30))))
+                .andExpect(status().isConflict());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM fixture_appearance WHERE fixture_id = ? AND team_id = ?",
+                Integer.class, s.fixtureId(), s.homeTeamId())).isZero();
+    }
+
+    @Test
+    void replaceLineupRejectsPlayerFromAnotherTeam() throws Exception {
+        Setup s = setup("live");
+        long otherTeam = TestApiSupport.createTeam(mockMvc, s.adminToken(), "OtherLineupTeam");
+        long otherPlayer = TestApiSupport.createPlayer(mockMvc, s.adminToken(), otherTeam, "OtherLineupPlayer", 21);
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(otherPlayer), "")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void replaceLineupCannotDropPlayerWhoAlreadyHasAnEvent() throws Exception {
+        Setup s = setup("live");
+        TestApiSupport.addEvent(mockMvc, s.managerToken(), s.fixtureId(), s.homeTeamId(),
+                s.homePlayer2Id(), "GOAL", null, 12, 0);
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.homePlayerId()), "")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void replaceLineupReplacesPreviousTeamLineup() throws Exception {
+        Setup s = setup("live");
+        String path = "/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances";
+
+        mockMvc.perform(put(path)
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.homePlayerId()), substituteBody(s.homePlayer2Id(), 20))))
+                .andExpect(status().isOk());
+        mockMvc.perform(put(path)
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.homePlayer2Id()), substituteBody(s.homePlayerId(), 45))))
+                .andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM fixture_appearance WHERE fixture_id = ? AND team_id = ?",
+                Integer.class, s.fixtureId(), s.homeTeamId())).isEqualTo(2);
+        assertThat(jdbc.queryForObject(
+                "SELECT is_starter FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Boolean.class, s.fixtureId(), s.homePlayer2Id())).isTrue();
+        assertThat(jdbc.queryForObject(
+                "SELECT is_starter FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Boolean.class, s.fixtureId(), s.homePlayerId())).isFalse();
+        assertThat(jdbc.queryForObject(
+                "SELECT minutes_played FROM fixture_appearance WHERE fixture_id = ? AND player_id = ?",
+                Integer.class, s.fixtureId(), s.homePlayerId())).isEqualTo(45);
+    }
+
+    @Test
+    void replaceLineupRejectsUnauthorizedTeamManager() throws Exception {
+        Setup s = setup("live");
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.awayTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.awayPlayerId()), "")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void replaceLineupRejectsLockedFixture() throws Exception {
+        Setup s = setup("live");
+        TestApiSupport.finish(mockMvc, s.adminToken(), s.fixtureId(), 1, 0);
+
+        mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.homeTeamId() + "/appearances")
+                        .header("Authorization", "Bearer " + s.managerToken())
+                        .contentType(APPLICATION_JSON)
+                        .content(lineupBody(Long.toString(s.homePlayerId()), "")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FIXTURE_LOCKED"));
+    }
+
+    @Test
     void teamManagerCannotAddOtherTeamAppearance() throws Exception {
         Setup s = setup("live");
         mockMvc.perform(post("/api/v1/manage/fixtures/" + s.fixtureId() + "/appearances")
@@ -181,6 +307,8 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
             TestApiSupport.changeStatus(mockMvc, admin, fixtureId, "LIVE");
         }
         long homePlayer = TestApiSupport.createPlayer(mockMvc, admin, home, "HomePlayer", 9);
+        long homePlayer2 = TestApiSupport.createPlayer(mockMvc, admin, home, "HomePlayer2", 11);
+        long homePlayer3 = TestApiSupport.createPlayer(mockMvc, admin, home, "HomePlayer3", 7);
         long awayPlayer = TestApiSupport.createPlayer(mockMvc, admin, away, "AwayPlayer", 10);
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         mockMvc.perform(post("/api/v1/admin/teams/" + home + "/managers")
@@ -189,7 +317,7 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
                         .content("{\"userId\":" + managerLogin.get("userId").asLong() + "}"))
                 .andExpect(status().isOk());
         return new Setup(admin, managerLogin.get("token").asText(), seasonId, home, away,
-                fixtureId, homePlayer, awayPlayer);
+                fixtureId, homePlayer, homePlayer2, homePlayer3, awayPlayer);
     }
 
     private String appearanceBody(long teamId, long playerId, int minutes) {
@@ -197,7 +325,16 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
                 + ",\"isStarter\":true,\"minutesPlayed\":" + minutes + "}";
     }
 
+    private String lineupBody(String starters, String substitutes) {
+        return "{\"starters\":[" + starters + "],\"substitutes\":[" + substitutes + "]}";
+    }
+
+    private String substituteBody(long playerId, int minutes) {
+        return "{\"playerId\":" + playerId + ",\"minutesPlayed\":" + minutes + "}";
+    }
+
     private record Setup(String adminToken, String managerToken, long seasonId, long homeTeamId,
-                         long awayTeamId, long fixtureId, long homePlayerId, long awayPlayerId) {
+                         long awayTeamId, long fixtureId, long homePlayerId, long homePlayer2Id,
+                         long homePlayer3Id, long awayPlayerId) {
     }
 }

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { request } from "../services/http";
 import { ApiError } from "../services/http";
 import { createFixture, finishFixture, setFixtureLocked } from "../services/competition";
-import { createEvent } from "../services/manage";
+import { createEvent, replaceTeamLineup } from "../services/manage";
 import { fetchAuditLogs } from "../services/audit";
 import { requireRole, saveSession, clearSession } from "../state/session";
 import { errorMessage } from "../utils/error";
@@ -52,6 +52,18 @@ describe("fixture management", () => {
     expect(requestMock).toHaveBeenCalledWith("/api/v1/manage/fixtures/10/events", {
       method: "POST",
       data: expect.objectContaining({ relatedPlayerId: null })
+    });
+  });
+
+  it("saves a complete team lineup in one request", async () => {
+    requestMock.mockResolvedValueOnce(undefined);
+    await replaceTeamLineup(10, 2, [8, 9], [{ playerId: 10, minutesPlayed: 32 }]);
+    expect(requestMock).toHaveBeenCalledWith("/api/v1/manage/fixtures/10/teams/2/appearances", {
+      method: "PUT",
+      data: {
+        starters: [8, 9],
+        substitutes: [{ playerId: 10, minutesPlayed: 32 }]
+      }
     });
   });
 
