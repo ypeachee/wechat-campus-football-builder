@@ -45,7 +45,7 @@
         <view class="admin-card__title">比赛数据</view>
         <view class="admin-card__copy">录入出场、进球与红黄牌</view>
       </view>
-      <view class="admin-card" bindtap="goAdminRatings">
+      <view class="admin-card" bindtap="openRatingPanel">
         <view class="admin-card__index">R</view>
         <view class="admin-card__title">评分审核</view>
         <view class="admin-card__copy">审核评价与敏感词</view>
@@ -96,4 +96,64 @@
       />
     </view>
   </block>
+
+  <view wx:if="{{ratingPanelVisible}}" class="rating-admin-overlay" bindtap="closeRatingPanel">
+    <view class="rating-admin-panel" catchtap="noop">
+      <view class="rating-admin-head">
+        <view class="rating-admin-title">评分审核</view>
+        <view class="rating-admin-close" bindtap="closeRatingPanel">×</view>
+      </view>
+      <view class="rating-admin-tabs">
+        <view class="rating-admin-tab {{ratingActiveTab === 'ratings' ? 'rating-admin-tab--active' : ''}}" data-tab="ratings" bindtap="switchRatingTab">评价审核</view>
+        <view class="rating-admin-tab {{ratingActiveTab === 'terms' ? 'rating-admin-tab--active' : ''}}" data-tab="terms" bindtap="switchRatingTab">敏感词</view>
+      </view>
+      <scroll-view scroll-y class="rating-admin-scroll">
+        <block wx:if="{{ratingActiveTab === 'ratings'}}">
+          <view class="rating-admin-chips">
+            <view wx:for="{{ratingFilters}}" wx:key="value" class="rating-admin-chip {{ratingFilter === item.value ? 'rating-admin-chip--active' : ''}}" data-value="{{item.value}}" bindtap="selectRatingFilter">{{item.label}}</view>
+          </view>
+          <view class="rating-admin-count">共 {{ratingTotal}} 条</view>
+          <view wx:if="{{ratingItems.length === 0}}" class="rating-admin-empty">当前筛选下暂无记录</view>
+          <view wx:for="{{ratingItems}}" wx:key="id" class="rating-admin-card">
+            <view class="rating-admin-card__top"><text>{{item.playerName}} · {{item.teamName}}</text><text>{{item.status}}</text></view>
+            <view class="rating-admin-card__meta">{{item.nickname}} · {{item.stars}} 星 · {{item.stars * 2}}/10</view>
+            <view class="rating-admin-card__comment">{{item.comment || "仅评分，无短评"}}</view>
+            <view wx:if="{{item.reporterCount}}" class="rating-admin-card__report">举报 {{item.reporterCount}} 次</view>
+            <view class="rating-admin-actions">
+              <t-button size="small" theme="success" variant="outline" data-id="{{item.id}}" data-action="approve" bind:tap="moderateRatingItem">通过</t-button>
+              <t-button size="small" theme="danger" variant="outline" data-id="{{item.id}}" data-action="reject" bind:tap="moderateRatingItem">拒绝</t-button>
+              <t-button size="small" theme="default" variant="outline" data-id="{{item.id}}" data-action="hide" bind:tap="moderateRatingItem">隐藏</t-button>
+            </view>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="rating-admin-form">
+            <input class="rating-admin-input" value="{{ratingTermName}}" data-field="ratingTermName" bindinput="ratingInput" maxlength="64" placeholder="敏感词" />
+            <input class="rating-admin-input" value="{{ratingTermCategory}}" data-field="ratingTermCategory" bindinput="ratingInput" maxlength="32" placeholder="分类" />
+            <view class="rating-admin-chips">
+              <view class="rating-admin-chip {{ratingTermAction === 'REVIEW' ? 'rating-admin-chip--active' : ''}}" data-field="ratingTermAction" data-value="REVIEW" bindtap="selectRatingTermAction">待审核</view>
+              <view class="rating-admin-chip {{ratingTermAction === 'BLOCK' ? 'rating-admin-chip--active' : ''}}" data-field="ratingTermAction" data-value="BLOCK" bindtap="selectRatingTermAction">直接拦截</view>
+            </view>
+            <t-button theme="primary" block loading="{{ratingPanelBusy}}" bind:tap="createRatingTerm">添加敏感词</t-button>
+          </view>
+          <view class="rating-admin-form">
+            <textarea class="rating-admin-textarea" value="{{ratingImportText}}" data-field="ratingImportText" bindinput="ratingInput" maxlength="20000" placeholder="每行一个敏感词，最多 5000 行" />
+            <view class="rating-admin-chips">
+              <view class="rating-admin-chip {{ratingImportAction === 'REVIEW' ? 'rating-admin-chip--active' : ''}}" data-field="ratingImportAction" data-value="REVIEW" bindtap="selectRatingTermAction">待审核</view>
+              <view class="rating-admin-chip {{ratingImportAction === 'BLOCK' ? 'rating-admin-chip--active' : ''}}" data-field="ratingImportAction" data-value="BLOCK" bindtap="selectRatingTermAction">直接拦截</view>
+            </view>
+            <t-button theme="primary" block loading="{{ratingPanelBusy}}" bind:tap="importRatingTerms">批量导入</t-button>
+          </view>
+          <view class="rating-admin-count">词库 {{ratingTerms.length}} 条</view>
+          <view wx:if="{{ratingTerms.length === 0}}" class="rating-admin-empty">暂无敏感词</view>
+          <view wx:for="{{ratingTerms}}" wx:key="id" class="rating-admin-term">
+            <view class="rating-admin-term__main"><text>{{item.term}}</text><text>{{item.category}} · {{item.action}} · {{item.enabled ? "启用" : "停用"}}</text></view>
+            <text class="rating-admin-link" data-id="{{item.id}}" bindtap="toggleRatingTerm">{{item.enabled ? "停用" : "启用"}}</text>
+            <text class="rating-admin-link rating-admin-link--danger" data-id="{{item.id}}" bindtap="removeRatingTerm">删除</text>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+  </view>
+
 </view>

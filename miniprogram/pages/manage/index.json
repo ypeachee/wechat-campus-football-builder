@@ -5,6 +5,8 @@
     "app-header": "/components/app-header/index",
     "empty-state": "/components/empty-state/index",
     "team-card": "/components/team-card/index",
-    "t-loading": "tdesign-miniprogram/loading/loading"
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-tag": "tdesign-miniprogram/tag/tag"
   }
 }

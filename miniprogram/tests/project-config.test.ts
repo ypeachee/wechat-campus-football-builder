@@ -68,7 +68,7 @@ describe("project.config.json", () => {
 
   it("registers every page with all required source files", () => {
     const app = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../app.json"), "utf8"));
-    expect(app.pages).toContain("pages/admin-ratings/index");
+    expect(app.pages).toContain("pages/manage/index");
     for (const page of app.pages as string[]) {
       for (const extension of ["ts", "json", "wxml", "wxss"]) {
         expect(fs.existsSync(path.resolve(__dirname, `../${page}.${extension}`))).toBe(true);

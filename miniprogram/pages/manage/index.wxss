@@ -78,3 +78,33 @@
   gap: 14rpx;
   margin-top: 22rpx;
 }
+
+
+.rating-admin-overlay { position: fixed; z-index: 60; inset: 0; display: flex; align-items: flex-end; background: rgba(0,0,0,.45); }
+.rating-admin-panel { width: 100%; height: 84vh; padding: 24rpx; border-radius: 28rpx 28rpx 0 0; background: #F4F1E8; box-sizing: border-box; }
+.rating-admin-head { display: flex; align-items: center; justify-content: space-between; }
+.rating-admin-title { font-size: 32rpx; font-weight: 800; }
+.rating-admin-close { color: #7C8983; font-size: 44rpx; }
+.rating-admin-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8rpx; margin-top: 16rpx; padding: 6rpx; border-radius: 14rpx; background: #E9E5DA; }
+.rating-admin-tab { padding: 14rpx; border-radius: 10rpx; text-align: center; font-size: 23rpx; color: #5E6B65; }
+.rating-admin-tab--active { background: #fff; color: #0B6B4B; font-weight: 700; }
+.rating-admin-scroll { height: calc(84vh - 150rpx); margin-top: 16rpx; }
+.rating-admin-chips { display: flex; flex-wrap: wrap; gap: 10rpx; margin-bottom: 14rpx; }
+.rating-admin-chip { padding: 10rpx 20rpx; border-radius: 999rpx; background: #fff; border: 1rpx solid #E4E2D9; color: #5E6B65; font-size: 21rpx; }
+.rating-admin-chip--active { background: #0B6B4B; border-color: #0B6B4B; color: #fff; }
+.rating-admin-count { margin: 12rpx 0; color: #5E6B65; font-size: 22rpx; font-weight: 700; }
+.rating-admin-empty { padding: 50rpx 0; color: #7C8983; font-size: 22rpx; text-align: center; }
+.rating-admin-card, .rating-admin-form, .rating-admin-term { margin-bottom: 12rpx; padding: 20rpx; border-radius: 18rpx; background: #fff; border: 1rpx solid #E4E2D9; }
+.rating-admin-card__top { display: flex; justify-content: space-between; font-size: 24rpx; font-weight: 700; }
+.rating-admin-card__meta { margin-top: 8rpx; color: #7C8983; font-size: 20rpx; }
+.rating-admin-card__comment { margin-top: 12rpx; font-size: 23rpx; line-height: 1.6; }
+.rating-admin-card__report { margin-top: 8rpx; color: #C7392F; font-size: 20rpx; }
+.rating-admin-actions { display: flex; gap: 10rpx; margin-top: 14rpx; }
+.rating-admin-input, .rating-admin-textarea { width: 100%; margin-bottom: 12rpx; padding: 16rpx; border-radius: 12rpx; background: #F8F6F0; border: 1rpx solid #E4E2D9; box-sizing: border-box; font-size: 23rpx; }
+.rating-admin-textarea { min-height: 150rpx; }
+.rating-admin-term { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14rpx; }
+.rating-admin-term__main { min-width: 0; display: flex; flex-direction: column; gap: 5rpx; }
+.rating-admin-term__main text:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.rating-admin-term__main text:last-child { color: #7C8983; font-size: 19rpx; }
+.rating-admin-link { color: #0B6B4B; font-size: 21rpx; }
+.rating-admin-link--danger { color: #C7392F; }

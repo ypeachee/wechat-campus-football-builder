@@ -17,8 +17,7 @@
     "pages/admin-audit/index",
     "pages/bracket/index",
     "pages/admin-competition/index",
-    "pages/admin-bracket/index",
-    "pages/admin-ratings/index"
+    "pages/admin-bracket/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",
