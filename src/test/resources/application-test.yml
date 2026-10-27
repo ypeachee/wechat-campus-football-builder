@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: true
+app:
+  jwt:
+    secret: campus-football-test-secret-at-least-32-bytes-long
+    ttl: PT2H
+  wechat:
+    app-id: test-app-id
+    app-secret: test-app-secret
+  bootstrap:
+    admin-openid: openid-admin

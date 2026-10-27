@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: campus-football-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/campus_football?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DB_USERNAME:campus}
+    password: ${DB_PASSWORD:campus}
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+mybatis:
+  mapper-locations: classpath:/mappers/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: ${SERVER_PORT:8080}
+app:
+  jwt:
+    secret: ${JWT_SECRET:campus-football-local-development-secret-change-me-2026}
+    ttl: ${JWT_TTL:PT2H}
+  wechat:
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+  bootstrap:
+    admin-openid: ${ADMIN_WECHAT_OPENID:}
