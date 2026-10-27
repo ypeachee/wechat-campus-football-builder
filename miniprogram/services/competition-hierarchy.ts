@@ -16,3 +16,7 @@ export function fetchStages(seasonId: number): Promise<Stage[]> {
 export function fetchGroups(stageId: number): Promise<CompetitionGroup[]> {
   return request<CompetitionGroup[]>(`/api/v1/groups?stageId=${stageId}`);
 }
+
+export function withAllGroups(stageId: number, groups: CompetitionGroup[]): CompetitionGroup[] {
+  return [{ id: 0, stageId, name: "全部小组", sortOrder: -1 }, ...groups];
+}

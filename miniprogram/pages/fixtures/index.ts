@@ -1,5 +1,5 @@
 import { fetchPublicFixtures, fetchPublicFixturesByStage } from "../../services/competition";
-import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages } from "../../services/competition-hierarchy";
+import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages, withAllGroups } from "../../services/competition-hierarchy";
 import { fetchTeams } from "../../services/teams";
 import type { Competition, CompetitionGroup, FixtureCard, FixtureStatus, FixtureSummary, Season, Stage, TeamSummary } from "../../types/domain";
 import { formatMatchTime } from "../../utils/date";
@@ -34,8 +34,8 @@ Page({
       const stages = seasonId ? await fetchStages(seasonId) : [];
       const stageId = this.data.selectedStage || stages[0]?.id || 0;
       const stage = stages.find((item) => item.id === stageId);
-      const groups = stage?.type === "GROUP" ? await fetchGroups(stageId) : [];
-      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || groups[0]?.id || 0) : 0;
+      const groups = stage?.type === "GROUP" ? withAllGroups(stageId, await fetchGroups(stageId)) : [];
+      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || 0) : 0;
       this.setData({ competitions, seasons, stages, groups, selectedCompetition: competitionId, selectedSeason: seasonId, selectedStage: stageId, selectedGroup: groupId,
         selectedCompetitionName: competitions.find((item) => item.id === competitionId)?.name ?? "",
         selectedSeasonName: seasons.find((item) => item.id === seasonId)?.name ?? "",
@@ -83,8 +83,8 @@ Page({
   },
   async loadGroups() {
     const stage = this.data.stages.find((item) => item.id === this.data.selectedStage);
-    const groups = stage?.type === "GROUP" ? await fetchGroups(stage.id) : [];
-    this.setData({ groups, selectedGroup: groups[0]?.id ?? 0, selectedGroupName: groups[0]?.name ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });
+    const groups = stage?.type === "GROUP" ? withAllGroups(stage.id, await fetchGroups(stage.id)) : [];
+    this.setData({ groups, selectedGroup: 0, selectedGroupName: groups[0]?.name ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });
     await this.loadFixtures();
   },
   async handleGroupChange(event: WechatMiniprogram.PickerChange) {

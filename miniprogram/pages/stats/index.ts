@@ -1,5 +1,5 @@
 import { fetchAppearancesFiltered, fetchAssistsFiltered, fetchScorersFiltered, fetchStandingsFiltered } from "../../services/stats";
-import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages } from "../../services/competition-hierarchy";
+import { fetchCompetitions, fetchGroups, fetchSeasonsByCompetition, fetchStages, withAllGroups } from "../../services/competition-hierarchy";
 import type { AppearanceRow, AssistRow, Competition, CompetitionGroup, RankingDisplayItem, ScorerRow, Season, Stage, StandingRow } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 
@@ -22,8 +22,8 @@ Page({
       const stages = seasonId ? await fetchStages(seasonId) : [];
       const stageId = this.data.selectedStage || stages[0]?.id || 0;
       const stage = stages.find((item) => item.id === stageId);
-      const groups = stage?.type === "GROUP" ? await fetchGroups(stageId) : [];
-      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || groups[0]?.id || 0) : 0;
+      const groups = stage?.type === "GROUP" ? withAllGroups(stageId, await fetchGroups(stageId)) : [];
+      const groupId = stage?.type === "GROUP" ? (this.data.selectedGroup || 0) : 0;
       this.setData({ competitions, seasons, stages, groups, selectedCompetition: competitionId, selectedSeason: seasonId, selectedStage: stageId, selectedGroup: groupId,
         selectedCompetitionName: competitions.find((item) => item.id === competitionId)?.name ?? "",
         selectedSeasonName: seasons.find((item) => item.id === seasonId)?.name ?? "", selectedStageName: stage?.name ?? "", selectedGroupName: groups.find((item) => item.id === groupId)?.name ?? "", selectedStageType: stage?.type ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });
@@ -65,8 +65,8 @@ Page({
   },
   async loadGroups() {
     const stage = this.data.stages.find((item) => item.id === this.data.selectedStage);
-    const groups = stage?.type === "GROUP" ? await fetchGroups(stage.id) : [];
-    this.setData({ groups, selectedGroup: groups[0]?.id ?? 0, selectedGroupName: groups[0]?.name ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });
+    const groups = stage?.type === "GROUP" ? withAllGroups(stage.id, await fetchGroups(stage.id)) : [];
+    this.setData({ groups, selectedGroup: 0, selectedGroupName: groups[0]?.name ?? "", canOpenBracket: stage?.type === "KNOCKOUT" });
     await this.loadStats();
   },
   async handleGroupChange(event: WechatMiniprogram.PickerChange) {
