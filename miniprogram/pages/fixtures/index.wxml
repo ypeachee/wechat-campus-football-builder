@@ -38,13 +38,13 @@
     <empty-state title="赛程加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
   </view>
 
-  <view wx:elif="{{filteredFixtures.length === 0}}" class="surface-card">
+  <view wx:elif="{{fixtureViews.length === 0}}" class="surface-card">
     <empty-state title="暂无比赛" description="当前筛选条件下没有可展示的比赛。" />
   </view>
 
   <view wx:else class="fixture-list">
     <match-card
-      wx:for="{{filteredFixtures}}"
+      wx:for="{{fixtureViews}}"
       wx:key="id"
       match="{{item}}"
       bind:select="openFixture"

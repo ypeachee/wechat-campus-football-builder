@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { ApiError } from "../services/http";
 import { clearSession, requireRole, saveSession } from "../state/session";
 import { getSelectedSeasonId, selectDefaultSeason, setSelectedSeasonId } from "../state/season";
@@ -17,6 +19,13 @@ describe("mini program acceptance flows", () => {
     ];
     expect(selectDefaultSeason(seasons)).toBe(2);
     expect(getSelectedSeasonId()).toBe(2);
+  });
+
+  it("binds the fixtures template to the list populated by the page", () => {
+    const template = fs.readFileSync(path.resolve(__dirname, "../pages/fixtures/index.wxml"), "utf8");
+    expect(template).toContain("wx:for=\"{{fixtureViews}}\"");
+    expect(template).toContain("fixtureViews.length");
+    expect(template).not.toContain("filteredFixtures");
   });
 
   it("drops stale competition hierarchy selections", () => {
