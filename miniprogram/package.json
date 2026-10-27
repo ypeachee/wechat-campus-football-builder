@@ -1,0 +1,22 @@
+{
+  "name": "campus-football-miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native WeChat Mini Program for the campus football league",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "miniprogram-api-typings": "5.2.3",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  },
+  "type": "module"
+}

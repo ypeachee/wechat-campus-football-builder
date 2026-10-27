@@ -146,3 +146,17 @@ $env:TEST_DB_PASSWORD='campus'
 1. 球队与球员列表
 2. 比赛详情与射手榜/助攻榜
 3. 管理员和球队管理员登录后的编辑界面
+
+## 微信小程序
+
+前端子工程位于 `miniprogram/`。
+
+```powershell
+cd miniprogram
+npm install
+npm run verify
+```
+
+使用微信开发者工具打开 `miniprogram/`，将 `project.config.json` 中的 `touristappid` 替换为你的小程序 AppID，然后执行“工具 -> 构建 npm”。
+
+开发环境默认请求 `http://127.0.0.1:8080`。生产或体验环境 API 地址在 `miniprogram/config/env.ts` 中配置，并需要加入微信后台 request 合法域名。

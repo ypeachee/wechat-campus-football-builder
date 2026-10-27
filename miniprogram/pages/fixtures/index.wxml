@@ -1,0 +1,11 @@
+<view class="page-shell">
+  <view class="brand-card">
+    <view class="brand-accent"></view>
+    <view class="placeholder-page">
+      <view>
+        <view class="placeholder-page__title">{{heading}}</view>
+        <view class="placeholder-page__copy">{{copy}}</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,9 @@
+{
+  "desc": "Campus football mini program sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

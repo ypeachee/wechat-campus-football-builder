@@ -6,3 +6,7 @@ target/
 *.iml
 .vscode/
 .mysql-data/
+miniprogram/node_modules/
+miniprogram/miniprogram_npm/
+miniprogram/project.private.config.json
+miniprogram/.env

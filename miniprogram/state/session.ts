@@ -1,0 +1,41 @@
+import type { Session } from "../types/domain";
+
+const SESSION_KEY = "campus_football_session";
+
+export function getSession(): Session | null {
+  const stored = wx.getStorageSync(SESSION_KEY);
+  if (!stored || typeof stored !== "object") {
+    return null;
+  }
+  const session = stored as Session;
+  if (!session.token || !session.role) {
+    return null;
+  }
+  return {
+    ...session,
+    managedTeamIds: Array.isArray(session.managedTeamIds) ? session.managedTeamIds : []
+  };
+}
+
+export function saveSession(session: Session): void {
+  wx.setStorageSync(SESSION_KEY, session);
+}
+
+export function clearSession(): void {
+  wx.removeStorageSync(SESSION_KEY);
+}
+
+export function isAdmin(): boolean {
+  return getSession()?.role === "ADMIN";
+}
+
+export function canManageTeam(teamId: number): boolean {
+  const session = getSession();
+  if (!session) {
+    return false;
+  }
+  if (session.role === "ADMIN") {
+    return true;
+  }
+  return session.role === "TEAM_MANAGER" && session.managedTeamIds.includes(teamId);
+}
