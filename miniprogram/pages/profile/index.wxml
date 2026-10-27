@@ -1,11 +1,64 @@
-<view class="page-shell">
-  <view class="brand-card">
-    <view class="brand-accent"></view>
-    <view class="placeholder-page">
-      <view>
-        <view class="placeholder-page__title">{{heading}}</view>
-        <view class="placeholder-page__copy">{{copy}}</view>
-      </view>
+<view class="page-shell profile-page">
+  <app-header
+    title="{{session ? (session.nickname || '微信用户') : '个人中心'}}"
+    subtitle="{{session ? roleText : '登录后可使用管理功能'}}"
+    season-name="{{session ? 'ACCOUNT' : 'PUBLIC'}}"
+  />
+
+  <view wx:if="{{loading}}" class="profile-loading">
+    <t-loading theme="circular" size="40rpx" text="刷新权限" />
+  </view>
+
+  <view wx:if="{{error}}" class="surface-card profile-error">
+    <view>{{error}}</view>
+  </view>
+
+  <view wx:if="{{!session}}" class="surface-card login-card">
+    <view class="login-card__title">微信登录</view>
+    <view class="login-card__copy">登录后可查看角色权限，并在授权范围内维护球队和比赛数据。</view>
+    <view class="login-card__action">
+      <t-button theme="primary" block loading="{{submitting}}" bind:tap="handleLogin">
+        {{submitting ? "登录中" : "微信一键登录"}}
+      </t-button>
     </view>
   </view>
+
+  <block wx:else>
+    <view class="surface-card account-card">
+      <view class="account-card__row">
+        <view class="account-card__label">用户 ID</view>
+        <view class="account-card__value numeric">{{session.userId}}</view>
+      </view>
+      <view class="account-card__row">
+        <view class="account-card__label">当前角色</view>
+        <view class="account-card__value">{{roleText}}</view>
+      </view>
+      <view class="account-card__row">
+        <view class="account-card__label">授权球队</view>
+        <view class="account-card__value">{{managedTeamsText}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{verified}}" class="profile-actions">
+      <role-gate roles="{{manageRoles}}">
+        <view class="manage-entry" bindtap="goManage">
+          <view class="manage-entry__text">
+            <view class="manage-entry__title">进入管理台</view>
+            <view class="manage-entry__copy">维护球队、球员和比赛数据</view>
+          </view>
+          <view class="manage-entry__arrow">›</view>
+        </view>
+      </role-gate>
+    </view>
+
+    <view class="shortcut-grid">
+      <view class="shortcut" bindtap="goFixtures">赛程</view>
+      <view class="shortcut" bindtap="goTeams">球队</view>
+      <view class="shortcut" bindtap="goStats">榜单</view>
+    </view>
+
+    <view class="logout-action">
+      <t-button theme="danger" variant="outline" block bind:tap="handleLogout">退出登录</t-button>
+    </view>
+  </block>
 </view>

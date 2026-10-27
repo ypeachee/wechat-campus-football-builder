@@ -1,4 +1,4 @@
-import type { Session } from "../types/domain";
+import type { Session, UserRole } from "../types/domain";
 
 const SESSION_KEY = "campus_football_session";
 
@@ -38,4 +38,12 @@ export function canManageTeam(teamId: number): boolean {
     return true;
   }
   return session.role === "TEAM_MANAGER" && session.managedTeamIds.includes(teamId);
+}
+
+export function requireRole(roles: UserRole[], teamId?: number): boolean {
+  const session = getSession();
+  if (!session || !roles.includes(session.role)) {
+    return false;
+  }
+  return teamId === undefined ? true : canManageTeam(teamId);
 }

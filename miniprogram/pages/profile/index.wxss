@@ -1,2 +1,114 @@
-/* Page-specific styles are added with the page implementation. */
+.profile-page {
+  padding-top: 22rpx;
+}
 
+.profile-loading {
+  display: flex;
+  justify-content: center;
+  padding: 30rpx 0;
+}
+
+.profile-error {
+  margin-top: 18rpx;
+  color: #C7392F;
+  font-size: 24rpx;
+}
+
+.login-card {
+  margin-top: 22rpx;
+  padding: 32rpx 28rpx;
+}
+
+.login-card__title {
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.login-card__copy {
+  margin-top: 12rpx;
+  color: #5E6B65;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.login-card__action {
+  margin-top: 28rpx;
+}
+
+.account-card {
+  margin-top: 22rpx;
+}
+
+.account-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.account-card__row:last-child {
+  border-bottom: 0;
+}
+
+.account-card__label {
+  color: #7C8983;
+  font-size: 23rpx;
+}
+
+.account-card__value {
+  text-align: right;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.profile-actions {
+  margin-top: 18rpx;
+}
+
+.manage-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx;
+  border-radius: 20rpx;
+  background: #0B6B4B;
+  color: #FFFFFF;
+}
+
+.manage-entry__title {
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.manage-entry__copy {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  opacity: 0.8;
+}
+
+.manage-entry__arrow {
+  font-size: 42rpx;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.shortcut {
+  padding: 26rpx 12rpx;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+  text-align: center;
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.logout-action {
+  margin-top: 30rpx;
+}

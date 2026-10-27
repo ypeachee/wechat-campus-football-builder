@@ -1,5 +1,9 @@
+import { setUnauthorizedHandler } from "./services/http";
+
 App({
   onLaunch() {
-    // Session restoration is intentionally non-blocking so public pages work offline.
+    setUnauthorizedHandler(() => {
+      wx.switchTab({ url: "/pages/profile/index" });
+    });
   }
 });

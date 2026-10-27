@@ -1,3 +1,8 @@
 {
-  "navigationBarTitleText": "我的"
+  "navigationBarTitleText": "我的",
+  "usingComponents": {
+    "app-header": "/components/app-header/index",
+    "role-gate": "/components/role-gate/index",
+    "empty-state": "/components/empty-state/index"
+  }
 }
