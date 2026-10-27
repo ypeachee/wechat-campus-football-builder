@@ -56,4 +56,48 @@
         INSERT INTO rating_report (rating_id, reporter_user_id, reason, status)
         VALUES (#{ratingId}, #{reporterUserId}, #{reason}, #{status})
     </insert>
+    <select id="findForModeration" resultType="com.campusfootball.rating.RatingModerationView">
+        SELECT r.id, r.fixture_id, r.player_id, p.name AS player_name, t.name AS team_name,
+               COALESCE(u.nickname, '微信用户') AS nickname, r.stars, r.comment,
+               r.status, r.moderation_reason,
+               (SELECT COUNT(*) FROM rating_report rr WHERE rr.rating_id = r.id AND rr.status = 'OPEN') AS reporter_count,
+               r.created_at, r.updated_at
+        FROM player_match_rating r
+        JOIN player p ON p.id = r.player_id
+        JOIN team t ON t.id = r.team_id
+        JOIN app_user u ON u.id = r.user_id
+        WHERE
+        <choose>
+            <when test="filter == 'PENDING'">r.status = 'PENDING'</when>
+            <when test="filter == 'REPORTED'">
+                EXISTS (SELECT 1 FROM rating_report rr WHERE rr.rating_id = r.id AND rr.status = 'OPEN')
+            </when>
+            <when test="filter == 'HIDDEN'">r.status = 'HIDDEN'</when>
+            <otherwise>1 = 1</otherwise>
+        </choose>
+        ORDER BY r.updated_at DESC, r.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="countForModeration" resultType="long">
+        SELECT COUNT(*) FROM player_match_rating r
+        WHERE
+        <choose>
+            <when test="filter == 'PENDING'">r.status = 'PENDING'</when>
+            <when test="filter == 'REPORTED'">
+                EXISTS (SELECT 1 FROM rating_report rr WHERE rr.rating_id = r.id AND rr.status = 'OPEN')
+            </when>
+            <when test="filter == 'HIDDEN'">r.status = 'HIDDEN'</when>
+            <otherwise>1 = 1</otherwise>
+        </choose>
+    </select>
+    <update id="updateStatus">
+        UPDATE player_match_rating
+        SET status = #{status}, moderation_reason = #{reason}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <update id="resolveOpenReports">
+        UPDATE rating_report
+        SET status = #{status}, reviewed_at = CURRENT_TIMESTAMP
+        WHERE rating_id = #{ratingId} AND status = 'OPEN'
+    </update>
 </mapper>

@@ -9,5 +9,6 @@ public enum AuditAction {
     SCORE_UPDATE,
     FINISH,
     LOCK,
-    UNLOCK
+    UNLOCK,
+    MODERATE
 }
