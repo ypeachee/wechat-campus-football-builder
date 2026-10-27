@@ -1,6 +1,6 @@
 <view class="page-shell home-page">
   <app-header
-    title="校园足球联赛"
+    title="CUGB校园足球"
     subtitle="积分、赛程与球员数据一站查看"
     season-name="{{selectedSeasonName}}"
   />

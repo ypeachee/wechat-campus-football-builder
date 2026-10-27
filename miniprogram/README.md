@@ -1,6 +1,6 @@
 # 微信小程序
 
-校园足球联赛原生微信小程序，使用 TypeScript、TDesign MiniProgram 和现有校园足球 API。
+CUGB 校园足球原生微信小程序，使用 TypeScript、TDesign MiniProgram 和现有校园足球 API。
 
 ## 环境
 
