@@ -1,0 +1,48 @@
+.match-card {
+  padding: 26rpx 24rpx;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.match-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.match-card__time {
+  color: #5E6B65;
+  font-size: 22rpx;
+}
+
+.match-card__teams {
+  display: grid;
+  grid-template-columns: 1fr 150rpx 1fr;
+  align-items: center;
+  gap: 12rpx;
+  margin: 24rpx 0 18rpx;
+}
+
+.match-card__team {
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.match-card__team--away {
+  text-align: right;
+}
+
+.match-card__score {
+  text-align: center;
+  color: #0B6B4B;
+  font-size: 34rpx;
+}
+
+.match-card__venue {
+  border-top: 1rpx solid #EEECE5;
+  padding-top: 16rpx;
+  color: #7C8983;
+  font-size: 22rpx;
+}

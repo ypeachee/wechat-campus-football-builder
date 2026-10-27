@@ -1,0 +1,17 @@
+<view class="season-picker" bindtap="openPicker">
+  <view class="season-picker__label">当前赛季</view>
+  <view class="season-picker__value">
+    <text>{{selectedLabel}}</text>
+    <t-icon name="chevron-down" size="32rpx" color="#5E6B65" />
+  </view>
+</view>
+
+<t-picker
+  visible="{{visible}}"
+  value="{{pickerValue}}"
+  title="选择赛季"
+  bind:confirm="onConfirm"
+  bind:cancel="closePicker"
+>
+  <t-picker-item options="{{options}}" />
+</t-picker>

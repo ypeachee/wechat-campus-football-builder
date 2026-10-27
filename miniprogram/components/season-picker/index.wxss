@@ -1,0 +1,24 @@
+.season-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24rpx 0 8rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.season-picker__label {
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.season-picker__value {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  color: #14201D;
+  font-size: 25rpx;
+  font-weight: 600;
+}

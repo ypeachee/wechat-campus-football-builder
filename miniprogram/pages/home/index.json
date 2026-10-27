@@ -1,3 +1,11 @@
 {
-  "navigationBarTitleText": "首页"
+  "navigationBarTitleText": "首页",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "app-header": "/components/app-header/index",
+    "empty-state": "/components/empty-state/index",
+    "match-card": "/components/match-card/index",
+    "ranking-list": "/components/ranking-list/index",
+    "season-picker": "/components/season-picker/index"
+  }
 }

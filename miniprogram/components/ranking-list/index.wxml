@@ -1,0 +1,16 @@
+<view class="ranking-list">
+  <block wx:for="{{items}}" wx:key="id">
+    <view class="ranking-row">
+      <view class="ranking-row__rank numeric">{{item.rank}}</view>
+      <view class="ranking-row__identity">
+        <view class="ranking-row__name">{{item.name}}</view>
+        <view class="ranking-row__team">{{item.teamName}}</view>
+      </view>
+      <view class="ranking-row__value">
+        <view class="ranking-row__number numeric">{{item.value}}</view>
+        <view class="ranking-row__label">{{metricLabel}}</view>
+      </view>
+    </view>
+  </block>
+  <view wx:if="{{items.length === 0}}" class="ranking-list__empty">暂无排名数据</view>
+</view>

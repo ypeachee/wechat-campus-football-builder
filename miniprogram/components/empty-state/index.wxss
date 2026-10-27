@@ -1,0 +1,10 @@
+.empty-state {
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.empty-state__action {
+  display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
+}

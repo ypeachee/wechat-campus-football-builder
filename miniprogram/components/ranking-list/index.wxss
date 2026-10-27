@@ -1,0 +1,65 @@
+.ranking-list {
+  overflow: hidden;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 24rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.ranking-row:last-child {
+  border-bottom: 0;
+}
+
+.ranking-row__rank {
+  width: 42rpx;
+  color: #0B6B4B;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.ranking-row__identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.ranking-row__team {
+  margin-top: 4rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.ranking-row__value {
+  min-width: 72rpx;
+  text-align: right;
+}
+
+.ranking-row__number {
+  color: #14201D;
+  font-size: 32rpx;
+}
+
+.ranking-row__label {
+  color: #7C8983;
+  font-size: 19rpx;
+}
+
+.ranking-list__empty {
+  padding: 44rpx 24rpx;
+  color: #7C8983;
+  text-align: center;
+}

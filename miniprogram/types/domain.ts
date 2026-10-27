@@ -147,3 +147,17 @@ export interface AuditLogRow {
   afterJson: string | null;
   createdAt: string;
 }
+
+export interface FixtureCard extends FixtureSummary {
+  homeTeamName: string;
+  awayTeamName: string;
+  timeLabel: string;
+}
+
+export interface RankingDisplayItem {
+  id: number;
+  rank: number;
+  name: string;
+  teamName: string;
+  value: number;
+}

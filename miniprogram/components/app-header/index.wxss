@@ -1,0 +1,52 @@
+.app-header {
+  position: relative;
+  overflow: hidden;
+  padding: 38rpx 32rpx 34rpx;
+  border-radius: 24rpx;
+  background: #0B6B4B;
+  color: #FFFFFF;
+  box-shadow: 0 12rpx 30rpx rgba(11, 107, 75, 0.16);
+}
+
+.app-header::after {
+  content: "";
+  position: absolute;
+  right: -70rpx;
+  top: -90rpx;
+  width: 250rpx;
+  height: 250rpx;
+  border: 30rpx solid rgba(183, 243, 74, 0.12);
+  border-radius: 50%;
+}
+
+.app-header__eyebrow {
+  font-size: 22rpx;
+  opacity: 0.78;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+.app-header__accent {
+  width: 54rpx;
+  height: 8rpx;
+  margin: 18rpx 0;
+  border-radius: 999rpx;
+  background: #B7F34A;
+}
+
+.app-header__title {
+  position: relative;
+  z-index: 1;
+  font-size: 46rpx;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.app-header__subtitle {
+  position: relative;
+  z-index: 1;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  opacity: 0.82;
+}

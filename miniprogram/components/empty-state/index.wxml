@@ -1,0 +1,6 @@
+<view class="empty-state">
+  <t-empty icon="inbox" description="{{description}}" />
+  <view wx:if="{{actionText}}" class="empty-state__action">
+    <t-button theme="primary" variant="outline" size="small" bind:tap="handleAction">{{actionText}}</t-button>
+  </view>
+</view>

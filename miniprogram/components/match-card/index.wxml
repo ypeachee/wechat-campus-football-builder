@@ -1,0 +1,15 @@
+<view wx:if="{{match}}" class="match-card" bindtap="handleTap">
+  <view class="match-card__topline">
+    <view class="match-card__time">{{match.timeLabel}}</view>
+    <t-tag size="small" variant="light" theme="{{statusTone}}">{{statusLabel}}</t-tag>
+  </view>
+  <view class="match-card__teams">
+    <view class="match-card__team match-card__team--home">{{match.homeTeamName}}</view>
+    <view class="match-card__score numeric">
+      <block wx:if="{{match.homeScore === null || match.awayScore === null}}">VS</block>
+      <block wx:else>{{match.homeScore}} : {{match.awayScore}}</block>
+    </view>
+    <view class="match-card__team match-card__team--away">{{match.awayTeamName}}</view>
+  </view>
+  <view class="match-card__venue">{{match.venue || "场地待定"}}</view>
+</view>

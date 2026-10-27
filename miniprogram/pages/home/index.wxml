@@ -1,11 +1,80 @@
-<view class="page-shell">
-  <view class="brand-card">
-    <view class="brand-accent"></view>
-    <view class="placeholder-page">
-      <view>
-        <view class="placeholder-page__title">{{heading}}</view>
-        <view class="placeholder-page__copy">{{copy}}</view>
-      </view>
+<view class="page-shell home-page">
+  <app-header
+    title="校园足球联赛"
+    subtitle="积分、赛程与球员数据一站查看"
+    season-name="{{selectedSeasonName}}"
+  />
+
+  <season-picker
+    seasons="{{seasons}}"
+    selected-id="{{selectedSeasonId}}"
+    bind:change="handleSeasonChange"
+  />
+
+  <view wx:if="{{loading}}" class="home-loading">
+    <t-loading theme="circular" size="48rpx" text="加载中" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card home-error">
+    <view class="home-error__title">暂时无法加载</view>
+    <view class="muted">{{error}}</view>
+    <view class="home-error__action">
+      <t-button theme="primary" size="small" bind:tap="retry">重新加载</t-button>
     </view>
   </view>
+
+  <view wx:elif="{{seasons.length === 0}}" class="surface-card">
+    <empty-state title="暂无赛季" description="管理员创建赛季后，这里会展示联赛数据。" />
+  </view>
+
+  <block wx:else>
+    <view class="section-head">
+      <view>
+        <view class="section-title">焦点比赛</view>
+        <view class="section-subtitle">最近一场进行中或即将开始的比赛</view>
+      </view>
+      <view class="text-link" bindtap="goFixtures">全部赛程</view>
+    </view>
+
+    <match-card wx:if="{{nextFixture}}" match="{{nextFixture}}" bind:select="openFixture" />
+    <view wx:else class="surface-card">
+      <empty-state title="暂无公开赛程" description="本赛季还没有可展示的比赛。" />
+    </view>
+
+    <view class="quick-grid">
+      <view class="quick-card quick-card--green" bindtap="goFixtures">
+        <view class="quick-card__index">01</view>
+        <view class="quick-card__title">赛程</view>
+        <view class="quick-card__copy">查看比赛与比分</view>
+      </view>
+      <view class="quick-card" bindtap="goTeams">
+        <view class="quick-card__index">02</view>
+        <view class="quick-card__title">球队</view>
+        <view class="quick-card__copy">浏览阵容与球员</view>
+      </view>
+      <view class="quick-card" bindtap="goStats">
+        <view class="quick-card__index">03</view>
+        <view class="quick-card__title">榜单</view>
+        <view class="quick-card__copy">积分与射手榜</view>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view>
+        <view class="section-title">积分榜</view>
+        <view class="section-subtitle">当前赛季前三名</view>
+      </view>
+      <view class="text-link" bindtap="goStats">完整榜单</view>
+    </view>
+    <ranking-list items="{{standingItems}}" metric-label="积分" />
+
+    <view class="section-head">
+      <view>
+        <view class="section-title">射手榜</view>
+        <view class="section-subtitle">当前赛季进球前三</view>
+      </view>
+      <view class="text-link" bindtap="goStats">更多数据</view>
+    </view>
+    <ranking-list items="{{scorerItems}}" metric-label="进球" />
+  </block>
 </view>

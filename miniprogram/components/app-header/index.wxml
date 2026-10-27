@@ -1,0 +1,6 @@
+<view class="app-header">
+  <view class="app-header__eyebrow">{{seasonName || "校园足球"}}</view>
+  <view class="app-header__accent"></view>
+  <view class="app-header__title">{{title}}</view>
+  <view class="app-header__subtitle">{{subtitle}}</view>
+</view>
