@@ -1,8 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.campusfootball.audit.AuditMapper">
+    <resultMap id="AuditMap" type="com.campusfootball.audit.AuditLog">
+        <id property="id" column="id"/>
+        <result property="actorUserId" column="actor_user_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="action" column="action"/>
+        <result property="entityType" column="entity_type"/>
+        <result property="entityId" column="entity_id"/>
+        <result property="beforeJson" column="before_json"/>
+        <result property="afterJson" column="after_json"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO audit_log (actor_user_id, team_id, action, entity_type, entity_id, before_json, after_json)
         VALUES (#{actorUserId}, #{teamId}, #{action}, #{entityType}, #{entityId}, #{beforeJson}, #{afterJson})
     </insert>
+
+    <select id="findAll" resultMap="AuditMap">
+        SELECT * FROM audit_log ORDER BY created_at DESC, id DESC
+    </select>
+
+    <select id="findForTeams" resultMap="AuditMap">
+        SELECT * FROM audit_log
+        WHERE team_id IN
+        <foreach collection="teamIds" item="teamId" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+        OR (
+            entity_type = 'FIXTURE'
+            AND entity_id IN (
+                SELECT id FROM fixture
+                WHERE home_team_id IN
+                <foreach collection="teamIds" item="teamId" open="(" separator="," close=")">
+                    #{teamId}
+                </foreach>
+                OR away_team_id IN
+                <foreach collection="teamIds" item="teamId" open="(" separator="," close=")">
+                    #{teamId}
+                </foreach>
+            )
+        )
+        ORDER BY created_at DESC, id DESC
+    </select>
 </mapper>
