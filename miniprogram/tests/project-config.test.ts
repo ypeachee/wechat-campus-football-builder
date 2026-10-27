@@ -15,6 +15,7 @@ describe("project.config.json", () => {
   it("excludes unused TDesign components and development files from the package", () => {
     const ignored = new Set(config.packOptions.ignore.map((entry: { value: string }) => entry.value));
     expect([...ignored]).toEqual(expect.arrayContaining([
+      "assets",
       "tests",
       "typings",
       "package-lock.json",

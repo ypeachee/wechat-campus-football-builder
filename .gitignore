@@ -10,3 +10,6 @@ miniprogram/node_modules/
 miniprogram/miniprogram_npm/
 miniprogram/project.private.config.json
 miniprogram/.env
+
+# Local verification uploads must never enter the mini program package or repository.
+miniprogram/assets/
