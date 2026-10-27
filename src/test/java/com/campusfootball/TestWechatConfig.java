@@ -4,6 +4,8 @@ import com.campusfootball.auth.WechatAuthClient;
 import com.campusfootball.auth.WechatIdentity;
 import com.campusfootball.common.api.AppException;
 import com.campusfootball.common.api.ErrorCode;
+import com.campusfootball.rating.ModerationDecision;
+import com.campusfootball.rating.WechatContentSecurityClient;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -18,6 +20,12 @@ public class TestWechatConfig {
             "viewer-code", new WechatIdentity("openid-viewer", null),
             "admin-code", new WechatIdentity("openid-admin", null)
     );
+
+    @Bean
+    @Primary
+    WechatContentSecurityClient testWechatContentSecurityClient() {
+        return (openid, content) -> ModerationDecision.PASS;
+    }
 
     @Bean
     @Primary
