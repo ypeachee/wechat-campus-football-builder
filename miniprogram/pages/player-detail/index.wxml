@@ -1,0 +1,36 @@
+<view class="page-shell player-detail-page">
+  <view wx:if="{{loading}}" class="detail-loading">
+    <t-loading theme="circular" size="48rpx" text="加载球员" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="球员加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+
+  <block wx:else>
+    <app-header
+      title="{{player.name}}"
+      subtitle="{{player.position || '位置待定'}}"
+      season-name="{{player.jerseyNo === null ? 'NO NUMBER' : 'NO. ' + player.jerseyNo}}"
+    />
+
+    <view class="player-profile surface-card">
+      <view class="player-profile__row">
+        <view class="player-profile__label">所属球队</view>
+        <view class="player-profile__value">球队 ID {{player.teamId}}</view>
+      </view>
+      <view class="player-profile__row">
+        <view class="player-profile__label">出生日期</view>
+        <view class="player-profile__value">{{player.birthDate || "未录入"}}</view>
+      </view>
+      <view class="player-profile__row">
+        <view class="player-profile__label">球员状态</view>
+        <view class="player-profile__value">{{player.status === "ACTIVE" ? "在队" : "停用"}}</view>
+      </view>
+    </view>
+
+    <view class="surface-card player-tip">
+      单球员完整赛季统计将在后续接入；当前可通过榜单查看射手、助攻与出场排名。
+    </view>
+  </block>
+</view>

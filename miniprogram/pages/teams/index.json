@@ -1,3 +1,9 @@
 {
-  "navigationBarTitleText": "球队"
+  "navigationBarTitleText": "球队",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "app-header": "/components/app-header/index",
+    "empty-state": "/components/empty-state/index",
+    "team-card": "/components/team-card/index"
+  }
 }

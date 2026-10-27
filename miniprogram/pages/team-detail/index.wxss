@@ -1,0 +1,89 @@
+.team-detail-page {
+  padding-top: 22rpx;
+}
+
+.detail-loading {
+  display: flex;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.team-facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.team-fact {
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.team-fact__label {
+  color: #7C8983;
+  font-size: 20rpx;
+}
+
+.team-fact__value {
+  margin-top: 8rpx;
+  font-size: 27rpx;
+  font-weight: 700;
+}
+
+.section-head {
+  margin-top: 36rpx;
+}
+
+.player-list {
+  overflow: hidden;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 24rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.player-row:last-child {
+  border-bottom: 0;
+}
+
+.player-row__number {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background: #E4F5EC;
+  color: #0B6B4B;
+  font-size: 26rpx;
+}
+
+.player-row__main {
+  flex: 1;
+}
+
+.player-row__name {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.player-row__meta {
+  margin-top: 4rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.player-row__arrow {
+  color: #A2ADA8;
+  font-size: 38rpx;
+}

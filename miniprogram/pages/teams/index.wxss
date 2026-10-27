@@ -1,2 +1,41 @@
-/* Page-specific styles are added with the page implementation. */
+.teams-page {
+  padding-top: 22rpx;
+}
 
+.search-box {
+  margin: 24rpx 0 20rpx;
+  padding: 0 22rpx;
+  height: 84rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.search-box__input {
+  width: 100%;
+  font-size: 26rpx;
+}
+
+.teams-loading {
+  display: flex;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.teams-error__title {
+  margin-bottom: 8rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.teams-error__action {
+  margin-top: 22rpx;
+}
+
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}

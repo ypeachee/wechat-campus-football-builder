@@ -4,7 +4,9 @@
     "pages/fixtures/index",
     "pages/teams/index",
     "pages/stats/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/team-detail/index",
+    "pages/player-detail/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",
@@ -19,11 +21,26 @@
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/home/index", "text": "首页" },
-      { "pagePath": "pages/fixtures/index", "text": "赛程" },
-      { "pagePath": "pages/teams/index", "text": "球队" },
-      { "pagePath": "pages/stats/index", "text": "榜单" },
-      { "pagePath": "pages/profile/index", "text": "我的" }
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/fixtures/index",
+        "text": "赛程"
+      },
+      {
+        "pagePath": "pages/teams/index",
+        "text": "球队"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "榜单"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
     ]
   },
   "style": "v2",

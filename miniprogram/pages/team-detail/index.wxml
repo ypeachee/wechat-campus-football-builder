@@ -1,0 +1,56 @@
+<view class="page-shell team-detail-page">
+  <view wx:if="{{loading}}" class="detail-loading">
+    <t-loading theme="circular" size="48rpx" text="加载球队" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="球队加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+
+  <block wx:else>
+    <app-header
+      title="{{team.name}}"
+      subtitle="{{team.coachName ? '主教练：' + team.coachName : '球队资料'}}"
+      season-name="{{team.shortName || 'TEAM'}}"
+    />
+
+    <view class="team-facts">
+      <view class="team-fact">
+        <view class="team-fact__label">主场</view>
+        <view class="team-fact__value">{{team.homeVenue || "待定"}}</view>
+      </view>
+      <view class="team-fact">
+        <view class="team-fact__label">阵容</view>
+        <view class="team-fact__value numeric">{{players.length}} 人</view>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view>
+        <view class="section-title">球员名单</view>
+        <view class="section-subtitle">点击球员查看基础资料</view>
+      </view>
+    </view>
+
+    <view wx:if="{{players.length === 0}}" class="surface-card">
+      <empty-state title="暂无球员" description="球队管理员录入球员后会显示在这里。" />
+    </view>
+
+    <view wx:else class="player-list">
+      <view
+        wx:for="{{players}}"
+        wx:key="id"
+        class="player-row"
+        data-id="{{item.id}}"
+        bindtap="openPlayer"
+      >
+        <view class="player-row__number numeric">{{item.jerseyNo === null ? "-" : item.jerseyNo}}</view>
+        <view class="player-row__main">
+          <view class="player-row__name">{{item.name}}</view>
+          <view class="player-row__meta">{{item.position || "位置待定"}}</view>
+        </view>
+        <view class="player-row__arrow">›</view>
+      </view>
+    </view>
+  </block>
+</view>

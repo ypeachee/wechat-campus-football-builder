@@ -1,0 +1,8 @@
+<view wx:if="{{team}}" class="team-card" bindtap="handleTap">
+  <view class="team-card__badge">{{badgeText}}</view>
+  <view class="team-card__body">
+    <view class="team-card__name">{{team.name}}</view>
+    <view class="team-card__meta">{{team.coachName || "教练待定"}} · {{team.homeVenue || "主场待定"}}</view>
+  </view>
+  <view class="team-card__arrow">›</view>
+</view>

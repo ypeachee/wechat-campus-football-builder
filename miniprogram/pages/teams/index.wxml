@@ -1,11 +1,37 @@
-<view class="page-shell">
-  <view class="brand-card">
-    <view class="brand-accent"></view>
-    <view class="placeholder-page">
-      <view>
-        <view class="placeholder-page__title">{{heading}}</view>
-        <view class="placeholder-page__copy">{{copy}}</view>
-      </view>
+<view class="page-shell teams-page">
+  <app-header title="参赛球队" subtitle="浏览球队资料与球员阵容" season-name="TEAMS" />
+
+  <view class="search-box">
+    <input
+      class="search-box__input"
+      placeholder="搜索球队或教练"
+      value="{{keyword}}"
+      bindinput="handleSearch"
+    />
+  </view>
+
+  <view wx:if="{{loading}}" class="teams-loading">
+    <t-loading theme="circular" size="48rpx" text="加载球队" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card teams-error">
+    <view class="teams-error__title">球队加载失败</view>
+    <view class="muted">{{error}}</view>
+    <view class="teams-error__action">
+      <t-button theme="primary" size="small" bind:tap="retry">重试</t-button>
     </view>
+  </view>
+
+  <view wx:elif="{{filteredTeams.length === 0}}" class="surface-card">
+    <empty-state title="没有匹配球队" description="换一个关键词，或等待管理员录入球队。" />
+  </view>
+
+  <view wx:else class="team-list">
+    <team-card
+      wx:for="{{filteredTeams}}"
+      wx:key="id"
+      team="{{item}}"
+      bind:select="openTeam"
+    />
   </view>
 </view>

@@ -1,0 +1,47 @@
+.team-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.team-card__badge {
+  width: 70rpx;
+  height: 70rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  background: #E4F5EC;
+  color: #0B6B4B;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.team-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-card__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.team-card__meta {
+  margin-top: 6rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.team-card__arrow {
+  color: #A2ADA8;
+  font-size: 38rpx;
+}
