@@ -139,23 +139,19 @@ $env:TEST_DB_PASSWORD='campus'
 - 积分榜不建表，由已完赛比赛动态计算
 - 球员榜只统计已完赛比赛
 
-## 下一阶段
-
-当前仓库只包含后端 API。微信小程序客户端将在下一阶段基于现有 API 实现，优先完成：
-
-1. 球队与球员列表
-2. 比赛详情与射手榜/助攻榜
-3. 管理员和球队管理员登录后的编辑界面
-
 ## 微信小程序
 
-前端子工程位于 `miniprogram/`。
+前端子工程位于 `miniprogram/`，包含公开浏览、微信登录、角色门禁和管理端页面。
 
 ```powershell
 cd miniprogram
 npm install
 npm run verify
 ```
+
+详细运行说明：[miniprogram/README.md](miniprogram/README.md)
+
+人工验收清单：[docs/acceptance/wechat-miniprogram-acceptance.md](docs/acceptance/wechat-miniprogram-acceptance.md)
 
 使用微信开发者工具打开 `miniprogram/`，将 `project.config.json` 中的 `touristappid` 替换为你的小程序 AppID，然后执行“工具 -> 构建 npm”。
 
