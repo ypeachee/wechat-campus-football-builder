@@ -1,0 +1,60 @@
+CREATE TABLE player_match_rating (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    fixture_id BIGINT NOT NULL,
+    player_id BIGINT NOT NULL,
+    team_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    stars TINYINT NOT NULL,
+    comment VARCHAR(100) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'VISIBLE',
+    moderation_reason VARCHAR(100) NULL,
+    edits_used TINYINT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_player_rating_target (fixture_id, player_id, user_id),
+    KEY idx_player_rating_fixture_status (fixture_id, status),
+    KEY idx_player_rating_player_status (player_id, status),
+    KEY idx_player_rating_user_updated (user_id, updated_at),
+    CONSTRAINT fk_player_rating_fixture FOREIGN KEY (fixture_id) REFERENCES fixture (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_rating_player FOREIGN KEY (player_id) REFERENCES player (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_rating_team FOREIGN KEY (team_id) REFERENCES team (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_rating_user FOREIGN KEY (user_id) REFERENCES app_user (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_player_rating_stars CHECK (stars BETWEEN 1 AND 5),
+    CONSTRAINT chk_player_rating_status CHECK (status IN ('VISIBLE', 'PENDING', 'REJECTED', 'HIDDEN')),
+    CONSTRAINT chk_player_rating_edits CHECK (edits_used IN (0, 1)),
+    CONSTRAINT chk_player_rating_comment CHECK (comment IS NULL OR CHAR_LENGTH(comment) BETWEEN 1 AND 100)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE rating_report (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    rating_id BIGINT NOT NULL,
+    reporter_user_id BIGINT NOT NULL,
+    reason VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_rating_report_reporter (rating_id, reporter_user_id),
+    KEY idx_rating_report_status_created (status, created_at),
+    CONSTRAINT fk_rating_report_rating FOREIGN KEY (rating_id) REFERENCES player_match_rating (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_rating_report_user FOREIGN KEY (reporter_user_id) REFERENCES app_user (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_rating_report_status CHECK (status IN ('OPEN', 'REVIEWED', 'DISMISSED'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE sensitive_term (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    term VARCHAR(64) NOT NULL,
+    category VARCHAR(32) NOT NULL,
+    action VARCHAR(10) NOT NULL,
+    enabled TINYINT(1) NOT NULL DEFAULT 1,
+    created_by BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_sensitive_term_term (term),
+    KEY idx_sensitive_term_enabled_action (enabled, action),
+    CONSTRAINT fk_sensitive_term_created_by FOREIGN KEY (created_by) REFERENCES app_user (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_sensitive_term_action CHECK (action IN ('BLOCK', 'REVIEW')),
+    CONSTRAINT chk_sensitive_term_enabled CHECK (enabled IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
