@@ -59,6 +59,37 @@ public final class TestApiSupport {
                 .andExpect(status().isOk());
     }
 
+
+    public static long createPlayer(MockMvc mockMvc, String token, long teamId, String name, int jerseyNo)
+            throws Exception {
+        return id(mockMvc.perform(post("/api/v1/manage/teams/" + teamId + "/players")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\",\"jerseyNo\":" + jerseyNo + "}"))
+                .andExpect(status().isOk())
+                .andReturn());
+    }
+
+    public static long addAppearance(MockMvc mockMvc, String token, long fixtureId, long teamId,
+                                     long playerId, boolean starter, Integer minutes) throws Exception {
+        String minutesJson = minutes == null ? "null" : Integer.toString(minutes);
+        return id(mockMvc.perform(post("/api/v1/manage/fixtures/" + fixtureId + "/appearances")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"teamId\":" + teamId + ",\"playerId\":" + playerId
+                                + ",\"isStarter\":" + starter + ",\"minutesPlayed\":" + minutesJson + "}"))
+                .andExpect(status().isOk())
+                .andReturn());
+    }
+
+    public static void setLocked(MockMvc mockMvc, String token, long fixtureId, boolean locked) throws Exception {
+        mockMvc.perform(put("/api/v1/admin/fixtures/" + fixtureId + "/lock")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"locked\":" + locked + "}"))
+                .andExpect(status().isOk());
+    }
+
     public static void finish(MockMvc mockMvc, String token, long fixtureId, int homeScore, int awayScore)
             throws Exception {
         mockMvc.perform(post("/api/v1/admin/fixtures/" + fixtureId + "/finish")

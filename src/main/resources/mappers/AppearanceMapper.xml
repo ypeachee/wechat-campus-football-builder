@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.AppearanceMapper">
+    <resultMap id="AppearanceMap" type="com.campusfootball.competition.FixtureAppearance">
+        <id property="id" column="id"/>
+        <result property="fixtureId" column="fixture_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="playerId" column="player_id"/>
+        <result property="starter" column="is_starter"/>
+        <result property="minutesPlayed" column="minutes_played"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fixture_appearance (fixture_id, team_id, player_id, is_starter, minutes_played, created_by)
+        VALUES (#{fixtureId}, #{teamId}, #{playerId}, #{starter}, #{minutesPlayed}, #{createdBy})
+    </insert>
+
+    <select id="findById" resultMap="AppearanceMap">
+        SELECT * FROM fixture_appearance WHERE id = #{id}
+    </select>
+
+    <select id="countByFixtureAndPlayer" resultType="int">
+        SELECT COUNT(*) FROM fixture_appearance WHERE fixture_id = #{fixtureId} AND player_id = #{playerId}
+    </select>
+
+    <update id="update">
+        UPDATE fixture_appearance
+        SET is_starter = #{starter}, minutes_played = #{minutesPlayed}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM fixture_appearance WHERE id = #{id}
+    </delete>
+</mapper>
