@@ -164,6 +164,7 @@ npm run verify
 - 评分用户每场每球员仅一条记录，24 小时内可修改一次
 - 短评最多 100 字，经过本地敏感词和微信 `msgSecCheck` 审核
 - 待审核、拒绝和隐藏评价不计入公开均分
+- 当值主裁支持独立的 5 星评分，同样按 10 分制展示，不提供文字评价
 - 管理员可审核评价、处理举报和维护敏感词
 - 验收清单：[docs/acceptance/ratings-moderation-acceptance.md](docs/acceptance/ratings-moderation-acceptance.md)
 

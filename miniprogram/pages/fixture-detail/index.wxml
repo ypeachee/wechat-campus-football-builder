@@ -31,6 +31,22 @@
 
     <view class="section-head">
       <view>
+        <view class="section-title">当值主裁评分</view>
+        <view class="section-subtitle">仅评分，不提供文字评价</view>
+      </view>
+    </view>
+    <view class="referee-rating-card">
+      <view class="referee-rating-card__main">
+        <view class="referee-rating-card__name">{{fixture.referee || "主裁待定"}}</view>
+        <view class="referee-rating-card__stars">{{refereeStarsText}}</view>
+        <view class="referee-rating-card__meta">{{refereeRating && refereeRating.ratingCount ? refereeRating.averageScore + "/10 · " + refereeRating.ratingCount + "人评分" : "暂无评分"}}</view>
+      </view>
+      <t-button size="small" theme="primary" variant="outline"
+        disabled="{{!ratingEnabled || !fixture.referee}}" bind:tap="openRefereeRatingDialog">评分</t-button>
+    </view>
+
+    <view class="section-head">
+      <view>
         <view class="section-title">球员评分</view>
         <view class="section-subtitle">5 星评分，按 10 分制展示</view>
       </view>
@@ -157,4 +173,24 @@
       </scroll-view>
     </view>
   </view>
+
+  <view wx:if="{{refereeDialogVisible}}" class="rating-overlay" bindtap="closeRefereeRatingDialog">
+    <view class="rating-sheet referee-rating-sheet" catchtap="noop">
+      <view class="rating-sheet__head">
+        <view>
+          <view class="rating-sheet__title">给主裁评分</view>
+          <view class="rating-sheet__meta">{{fixture.referee}}</view>
+        </view>
+        <view class="rating-sheet__close" bindtap="closeRefereeRatingDialog">×</view>
+      </view>
+      <view class="rating-sheet__label">你的评分</view>
+      <star-rating value="{{refereeStars}}" readonly="{{refereeOwnRating && !refereeOwnRating.canEdit}}"
+        bind:change="handleRefereeStars" />
+      <view class="rating-sheet__score">{{refereeStars ? refereeStars * 2 + " / 10" : "请选择 1–5 星"}}</view>
+      <view class="rating-sheet__status">主裁评分不包含文字评价</view>
+      <t-button theme="primary" block loading="{{refereeSubmitting}}"
+        disabled="{{refereeOwnRating && !refereeOwnRating.canEdit}}" bind:tap="saveRefereeRating">提交主裁评分</t-button>
+    </view>
+  </view>
+
 </view>

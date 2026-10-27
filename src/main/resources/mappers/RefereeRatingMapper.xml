@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.rating.RefereeRatingMapper">
+    <resultMap id="RefereeRatingMap" type="com.campusfootball.rating.FixtureRefereeRating">
+        <id property="id" column="id"/>
+        <result property="fixtureId" column="fixture_id"/>
+        <result property="refereeName" column="referee_name"/>
+        <result property="userId" column="user_id"/>
+        <result property="stars" column="stars"/>
+        <result property="editsUsed" column="edits_used"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    <select id="findByTarget" resultMap="RefereeRatingMap">
+        SELECT * FROM fixture_referee_rating
+        WHERE fixture_id = #{fixtureId} AND referee_name = #{refereeName} AND user_id = #{userId}
+        LIMIT 1
+    </select>
+    <select id="countRecentSubmissions" resultType="int">
+        SELECT COUNT(*) FROM fixture_referee_rating
+        WHERE user_id = #{userId} AND updated_at &gt;= #{since}
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fixture_referee_rating
+            (fixture_id, referee_name, user_id, stars, edits_used, created_at, updated_at)
+        VALUES (#{fixtureId}, #{refereeName}, #{userId}, #{stars}, #{editsUsed}, #{createdAt}, #{updatedAt})
+    </insert>
+    <update id="updateSubmission">
+        UPDATE fixture_referee_rating
+        SET stars = #{stars}, edits_used = #{editsUsed}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <select id="summary" resultType="com.campusfootball.rating.RefereeRatingSummary">
+        SELECT #{refereeName} AS referee_name,
+               COALESCE(AVG(stars), 0) * 2 AS average_score,
+               COUNT(*) AS rating_count,
+               COALESCE(SUM(stars = 1), 0) AS star1_count,
+               COALESCE(SUM(stars = 2), 0) AS star2_count,
+               COALESCE(SUM(stars = 3), 0) AS star3_count,
+               COALESCE(SUM(stars = 4), 0) AS star4_count,
+               COALESCE(SUM(stars = 5), 0) AS star5_count
+        FROM fixture_referee_rating
+        WHERE fixture_id = #{fixtureId} AND referee_name = #{refereeName}
+    </select>
+</mapper>

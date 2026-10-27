@@ -209,3 +209,11 @@
 .rating-comment__score { color: #0B6B4B; }
 .rating-comment__text { margin: 10rpx 0; font-size: 24rpx; line-height: 1.6; }
 .rating-comment__actions { display: flex; justify-content: space-between; color: #7C8983; font-size: 19rpx; }
+
+
+.referee-rating-card { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; padding: 24rpx; border-radius: 20rpx; background: #fff; border: 1rpx solid #E4E2D9; }
+.referee-rating-card__main { min-width: 0; }
+.referee-rating-card__name { font-size: 27rpx; font-weight: 800; }
+.referee-rating-card__stars { margin-top: 8rpx; color: #E5B53F; font-size: 30rpx; letter-spacing: 3rpx; }
+.referee-rating-card__meta { margin-top: 5rpx; color: #7C8983; font-size: 21rpx; }
+.referee-rating-sheet { padding-bottom: calc(36rpx + env(safe-area-inset-bottom)); }

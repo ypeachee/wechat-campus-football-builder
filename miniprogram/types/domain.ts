@@ -334,3 +334,32 @@ export interface SensitiveTerm {
   createdAt: string;
   updatedAt: string;
 }
+
+
+export interface RefereeRatingSummary {
+  refereeName: string | null;
+  averageScore: number;
+  ratingCount: number;
+  star1Count: number;
+  star2Count: number;
+  star3Count: number;
+  star4Count: number;
+  star5Count: number;
+}
+
+export interface RefereeOwnRating {
+  rated: boolean;
+  id: number | null;
+  stars: number | null;
+  score: number | null;
+  canEdit: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface RefereeRatingSubmission {
+  id: number;
+  stars: number;
+  score: number;
+  canEdit: boolean;
+}

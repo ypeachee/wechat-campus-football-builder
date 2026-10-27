@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { request } from "../services/http";
 import {
   createSensitiveTerm, fetchFixtureRatings, fetchModerationRatings, fetchMyRating,
-  fetchPlayerComments, importSensitiveTerms, moderateRating, reportRating, submitPlayerRating
+  fetchMyRefereeRating, fetchPlayerComments, fetchRefereeRating, importSensitiveTerms,
+  moderateRating, reportRating, submitPlayerRating, submitRefereeRating
 } from "../services/ratings";
 
 vi.mock("../services/http", () => ({ request: vi.fn() }));
@@ -26,6 +27,19 @@ describe("rating services", () => {
       method: "PUT", data: { stars: 4, comment: "防守稳健" }
     });
   });
+  it("loads and submits referee ratings without comments", async () => {
+    requestMock.mockResolvedValueOnce({ ratingCount: 2 }).mockResolvedValueOnce({ rated: false })
+      .mockResolvedValueOnce({ id: 8, score: 8 });
+    await fetchRefereeRating(9);
+    await fetchMyRefereeRating(9);
+    await submitRefereeRating(9, 4);
+    expect(requestMock).toHaveBeenNthCalledWith(1, "/api/v1/fixtures/9/referee-rating");
+    expect(requestMock).toHaveBeenNthCalledWith(2, "/api/v1/fixtures/9/referee-rating/me");
+    expect(requestMock).toHaveBeenNthCalledWith(3, "/api/v1/fixtures/9/referee-rating", {
+      method: "PUT", data: { stars: 4 }
+    });
+  });
+
   it("reports and moderates ratings", async () => {
     requestMock.mockResolvedValue(undefined);
     await reportRating(12, " 不当内容 ");

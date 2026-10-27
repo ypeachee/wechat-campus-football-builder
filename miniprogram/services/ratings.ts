@@ -7,6 +7,9 @@ import type {
   RatingModerationPage,
   RatingStatus,
   RatingSubmission,
+  RefereeOwnRating,
+  RefereeRatingSubmission,
+  RefereeRatingSummary,
   SensitiveTerm,
   SensitiveTermAction
 } from "../types/domain";
@@ -24,6 +27,21 @@ export function fetchPlayerRatingSummary(playerId: number,
                                          seasonId?: number | null): Promise<PlayerSeasonRatingSummary> {
   const season = seasonId ? `?seasonId=${seasonId}` : "";
   return request(`/api/v1/players/${playerId}/rating-summary${season}`);
+}
+
+export function fetchRefereeRating(fixtureId: number): Promise<RefereeRatingSummary> {
+  return request(`/api/v1/fixtures/${fixtureId}/referee-rating`);
+}
+
+export function fetchMyRefereeRating(fixtureId: number): Promise<RefereeOwnRating> {
+  return request(`/api/v1/fixtures/${fixtureId}/referee-rating/me`);
+}
+
+export function submitRefereeRating(fixtureId: number, stars: number): Promise<RefereeRatingSubmission> {
+  return request(`/api/v1/fixtures/${fixtureId}/referee-rating`, {
+    method: "PUT",
+    data: { stars }
+  });
 }
 
 export function fetchMyRating(fixtureId: number, playerId: number): Promise<OwnRating> {

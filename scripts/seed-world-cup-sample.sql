@@ -28,6 +28,7 @@ SET @old_season_id = (SELECT id FROM season WHERE competition_id = @old_competit
 DELETE rr FROM rating_report rr JOIN player_match_rating r ON r.id = rr.rating_id
 JOIN fixture f ON f.id = r.fixture_id WHERE f.season_id = @old_season_id;
 DELETE r FROM player_match_rating r JOIN fixture f ON f.id = r.fixture_id WHERE f.season_id = @old_season_id;
+DELETE rr FROM fixture_referee_rating rr JOIN fixture f ON f.id = rr.fixture_id WHERE f.season_id = @old_season_id;
 DELETE e FROM fixture_event e JOIN fixture f ON f.id = e.fixture_id WHERE f.season_id = @old_season_id;
 DELETE a FROM fixture_appearance a JOIN fixture f ON f.id = a.fixture_id WHERE f.season_id = @old_season_id;
 DELETE ks FROM knockout_seed ks JOIN stage st ON st.id = ks.stage_id WHERE st.season_id = @old_season_id;
@@ -326,6 +327,16 @@ VALUES
 (@f_b1, @valencia, @ecu, @fan2, 4, '厄瓜多尔最可靠的进攻点', 'VISIBLE', 0),
 (@f_b2, @richarlison, @bra, @fan1, 4, '禁区内反应很快', 'VISIBLE', 0),
 (@f_b2, @morata, @esp, @fan2, 3, '跑位不错，但机会转化一般', 'VISIBLE', 0);
+
+INSERT INTO fixture_referee_rating
+    (fixture_id, referee_name, user_id, stars, edits_used)
+VALUES
+(@f_a1, '马宁', @fan1, 4, 0),
+(@f_a1, '马宁', @fan2, 3, 0),
+(@f_a2, '马宁', @fan1, 5, 0),
+(@f_b1, '傅明', @fan2, 4, 0),
+(@f_sf1, '张雷', @fan1, 3, 0),
+(@f_final, '马宁', @fan2, 5, 0);
 
 INSERT INTO fixture_appearance (fixture_id, team_id, player_id, is_starter, minutes_played, created_by)
 SELECT f.id, p.team_id, p.id, 1, 90, @admin_id

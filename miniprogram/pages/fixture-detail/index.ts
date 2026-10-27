@@ -1,7 +1,7 @@
 import { fetchFixtureDetail } from "../../services/competition";
-import { fetchFixtureRatings, fetchMyRating, fetchPlayerComments, reportRating, submitPlayerRating } from "../../services/ratings";
+import { fetchFixtureRatings, fetchMyRating, fetchMyRefereeRating, fetchPlayerComments, fetchRefereeRating, reportRating, submitPlayerRating, submitRefereeRating } from "../../services/ratings";
 import { fetchTeamPlayers } from "../../services/teams";
-import type { FixtureDetail, OwnRating, PlayerRatingSummary, PlayerSummary, RatingComment, RatingStatus } from "../../types/domain";
+import type { FixtureDetail, OwnRating, PlayerRatingSummary, PlayerSummary, RatingComment, RefereeOwnRating, RefereeRatingSummary } from "../../types/domain";
 import { getSession } from "../../state/session";
 import { canRateFixture, ratingStatusText, starLabel, starsToScore } from "../../utils/rating";
 import { formatMatchTime } from "../../utils/date";
@@ -53,6 +53,12 @@ type FixtureDetailData = {
   selectedRatingStatusText: string;
   selectedRatingComments: RatingComment[];
   ratingSubmitting: boolean;
+  refereeRating: RefereeRatingSummary | null;
+  refereeStarsText: string;
+  refereeOwnRating: RefereeOwnRating | null;
+  refereeDialogVisible: boolean;
+  refereeStars: number;
+  refereeSubmitting: boolean;
 };
 
 Page({
@@ -80,7 +86,13 @@ Page({
     selectedRatingComment: "",
     selectedRatingStatusText: "",
     selectedRatingComments: [] as RatingComment[],
-    ratingSubmitting: false
+    ratingSubmitting: false,
+    refereeRating: null as RefereeRatingSummary | null,
+    refereeStarsText: "☆☆☆☆☆",
+    refereeOwnRating: null as RefereeOwnRating | null,
+    refereeDialogVisible: false,
+    refereeStars: 0,
+    refereeSubmitting: false
   } as FixtureDetailData,
 
   onLoad(options: Record<string, string | undefined>) {
@@ -101,10 +113,11 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const fixture = await fetchFixtureDetail(fixtureId);
-      const [homePlayers, awayPlayers, ratingSummaries] = await Promise.all([
+      const [homePlayers, awayPlayers, ratingSummaries, refereeRating] = await Promise.all([
         fetchTeamPlayers(fixture.homeTeam.id).catch(() => []),
         fetchTeamPlayers(fixture.awayTeam.id).catch(() => []),
-        canRateFixture(fixture.status) ? fetchFixtureRatings(fixture.id).catch(() => []) : Promise.resolve([])
+        canRateFixture(fixture.status) ? fetchFixtureRatings(fixture.id).catch(() => []) : Promise.resolve([]),
+        canRateFixture(fixture.status) && fixture.referee ? fetchRefereeRating(fixture.id).catch(() => null) : Promise.resolve(null)
       ]);
       const playerMap = new Map<number, PlayerSummary>();
       [...homePlayers, ...awayPlayers].forEach((player) => playerMap.set(player.id, player));
@@ -119,6 +132,8 @@ Page({
       this.setData({
         fixture,
         ratingEnabled: canRateFixture(fixture.status),
+        refereeRating,
+        refereeStarsText: starLabel((refereeRating?.averageScore ?? 0) / 2),
         homeRatings: ratingViews.filter((rating) => rating.teamId === fixture.homeTeam.id),
         awayRatings: ratingViews.filter((rating) => rating.teamId === fixture.awayTeam.id),
         statusLabel: fixtureStatusLabel(fixture.status),
@@ -254,6 +269,52 @@ Page({
         }
       }
     });
+  },
+
+  async openRefereeRatingDialog() {
+    if (!this.data.fixture?.referee) {
+      wx.showToast({ title: "本场比赛尚未填写当值主裁", icon: "none" });
+      return;
+    }
+    this.setData({ refereeDialogVisible: true, refereeOwnRating: null, refereeStars: 0 });
+    if (getSession() && this.data.fixture) {
+      const mine = await fetchMyRefereeRating(this.data.fixture.id).catch(() => null);
+      this.setData({ refereeOwnRating: mine?.rated ? mine : null, refereeStars: mine?.stars ?? 0 });
+    }
+  },
+
+  closeRefereeRatingDialog() {
+    if (!this.data.refereeSubmitting) this.setData({ refereeDialogVisible: false });
+  },
+
+  handleRefereeStars(event: WechatMiniprogram.CustomEvent<{ stars: number }>) {
+    this.setData({ refereeStars: event.detail.stars });
+  },
+
+  async saveRefereeRating() {
+    if (!getSession()) {
+      wx.showToast({ title: "请先登录后评分", icon: "none" });
+      return;
+    }
+    if (!this.data.fixture || this.data.refereeStars < 1) {
+      wx.showToast({ title: "请选择 1–5 星", icon: "none" });
+      return;
+    }
+    this.setData({ refereeSubmitting: true });
+    try {
+      await submitRefereeRating(this.data.fixture.id, this.data.refereeStars);
+      const rating = await fetchRefereeRating(this.data.fixture.id).catch(() => null);
+      this.setData({
+        refereeRating: rating,
+        refereeStarsText: starLabel((rating?.averageScore ?? 0) / 2),
+        refereeDialogVisible: false
+      });
+      wx.showToast({ title: "主裁评分已提交", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: errorMessage(error), icon: "none" });
+    } finally {
+      this.setData({ refereeSubmitting: false });
+    }
   },
 
   async refreshRatings() {
