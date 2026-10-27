@@ -34,6 +34,12 @@ public class PlayerService {
         return playerMapper.findByTeamId(teamId);
     }
 
+    public List<Player> findAllForManagement(long actorUserId, long teamId) {
+        authorizationService.requireCanManageTeam(actorUserId, teamId);
+        teamMapper.findById(teamId).orElseThrow(this::notFound);
+        return playerMapper.findByTeamId(teamId);
+    }
+
     public Player getActivePlayer(long playerId) {
         Player player = playerMapper.findById(playerId)
                 .filter(candidate -> candidate.getStatus() == PlayerStatus.ACTIVE)

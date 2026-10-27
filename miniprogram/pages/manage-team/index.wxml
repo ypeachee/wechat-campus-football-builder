@@ -1,0 +1,110 @@
+<view class="page-shell manage-team-page">
+  <app-header
+    title="{{createMode ? '新建球队' : (team ? team.name : '球队资料')}}"
+    subtitle="球队管理员仅能维护授权球队"
+    season-name="TEAM EDITOR"
+  />
+
+  <view wx:if="{{loading}}" class="manage-loading">
+    <t-loading theme="circular" size="44rpx" text="加载球队资料" />
+  </view>
+
+  <view wx:elif="{{!verified}}" class="surface-card">
+    <empty-state title="无法进入管理页" description="{{error}}" />
+  </view>
+
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-card__title">{{createMode ? "基础资料" : "编辑球队资料"}}</view>
+      <view class="form-field">
+        <view class="form-label">球队名称</view>
+        <input class="form-input" value="{{teamForm.name}}" data-field="name" bindinput="handleTeamInput" placeholder="请输入球队名称" />
+        <view wx:if="{{teamErrors.name}}" class="form-error">{{teamErrors.name}}</view>
+      </view>
+      <view class="form-field">
+        <view class="form-label">球队简称</view>
+        <input class="form-input" value="{{teamForm.shortName}}" data-field="shortName" bindinput="handleTeamInput" placeholder="例如：计算机队" />
+      </view>
+      <view class="form-field">
+        <view class="form-label">主教练</view>
+        <input class="form-input" value="{{teamForm.coachName}}" data-field="coachName" bindinput="handleTeamInput" placeholder="教练姓名" />
+      </view>
+      <view class="form-field">
+        <view class="form-label">主场</view>
+        <input class="form-input" value="{{teamForm.homeVenue}}" data-field="homeVenue" bindinput="handleTeamInput" placeholder="比赛场地" />
+      </view>
+      <view wx:if="{{isAdmin && !createMode}}" class="form-field form-field--row">
+        <view>
+          <view class="form-label">球队启用</view>
+          <view class="form-hint">关闭后不在公开端展示</view>
+        </view>
+        <switch checked="{{teamForm.status === 'ACTIVE'}}" color="#0B6B4B" bindchange="handleTeamStatusChange" />
+      </view>
+      <view wx:if="{{teamErrors.status}}" class="form-error">{{teamErrors.status}}</view>
+      <view class="form-actions">
+        <t-button theme="primary" block loading="{{submitting}}" bind:tap="saveTeam">保存球队</t-button>
+      </view>
+    </view>
+
+    <block wx:if="{{!createMode}}">
+      <view class="section-head">
+        <view>
+          <view class="section-title">球员名单</view>
+          <view class="section-subtitle">共 {{players.length}} 名球员</view>
+        </view>
+        <view class="text-button" bindtap="openCreatePlayer">新增球员</view>
+      </view>
+
+      <view wx:if="{{players.length === 0}}" class="surface-card">
+        <empty-state title="暂无球员" description="新增球员后会显示在这里。" />
+      </view>
+
+      <view wx:else class="player-management-list">
+        <view wx:for="{{players}}" wx:key="id" class="player-management-row">
+          <view class="player-management-row__jersey numeric">{{item.jerseyNo === null ? "-" : item.jerseyNo}}</view>
+          <view class="player-management-row__main">
+            <view class="player-management-row__name">{{item.name}}</view>
+            <view class="player-management-row__meta">{{item.position || "位置待定"}}</view>
+          </view>
+          <t-tag size="small" variant="light" theme="{{item.status === 'ACTIVE' ? 'success' : 'default'}}">
+            {{item.status === "ACTIVE" ? "在队" : "停用"}}
+          </t-tag>
+          <view class="player-management-row__edit" data-id="{{item.id}}" bindtap="openEditPlayer">编辑</view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <t-popup
+    visible="{{playerDialogVisible}}"
+    placement="bottom"
+    close-on-overlay-click
+    bind:visible-change="handlePlayerPopupChange"
+  >
+    <view class="player-dialog">
+      <view class="player-dialog__title">{{playerForm.id === null ? "新增球员" : "编辑球员"}}</view>
+      <view class="form-field">
+        <view class="form-label">球员姓名</view>
+        <input class="form-input" value="{{playerForm.name}}" data-field="name" bindinput="handlePlayerInput" placeholder="请输入姓名" />
+        <view wx:if="{{playerErrors.name}}" class="form-error">{{playerErrors.name}}</view>
+      </view>
+      <view class="form-field">
+        <view class="form-label">球衣号码</view>
+        <input class="form-input" type="number" value="{{playerForm.jerseyNo === null ? '' : playerForm.jerseyNo}}" bindinput="handlePlayerJerseyInput" placeholder="0-999，可留空" />
+        <view wx:if="{{playerErrors.jerseyNo}}" class="form-error">{{playerErrors.jerseyNo}}</view>
+      </view>
+      <view class="form-field">
+        <view class="form-label">场上位置</view>
+        <input class="form-input" value="{{playerForm.position}}" data-field="position" bindinput="handlePlayerInput" placeholder="前锋 / 中场 / 后卫 / 门将" />
+      </view>
+      <view wx:if="{{playerForm.id !== null}}" class="form-field form-field--row">
+        <view class="form-label">球员启用</view>
+        <switch checked="{{playerForm.status === 'ACTIVE'}}" color="#0B6B4B" bindchange="handlePlayerStatusChange" />
+      </view>
+      <view class="player-dialog__actions">
+        <t-button theme="default" variant="outline" block bind:tap="closePlayerDialog">取消</t-button>
+        <t-button theme="primary" block loading="{{submitting}}" bind:tap="savePlayer">保存</t-button>
+      </view>
+    </view>
+  </t-popup>
+</view>

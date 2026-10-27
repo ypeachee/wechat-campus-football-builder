@@ -143,6 +143,33 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void teamManagerCanListOwnInactivePlayersButNotOtherTeams() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long ownTeam = createTeam(admin, "ManagedRoster");
+        long otherTeam = createTeam(admin, "OtherRoster");
+        long playerId = createPlayer(admin, ownTeam, "InactiveLater", 12);
+        JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
+        String manager = managerLogin.get("token").asText();
+        grant(admin, ownTeam, managerLogin.get("userId").asLong());
+
+        mockMvc.perform(put("/api/v1/manage/players/" + playerId)
+                        .header("Authorization", "Bearer " + manager)
+                        .contentType(APPLICATION_JSON)
+                        .content(playerBody("InactiveLater", 12, "INACTIVE")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/manage/teams/" + ownTeam + "/players")
+                        .header("Authorization", "Bearer " + manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(playerId))
+                .andExpect(jsonPath("$[0].status").value("INACTIVE"));
+
+        mockMvc.perform(get("/api/v1/manage/teams/" + otherTeam + "/players")
+                        .header("Authorization", "Bearer " + manager))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void writesCreateTeamScopedAuditRows() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = createTeam(admin, "AuditTeam");

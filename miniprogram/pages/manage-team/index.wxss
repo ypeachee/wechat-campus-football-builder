@@ -1,0 +1,150 @@
+.manage-team-page {
+  padding-top: 22rpx;
+}
+
+.manage-loading {
+  display: flex;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.form-card {
+  margin-top: 20rpx;
+}
+
+.form-card__title {
+  margin-bottom: 18rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.form-field {
+  margin-top: 18rpx;
+}
+
+.form-field--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-label {
+  margin-bottom: 8rpx;
+  color: #5E6B65;
+  font-size: 22rpx;
+}
+
+.form-hint {
+  color: #9AA49F;
+  font-size: 19rpx;
+}
+
+.form-input {
+  height: 76rpx;
+  padding: 0 18rpx;
+  border-radius: 14rpx;
+  background: #F8F6F0;
+  border: 1rpx solid #E4E2D9;
+  font-size: 25rpx;
+}
+
+.form-error {
+  margin-top: 6rpx;
+  color: #C7392F;
+  font-size: 20rpx;
+}
+
+.form-actions {
+  margin-top: 26rpx;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 34rpx;
+}
+
+.section-head .section-title {
+  margin: 0;
+}
+
+.text-button {
+  color: #0B6B4B;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.player-management-list {
+  overflow: hidden;
+  margin-top: 16rpx;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+}
+
+.player-management-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 20rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.player-management-row:last-child {
+  border-bottom: 0;
+}
+
+.player-management-row__jersey {
+  width: 52rpx;
+  height: 52rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  background: #E4F5EC;
+  color: #0B6B4B;
+  font-size: 22rpx;
+}
+
+.player-management-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-management-row__name {
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.player-management-row__meta {
+  margin-top: 3rpx;
+  color: #7C8983;
+  font-size: 19rpx;
+}
+
+.player-management-row__edit {
+  padding: 10rpx 8rpx;
+  color: #0B6B4B;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.player-dialog {
+  padding: 30rpx 28rpx calc(30rpx + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  border-radius: 26rpx 26rpx 0 0;
+}
+
+.player-dialog__title {
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.player-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 30rpx;
+}

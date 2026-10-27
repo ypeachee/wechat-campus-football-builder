@@ -1,0 +1,66 @@
+<view class="page-shell manage-page">
+  <app-header title="管理台" subtitle="{{roleText || '权限校验中'}}" season-name="MANAGE" />
+
+  <view wx:if="{{loading}}" class="manage-loading">
+    <t-loading theme="circular" size="44rpx" text="校验权限" />
+  </view>
+
+  <view wx:elif="{{!session}}" class="surface-card">
+    <empty-state
+      title="请先登录"
+      description="管理功能仅对联赛管理员和球队管理员开放。"
+      action-text="前往登录"
+      bind:action="goProfile"
+    />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="权限刷新失败" description="{{error}}" action-text="前往登录" bind:action="goProfile" />
+  </view>
+
+  <block wx:elif="{{verified}}">
+    <view wx:if="{{isAdmin}}" class="admin-grid">
+      <view class="admin-card" bindtap="goAdminSeason">
+        <view class="admin-card__index">S</view>
+        <view class="admin-card__title">赛季管理</view>
+        <view class="admin-card__copy">创建赛季与参赛球队</view>
+      </view>
+      <view class="admin-card" bindtap="goAdminFixtures">
+        <view class="admin-card__index">F</view>
+        <view class="admin-card__title">赛程管理</view>
+        <view class="admin-card__copy">比赛状态、比分与锁定</view>
+      </view>
+      <view class="admin-card" bindtap="goAdminAccess">
+        <view class="admin-card__index">A</view>
+        <view class="admin-card__title">球队授权</view>
+        <view class="admin-card__copy">授予或撤销管理权限</view>
+      </view>
+      <view class="admin-card" bindtap="goAdminAudit">
+        <view class="admin-card__index">L</view>
+        <view class="admin-card__title">审计日志</view>
+        <view class="admin-card__copy">查看数据变更记录</view>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view>
+        <view class="section-title">球队资料</view>
+        <view class="section-subtitle">{{isAdmin ? '选择球队进行编辑' : '只显示你被授权的球队'}}</view>
+      </view>
+      <view wx:if="{{isAdmin}}" class="text-button" bindtap="createTeam">新建球队</view>
+    </view>
+
+    <view wx:if="{{teams.length === 0}}" class="surface-card">
+      <empty-state title="暂无球队" description="{{isAdmin ? '先创建一支球队。' : '请联系联赛管理员完成球队授权。'}}" />
+    </view>
+
+    <view wx:else class="team-list">
+      <team-card
+        wx:for="{{teams}}"
+        wx:key="id"
+        team="{{item}}"
+        bind:select="openTeam"
+      />
+    </view>
+  </block>
+</view>

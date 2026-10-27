@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/manage")
@@ -32,6 +34,13 @@ public class TeamManagementController {
     public void updateTeam(@PathVariable long teamId, @Valid @RequestBody UpdateTeamRequest request) {
         teamService.updateTeam(currentUser.require().userId(), teamId, request.name(), request.shortName(),
                 request.logoUrl(), request.coachName(), request.homeVenue(), request.status());
+    }
+
+    @GetMapping("/teams/{teamId}/players")
+    public List<TeamController.PlayerResponse> players(@PathVariable long teamId) {
+        return playerService.findAllForManagement(currentUser.require().userId(), teamId).stream()
+                .map(TeamController.PlayerResponse::from)
+                .toList();
     }
 
     @PostMapping("/teams/{teamId}/players")
