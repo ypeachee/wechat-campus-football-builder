@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "miniprogram" / "assets" / "branding"
+OUT_DIR = ROOT / "assets" / "branding"
 SCALE = 3
 SIZE = 1024
 S = SIZE * SCALE
