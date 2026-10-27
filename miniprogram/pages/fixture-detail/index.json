@@ -3,6 +3,8 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "app-header": "/components/app-header/index",
-    "empty-state": "/components/empty-state/index"
+    "empty-state": "/components/empty-state/index",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-tag": "tdesign-miniprogram/tag/tag"
   }
 }

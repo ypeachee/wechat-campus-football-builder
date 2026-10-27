@@ -156,10 +156,6 @@
       },
       {
         "type": "folder",
-        "value": "miniprogram_npm/tdesign-miniprogram/config-provider"
-      },
-      {
-        "type": "folder",
         "value": "miniprogram_npm/tdesign-miniprogram/count-down"
       },
       {

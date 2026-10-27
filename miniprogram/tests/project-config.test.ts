@@ -22,11 +22,15 @@ describe("project.config.json", () => {
       "miniprogram_npm/tdesign-miniprogram/chat-markdown"
     ]));
     expect(config.setting.uploadWithSourceMap).toBe(false);
+    expect(ignored).not.toContain("miniprogram_npm/tdesign-miniprogram/config-provider");
 
     const app = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../app.json"), "utf8"));
-    expect(app.usingComponents).not.toHaveProperty("t-input");
-    expect(app.usingComponents).not.toHaveProperty("t-switch");
-    expect(app.usingComponents).not.toHaveProperty("t-stepper");
+    expect(app.usingComponents).toBeUndefined();
+
+    const stats = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../pages/stats/index.json"), "utf8"));
+    const seasonPicker = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../components/season-picker/index.json"), "utf8"));
+    expect(stats.usingComponents).toHaveProperty("t-tabs");
+    expect(seasonPicker.usingComponents).toHaveProperty("t-picker");
   });
 
   it("keeps the projected main package below 1.5 MB", () => {

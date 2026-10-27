@@ -6,6 +6,8 @@
     "empty-state": "/components/empty-state/index",
     "match-card": "/components/match-card/index",
     "ranking-list": "/components/ranking-list/index",
-    "season-picker": "/components/season-picker/index"
+    "season-picker": "/components/season-picker/index",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-button": "tdesign-miniprogram/button/button"
   }
 }

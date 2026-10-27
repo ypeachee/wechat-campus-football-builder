@@ -3,6 +3,8 @@
   "usingComponents": {
     "app-header": "/components/app-header/index",
     "role-gate": "/components/role-gate/index",
-    "empty-state": "/components/empty-state/index"
+    "empty-state": "/components/empty-state/index",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-button": "tdesign-miniprogram/button/button"
   }
 }

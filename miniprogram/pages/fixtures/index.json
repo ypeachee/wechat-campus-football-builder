@@ -5,6 +5,7 @@
     "app-header": "/components/app-header/index",
     "empty-state": "/components/empty-state/index",
     "match-card": "/components/match-card/index",
-    "season-picker": "/components/season-picker/index"
+    "season-picker": "/components/season-picker/index",
+    "t-loading": "tdesign-miniprogram/loading/loading"
   }
 }

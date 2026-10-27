@@ -1,1 +1,9 @@
-{"navigationBarTitleText":"赛事层级管理","usingComponents":{"app-header":"/components/app-header/index","empty-state":"/components/empty-state/index"}}
+{
+  "navigationBarTitleText": "赛事层级管理",
+  "usingComponents": {
+    "app-header": "/components/app-header/index",
+    "empty-state": "/components/empty-state/index",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}

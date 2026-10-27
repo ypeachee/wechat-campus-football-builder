@@ -5,6 +5,9 @@
     "app-header": "/components/app-header/index",
     "empty-state": "/components/empty-state/index",
     "ranking-list": "/components/ranking-list/index",
-    "season-picker": "/components/season-picker/index"
+    "season-picker": "/components/season-picker/index",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
+    "t-tabs": "tdesign-miniprogram/tabs/tabs"
   }
 }
