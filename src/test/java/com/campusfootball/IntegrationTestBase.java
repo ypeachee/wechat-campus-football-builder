@@ -1,8 +1,12 @@
 package com.campusfootball;
 
+import com.campusfootball.auth.AdminBootstrap;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +27,20 @@ public abstract class IntegrationTestBase {
             MYSQL.start();
             Runtime.getRuntime().addShutdownHook(new Thread(MYSQL::stop));
         }
+    }
+
+    @Autowired
+    protected JdbcTemplate jdbc;
+
+    @Autowired
+    protected AdminBootstrap adminBootstrap;
+
+    protected TestDataFactory data;
+
+    @BeforeEach
+    void resetDatabase() {
+        data = new TestDataFactory(jdbc, adminBootstrap);
+        data.reset();
     }
 
     @DynamicPropertySource

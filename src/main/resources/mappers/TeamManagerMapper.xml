@@ -4,4 +4,21 @@
     <select id="findTeamIdsByUserId" resultType="long">
         SELECT team_id FROM team_manager WHERE user_id = #{userId} ORDER BY team_id
     </select>
+
+    <select id="countByUserAndTeam" resultType="int">
+        SELECT COUNT(*) FROM team_manager WHERE user_id = #{userId} AND team_id = #{teamId}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM team_manager WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insertGrant">
+        INSERT INTO team_manager (user_id, team_id, granted_by)
+        VALUES (#{userId}, #{teamId}, #{grantedBy})
+    </insert>
+
+    <delete id="deleteGrant">
+        DELETE FROM team_manager WHERE user_id = #{userId} AND team_id = #{teamId}
+    </delete>
 </mapper>
