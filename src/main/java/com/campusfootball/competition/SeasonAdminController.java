@@ -2,6 +2,7 @@ package com.campusfootball.competition;
 
 import com.campusfootball.common.api.IdResponse;
 import com.campusfootball.common.security.CurrentUser;
+import com.campusfootball.team.Team;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,6 +39,11 @@ public class SeasonAdminController {
     @GetMapping("/seasons")
     public List<SeasonController.SeasonResponse> seasons() {
         return seasonService.findAll().stream().map(SeasonController.SeasonResponse::from).toList();
+    }
+
+    @GetMapping("/seasons/{seasonId}/teams")
+    public List<Team> teams(@PathVariable long seasonId) {
+        return seasonService.findTeams(seasonId);
     }
 
     @PostMapping("/seasons/{seasonId}/teams/{teamId}")

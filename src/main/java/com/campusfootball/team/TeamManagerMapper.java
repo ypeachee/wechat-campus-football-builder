@@ -9,6 +9,8 @@ import java.util.List;
 public interface TeamManagerMapper {
     List<Long> findTeamIdsByUserId(@Param("userId") long userId);
 
+    List<Long> findUserIdsByTeamId(@Param("teamId") long teamId);
+
     int countByUserAndTeam(@Param("userId") long userId, @Param("teamId") long teamId);
 
     int countByUserId(@Param("userId") long userId);

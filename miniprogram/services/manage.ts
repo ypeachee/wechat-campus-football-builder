@@ -53,3 +53,18 @@ export function fetchAdminTeams(): Promise<TeamSummary[]> {
 export function fetchAdminTeamPlayers(teamId: number): Promise<PlayerSummary[]> {
   return request<PlayerSummary[]>(`/api/v1/admin/teams/${teamId}/players`);
 }
+
+export function fetchTeamManagers(teamId: number): Promise<number[]> {
+  return request<number[]>(`/api/v1/admin/teams/${teamId}/managers`);
+}
+
+export function grantTeamManager(teamId: number, userId: number): Promise<void> {
+  return request<void>(`/api/v1/admin/teams/${teamId}/managers`, {
+    method: "POST",
+    data: { userId }
+  });
+}
+
+export function revokeTeamManager(teamId: number, userId: number): Promise<void> {
+  return request<void>(`/api/v1/admin/teams/${teamId}/managers/${userId}`, { method: "DELETE" });
+}

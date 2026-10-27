@@ -1,0 +1,113 @@
+.admin-access-page {
+  padding-top: 22rpx;
+}
+
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.team-scroll {
+  margin-top: 20rpx;
+  white-space: nowrap;
+}
+
+.team-tabs {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 24rpx;
+}
+
+.team-tab {
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+  color: #5E6B65;
+  font-size: 23rpx;
+}
+
+.team-tab--active {
+  background: #0B6B4B;
+  border-color: #0B6B4B;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.access-card {
+  margin-top: 18rpx;
+}
+
+.access-card__title {
+  font-size: 31rpx;
+  font-weight: 800;
+}
+
+.access-card__copy {
+  margin-top: 4rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.manager-empty {
+  padding: 24rpx 0;
+  color: #9AA49F;
+  font-size: 22rpx;
+}
+
+.manager-list {
+  margin-top: 12rpx;
+  border-top: 1rpx solid #EEECE5;
+}
+
+.manager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.manager-row__id {
+  font-size: 25rpx;
+}
+
+.manager-row__revoke {
+  color: #C7392F;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.grant-section {
+  margin-top: 26rpx;
+}
+
+.form-label {
+  margin-bottom: 8rpx;
+  color: #5E6B65;
+  font-size: 22rpx;
+}
+
+.grant-row {
+  display: flex;
+  gap: 10rpx;
+}
+
+.grant-input {
+  flex: 1;
+  height: 68rpx;
+  padding: 0 16rpx;
+  border-radius: 14rpx;
+  background: #F8F6F0;
+  border: 1rpx solid #E4E2D9;
+  box-sizing: border-box;
+  font-size: 24rpx;
+}
+
+.grant-hint {
+  margin-top: 10rpx;
+  color: #9AA49F;
+  font-size: 19rpx;
+  line-height: 1.6;
+}

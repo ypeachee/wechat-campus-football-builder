@@ -5,6 +5,7 @@ import com.campusfootball.audit.AuditService;
 import com.campusfootball.common.api.AppException;
 import com.campusfootball.common.api.ErrorCode;
 import com.campusfootball.team.AuthorizationService;
+import com.campusfootball.team.Team;
 import com.campusfootball.team.TeamMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,11 @@ public class SeasonService {
 
     public Season get(long seasonId) {
         return seasonMapper.findById(seasonId).orElseThrow(() -> notFound());
+    }
+
+    public List<Team> findTeams(long seasonId) {
+        get(seasonId);
+        return seasonMapper.findTeamsBySeason(seasonId);
     }
 
     @Transactional

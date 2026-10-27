@@ -1,0 +1,91 @@
+<view class="page-shell admin-season-page">
+  <app-header title="赛季管理" subtitle="创建赛季并维护参赛球队" season-name="ADMIN" />
+
+  <view wx:if="{{loading}}" class="admin-loading">
+    <t-loading theme="circular" size="44rpx" text="加载赛季" />
+  </view>
+
+  <view wx:elif="{{!verified}}" class="surface-card">
+    <empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" />
+  </view>
+
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-card__title">创建赛季</view>
+      <view class="form-field">
+        <view class="form-label">赛季名称</view>
+        <input class="form-input" value="{{seasonForm.name}}" data-field="name" bindinput="handleFormInput" placeholder="例如：2026 秋季联赛" />
+      </view>
+      <view class="date-grid">
+        <picker mode="date" value="{{seasonForm.startDate}}" bindchange="handleStartDate">
+          <view class="form-field">
+            <view class="form-label">开始日期</view>
+            <view class="date-value">{{seasonForm.startDate || "选择日期"}}</view>
+          </view>
+        </picker>
+        <picker mode="date" value="{{seasonForm.endDate}}" bindchange="handleEndDate">
+          <view class="form-field">
+            <view class="form-label">结束日期</view>
+            <view class="date-value">{{seasonForm.endDate || "选择日期"}}</view>
+          </view>
+        </picker>
+      </view>
+      <view class="form-field">
+        <view class="form-label">初始状态</view>
+        <view class="status-options">
+          <view
+            wx:for="{{statusOptions}}"
+            wx:key="value"
+            class="status-option {{seasonForm.status === item.value ? 'status-option--active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="selectStatus"
+          >{{item.label}}</view>
+        </view>
+      </view>
+      <view class="form-actions">
+        <t-button theme="primary" block loading="{{submitting}}" bind:tap="createSeason">创建赛季</t-button>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view class="section-title">赛季列表</view>
+    </view>
+    <scroll-view class="season-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="season-tabs">
+        <view
+          wx:for="{{seasons}}"
+          wx:key="id"
+          class="season-tab {{selectedSeasonId === item.id ? 'season-tab--active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectSeason"
+        >
+          <view class="season-tab__name">{{item.name}}</view>
+          <view class="season-tab__status">{{item.status}}</view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{selectedSeason}}" class="surface-card season-detail">
+      <view class="season-detail__title">{{selectedSeason.name}}</view>
+      <view class="season-detail__copy">管理该赛季的参赛球队</view>
+
+      <view class="team-section-title">已参赛</view>
+      <view wx:if="{{seasonTeams.length === 0}}" class="team-empty">暂无参赛球队</view>
+      <view wx:else class="admin-team-list">
+        <view wx:for="{{seasonTeams}}" wx:key="id" class="admin-team-row">
+          <view class="admin-team-row__name">{{item.name}}</view>
+          <view class="admin-team-row__action admin-team-row__action--danger" data-id="{{item.id}}" bindtap="removeTeam">移除</view>
+        </view>
+      </view>
+
+      <view class="team-section-title">可添加</view>
+      <view wx:if="{{availableTeams.length === 0}}" class="team-empty">没有可添加的球队</view>
+      <view wx:else class="admin-team-list">
+        <view wx:for="{{availableTeams}}" wx:key="id" class="admin-team-row">
+          <view class="admin-team-row__name">{{item.name}}</view>
+          <view class="admin-team-row__action" data-id="{{item.id}}" bindtap="addTeam">加入</view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

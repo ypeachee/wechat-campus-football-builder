@@ -39,4 +39,12 @@
     <delete id="removeTeam">
         DELETE FROM season_team WHERE season_id = #{seasonId} AND team_id = #{teamId}
     </delete>
+
+    <select id="findTeamsBySeason" resultType="com.campusfootball.team.Team">
+        SELECT t.*
+        FROM season_team st
+        JOIN team t ON t.id = st.team_id
+        WHERE st.season_id = #{seasonId}
+        ORDER BY t.name
+    </select>
 </mapper>

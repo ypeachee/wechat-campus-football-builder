@@ -42,6 +42,21 @@ class SeasonFixtureIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void adminCanListSeasonTeams() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long seasonId = TestApiSupport.createSeason(mockMvc, admin, "SeasonTeams", "ACTIVE");
+        long home = TestApiSupport.createTeam(mockMvc, admin, "SeasonTeamA");
+        long away = TestApiSupport.createTeam(mockMvc, admin, "SeasonTeamB");
+        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, home);
+        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, away);
+
+        mockMvc.perform(get("/api/v1/admin/seasons/" + seasonId + "/teams")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
     void draftSeasonHiddenFromPublicButVisibleToAdmin() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long seasonId = TestApiSupport.createSeason(mockMvc, admin, "DraftSeason", "DRAFT");

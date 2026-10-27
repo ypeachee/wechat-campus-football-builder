@@ -30,6 +30,10 @@ public class TeamManagerService {
         this.auditService = auditService;
     }
 
+    public java.util.List<Long> findUserIds(long teamId) {
+        return teamManagerMapper.findUserIdsByTeamId(teamId);
+    }
+
     @Transactional
     public void grant(long actorUserId, long teamId, long targetUserId) {
         authorizationService.requireAdmin(actorUserId);

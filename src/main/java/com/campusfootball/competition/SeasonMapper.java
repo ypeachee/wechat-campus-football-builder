@@ -3,6 +3,8 @@ package com.campusfootball.competition;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.campusfootball.team.Team;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +23,6 @@ public interface SeasonMapper {
     int addTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
 
     int removeTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
+
+    List<Team> findTeamsBySeason(@Param("seasonId") long seasonId);
 }

@@ -52,6 +52,26 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void adminCanListCurrentTeamManagers() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long teamId = createTeam(admin, "ManagerListTeam");
+        JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
+        long managerId = managerLogin.get("userId").asLong();
+        grant(admin, teamId, managerId);
+
+        mockMvc.perform(get("/api/v1/admin/teams/" + teamId + "/managers")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value(managerId));
+
+        revoke(admin, teamId, managerId);
+        mockMvc.perform(get("/api/v1/admin/teams/" + teamId + "/managers")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
     void alreadyIssuedTokenLosesAccessAfterRevocation() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = createTeam(admin, "RevokeTeam");

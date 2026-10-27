@@ -9,7 +9,9 @@
     "pages/player-detail/index",
     "pages/fixture-detail/index",
     "pages/manage/index",
-    "pages/manage-team/index"
+    "pages/manage-team/index",
+    "pages/admin-season/index",
+    "pages/admin-access/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",

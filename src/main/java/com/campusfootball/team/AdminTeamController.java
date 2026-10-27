@@ -64,6 +64,12 @@ public class AdminTeamController {
         return TeamController.PlayerResponse.from(playerService.getPlayer(playerId));
     }
 
+    @GetMapping("/teams/{teamId}/managers")
+    public List<Long> managers(@PathVariable long teamId) {
+        teamService.getTeam(teamId);
+        return teamManagerService.findUserIds(teamId);
+    }
+
     @PostMapping("/teams/{teamId}/managers")
     public void grantManager(@PathVariable long teamId, @Valid @RequestBody GrantManagerRequest request) {
         teamManagerService.grant(currentUser.require().userId(), teamId, request.userId());

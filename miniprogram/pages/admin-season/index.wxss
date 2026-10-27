@@ -1,0 +1,174 @@
+.admin-season-page {
+  padding-top: 22rpx;
+}
+
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.form-card {
+  margin-top: 20rpx;
+}
+
+.form-card__title,
+.season-detail__title {
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.form-field {
+  margin-top: 18rpx;
+}
+
+.form-label {
+  margin-bottom: 8rpx;
+  color: #5E6B65;
+  font-size: 22rpx;
+}
+
+.form-input,
+.date-value {
+  height: 74rpx;
+  padding: 0 18rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 14rpx;
+  background: #F8F6F0;
+  border: 1rpx solid #E4E2D9;
+  box-sizing: border-box;
+  font-size: 25rpx;
+}
+
+.date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.status-options {
+  display: flex;
+  gap: 10rpx;
+}
+
+.status-option {
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #F8F6F0;
+  border: 1rpx solid #E4E2D9;
+  color: #5E6B65;
+  font-size: 22rpx;
+}
+
+.status-option--active {
+  background: #E4F5EC;
+  border-color: #AAD9C2;
+  color: #0B6B4B;
+  font-weight: 700;
+}
+
+.form-actions {
+  margin-top: 24rpx;
+}
+
+.section-head {
+  margin-top: 32rpx;
+}
+
+.section-head .section-title {
+  margin: 0;
+}
+
+.season-scroll {
+  margin-top: 14rpx;
+  white-space: nowrap;
+}
+
+.season-tabs {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 24rpx;
+}
+
+.season-tab {
+  min-width: 190rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+  box-sizing: border-box;
+}
+
+.season-tab--active {
+  background: #0B6B4B;
+  border-color: #0B6B4B;
+  color: #FFFFFF;
+}
+
+.season-tab__name {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.season-tab__status {
+  margin-top: 5rpx;
+  font-size: 18rpx;
+  opacity: 0.68;
+}
+
+.season-detail {
+  margin-top: 18rpx;
+}
+
+.season-detail__copy {
+  margin-top: 6rpx;
+  color: #7C8983;
+  font-size: 21rpx;
+}
+
+.team-section-title {
+  margin-top: 24rpx;
+  color: #5E6B65;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.team-empty {
+  padding: 20rpx 0;
+  color: #9AA49F;
+  font-size: 21rpx;
+}
+
+.admin-team-list {
+  margin-top: 8rpx;
+  overflow: hidden;
+  border-radius: 14rpx;
+  border: 1rpx solid #EEECE5;
+}
+
+.admin-team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx;
+  border-bottom: 1rpx solid #EEECE5;
+}
+
+.admin-team-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-team-row__name {
+  font-size: 24rpx;
+}
+
+.admin-team-row__action {
+  color: #0B6B4B;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.admin-team-row__action--danger {
+  color: #C7392F;
+}
