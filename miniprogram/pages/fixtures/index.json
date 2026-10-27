@@ -1,3 +1,10 @@
 {
-  "navigationBarTitleText": "赛程"
+  "navigationBarTitleText": "赛程",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "app-header": "/components/app-header/index",
+    "empty-state": "/components/empty-state/index",
+    "match-card": "/components/match-card/index",
+    "season-picker": "/components/season-picker/index"
+  }
 }

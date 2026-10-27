@@ -1,11 +1,41 @@
-<view class="page-shell">
-  <view class="brand-card">
-    <view class="brand-accent"></view>
-    <view class="placeholder-page">
-      <view>
-        <view class="placeholder-page__title">{{heading}}</view>
-        <view class="placeholder-page__copy">{{copy}}</view>
-      </view>
+<view class="page-shell fixtures-page">
+  <app-header title="赛程中心" subtitle="按状态查看本赛季比赛" season-name="{{selectedSeasonName}}" />
+  <season-picker
+    seasons="{{seasons}}"
+    selected-id="{{selectedSeasonId}}"
+    bind:change="handleSeasonChange"
+  />
+
+  <scroll-view class="status-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="status-chips">
+      <view
+        wx:for="{{statusFilters}}"
+        wx:key="value"
+        class="status-chip {{selectedStatus === item.value ? 'status-chip--active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="handleStatusFilter"
+      >{{item.label}}</view>
     </view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="fixtures-loading">
+    <t-loading theme="circular" size="48rpx" text="加载赛程" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="赛程加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+
+  <view wx:elif="{{filteredFixtures.length === 0}}" class="surface-card">
+    <empty-state title="暂无比赛" description="当前筛选条件下没有可展示的比赛。" />
+  </view>
+
+  <view wx:else class="fixture-list">
+    <match-card
+      wx:for="{{filteredFixtures}}"
+      wx:key="id"
+      match="{{item}}"
+      bind:select="openFixture"
+    />
   </view>
 </view>

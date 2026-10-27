@@ -6,7 +6,8 @@
     "pages/stats/index",
     "pages/profile/index",
     "pages/team-detail/index",
-    "pages/player-detail/index"
+    "pages/player-detail/index",
+    "pages/fixture-detail/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#F4F1E8",

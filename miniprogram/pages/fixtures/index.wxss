@@ -1,2 +1,42 @@
-/* Page-specific styles are added with the page implementation. */
+.fixtures-page {
+  padding-top: 22rpx;
+}
 
+.status-scroll {
+  margin: 18rpx 0;
+  white-space: nowrap;
+}
+
+.status-chips {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 24rpx;
+}
+
+.status-chip {
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E4E2D9;
+  color: #5E6B65;
+  font-size: 23rpx;
+}
+
+.status-chip--active {
+  background: #0B6B4B;
+  border-color: #0B6B4B;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.fixtures-loading {
+  display: flex;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.fixture-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}

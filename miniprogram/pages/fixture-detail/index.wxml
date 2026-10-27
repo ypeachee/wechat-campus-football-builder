@@ -1,0 +1,81 @@
+<view class="page-shell fixture-detail-page">
+  <view wx:if="{{loading}}" class="detail-loading">
+    <t-loading theme="circular" size="48rpx" text="加载比赛" />
+  </view>
+
+  <view wx:elif="{{error}}" class="surface-card">
+    <empty-state title="比赛加载失败" description="{{error}}" action-text="重试" bind:action="retry" />
+  </view>
+
+  <block wx:else>
+    <app-header
+      title="比赛详情"
+      subtitle="{{timeLabel}} · {{fixture.venue || '场地待定'}}"
+      season-name="MATCH DAY"
+    />
+
+    <view class="scoreboard">
+      <view class="scoreboard__status">
+        <t-tag size="small" variant="light" theme="{{statusTone}}">{{statusLabel}}</t-tag>
+      </view>
+      <view class="scoreboard__main">
+        <view class="scoreboard__team">{{fixture.homeTeam.name}}</view>
+        <view class="scoreboard__score numeric">
+          <block wx:if="{{fixture.homeScore === null || fixture.awayScore === null}}">VS</block>
+          <block wx:else>{{fixture.homeScore}} : {{fixture.awayScore}}</block>
+        </view>
+        <view class="scoreboard__team scoreboard__team--away">{{fixture.awayTeam.name}}</view>
+      </view>
+      <view class="scoreboard__locked" wx:if="{{fixture.dataLocked}}">数据已锁定</view>
+    </view>
+
+    <view class="section-head">
+      <view class="section-title">比赛事件</view>
+      <view class="section-subtitle">按比赛时间排序</view>
+    </view>
+
+    <view wx:if="{{eventViews.length === 0}}" class="surface-card">
+      <empty-state title="暂无比赛事件" description="比赛事件录入后会在这里展示。" />
+    </view>
+
+    <view wx:else class="event-list">
+      <view wx:for="{{eventViews}}" wx:key="id" class="event-row">
+        <view class="event-row__minute numeric">{{item.minuteLabel}}</view>
+        <view class="event-row__marker event-row__marker--{{item.eventTone}}"></view>
+        <view class="event-row__body">
+          <view class="event-row__headline">
+            <t-tag size="small" variant="light" theme="{{item.eventTone}}">{{item.eventLabel}}</t-tag>
+            <text class="event-row__team">{{item.teamName}}</text>
+          </view>
+          <view class="event-row__player">{{item.playerName}}</view>
+          <view wx:if="{{item.relatedName}}" class="event-row__assist">助攻：{{item.relatedName}}</view>
+          <view wx:if="{{item.note}}" class="event-row__note">{{item.note}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <view class="section-title">出场名单</view>
+      <view class="section-subtitle">首发与替补记录</view>
+    </view>
+
+    <view class="lineup-grid">
+      <view class="lineup-card">
+        <view class="lineup-card__title">{{fixture.homeTeam.name}}</view>
+        <view wx:if="{{homeAppearances.length === 0}}" class="lineup-card__empty">暂无记录</view>
+        <view wx:for="{{homeAppearances}}" wx:key="id" class="lineup-row">
+          <view class="lineup-row__name">{{item.playerName}}</view>
+          <view class="lineup-row__meta">{{item.starterText}} · {{item.minutesText}}</view>
+        </view>
+      </view>
+      <view class="lineup-card">
+        <view class="lineup-card__title">{{fixture.awayTeam.name}}</view>
+        <view wx:if="{{awayAppearances.length === 0}}" class="lineup-card__empty">暂无记录</view>
+        <view wx:for="{{awayAppearances}}" wx:key="id" class="lineup-row">
+          <view class="lineup-row__name">{{item.playerName}}</view>
+          <view class="lineup-row__meta">{{item.starterText}} · {{item.minutesText}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
