@@ -177,3 +177,35 @@
   color: #7C8983;
   font-size: 19rpx;
 }
+
+
+.rating-team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
+.rating-team-card { min-width: 0; padding: 20rpx; border-radius: 20rpx; background: #fff; border: 1rpx solid #E4E2D9; }
+.rating-team-card__title { padding-bottom: 14rpx; border-bottom: 1rpx solid #EEECE5; font-size: 25rpx; font-weight: 800; }
+.rating-team-card__empty { padding: 24rpx 0; color: #7C8983; font-size: 21rpx; text-align: center; }
+.rating-player-row { padding: 16rpx 0; border-bottom: 1rpx solid #F2F0EA; }
+.rating-player-row:last-child { border-bottom: 0; }
+.rating-player-row__main { min-width: 0; }
+.rating-player-row__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 23rpx; font-weight: 700; }
+.rating-player-row__stars { margin-top: 6rpx; color: #E5B53F; font-size: 22rpx; letter-spacing: 2rpx; }
+.rating-player-row__score { margin-top: 6rpx; color: #0B6B4B; font-size: 22rpx; font-weight: 700; }
+.rating-overlay { position: fixed; z-index: 40; inset: 0; display: flex; align-items: flex-end; background: rgba(0,0,0,.46); }
+.rating-sheet { width: 100%; max-height: 82vh; padding: 28rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)); border-radius: 28rpx 28rpx 0 0; background: #F4F1E8; box-sizing: border-box; }
+.rating-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16rpx; }
+.rating-sheet__title { font-size: 34rpx; font-weight: 800; }
+.rating-sheet__meta { margin-top: 6rpx; color: #7C8983; font-size: 21rpx; }
+.rating-sheet__close { color: #7C8983; font-size: 44rpx; line-height: 1; }
+.rating-sheet__scroll { max-height: 68vh; margin-top: 20rpx; }
+.rating-sheet__label { margin: 8rpx 0; color: #5E6B65; font-size: 22rpx; }
+.rating-sheet__score { margin: 10rpx 0 16rpx; color: #0B6B4B; font-weight: 700; }
+.rating-sheet__status { margin-bottom: 12rpx; color: #9C6B16; font-size: 21rpx; }
+.rating-sheet__textarea { width: 100%; min-height: 150rpx; padding: 18rpx; border-radius: 14rpx; background: #fff; border: 1rpx solid #E4E2D9; box-sizing: border-box; font-size: 24rpx; }
+.rating-sheet__counter { margin: 6rpx 0 18rpx; color: #7C8983; font-size: 20rpx; text-align: right; }
+.rating-comments__head { display: flex; justify-content: space-between; margin-top: 28rpx; padding-top: 20rpx; border-top: 1rpx solid #DDD9CE; font-size: 24rpx; font-weight: 700; }
+.rating-comments__empty { padding: 28rpx 0; color: #7C8983; font-size: 21rpx; text-align: center; }
+.rating-comment { margin-top: 14rpx; padding: 18rpx; border-radius: 16rpx; background: #fff; }
+.rating-comment__top { display: flex; justify-content: space-between; color: #5E6B65; font-size: 21rpx; }
+.rating-comment__name { font-weight: 700; }
+.rating-comment__score { color: #0B6B4B; }
+.rating-comment__text { margin: 10rpx 0; font-size: 24rpx; line-height: 1.6; }
+.rating-comment__actions { display: flex; justify-content: space-between; color: #7C8983; font-size: 19rpx; }

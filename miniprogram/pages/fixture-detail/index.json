@@ -5,6 +5,7 @@
     "app-header": "/components/app-header/index",
     "empty-state": "/components/empty-state/index",
     "t-loading": "tdesign-miniprogram/loading/loading",
-    "t-tag": "tdesign-miniprogram/tag/tag"
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "star-rating": "/components/star-rating/index"
   }
 }

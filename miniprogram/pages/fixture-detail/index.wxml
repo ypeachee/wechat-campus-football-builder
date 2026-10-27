@@ -30,6 +30,43 @@
     </view>
 
     <view class="section-head">
+      <view>
+        <view class="section-title">球员评分</view>
+        <view class="section-subtitle">5 星评分，按 10 分制展示</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!ratingEnabled}}" class="surface-card rating-closed">
+      <empty-state title="评分未开放" description="比赛结束后可为主客队出场球员评分。" />
+    </view>
+    <view wx:else class="rating-team-grid">
+      <view class="rating-team-card">
+        <view class="rating-team-card__title">{{fixture.homeTeam.name}}</view>
+        <view wx:if="{{homeRatings.length === 0}}" class="rating-team-card__empty">暂无出场球员</view>
+        <view wx:for="{{homeRatings}}" wx:key="playerId" class="rating-player-row"
+          data-player-id="{{item.playerId}}" bindtap="openRatingDialog">
+          <view class="rating-player-row__main">
+            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + "号 "}}{{item.playerName}}</view>
+            <view class="rating-player-row__stars">{{item.starsText}}</view>
+          </view>
+          <view class="rating-player-row__score numeric">{{item.ratingCount === 0 ? "待评分" : item.averageScore + "/10"}}</view>
+        </view>
+      </view>
+      <view class="rating-team-card">
+        <view class="rating-team-card__title">{{fixture.awayTeam.name}}</view>
+        <view wx:if="{{awayRatings.length === 0}}" class="rating-team-card__empty">暂无出场球员</view>
+        <view wx:for="{{awayRatings}}" wx:key="playerId" class="rating-player-row"
+          data-player-id="{{item.playerId}}" bindtap="openRatingDialog">
+          <view class="rating-player-row__main">
+            <view class="rating-player-row__name">{{item.jerseyNo === null ? "" : item.jerseyNo + "号 "}}{{item.playerName}}</view>
+            <view class="rating-player-row__stars">{{item.starsText}}</view>
+          </view>
+          <view class="rating-player-row__score numeric">{{item.ratingCount === 0 ? "待评分" : item.averageScore + "/10"}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-head">
       <view class="section-title">比赛事件</view>
       <view class="section-subtitle">按比赛时间排序</view>
     </view>
@@ -78,4 +115,46 @@
       </view>
     </view>
   </block>
+
+  <view wx:if="{{ratingDialogVisible}}" class="rating-overlay" bindtap="closeRatingDialog">
+    <view class="rating-sheet" catchtap="noop">
+      <view class="rating-sheet__head">
+        <view>
+          <view class="rating-sheet__title">{{selectedPlayerName}}</view>
+          <view class="rating-sheet__meta">{{selectedTeamName}}{{selectedRating ? " · " + (selectedRating.ratingCount ? selectedRating.averageScore + "/10 · " + selectedRating.ratingCount + "人评分" : "暂无评分") : ""}}</view>
+        </view>
+        <view class="rating-sheet__close" bindtap="closeRatingDialog">×</view>
+      </view>
+
+      <scroll-view scroll-y class="rating-sheet__scroll">
+        <view class="rating-sheet__label">你的评分</view>
+        <star-rating value="{{selectedRatingStars}}" readonly="{{selectedMyRating && !selectedMyRating.canEdit}}"
+          bind:change="handleRatingStars" />
+        <view class="rating-sheet__score">{{selectedRatingStars ? selectedRatingStars * 2 + " / 10" : "请选择 1–5 星"}}</view>
+        <view wx:if="{{selectedRatingStatusText}}" class="rating-sheet__status">{{selectedRatingStatusText}}</view>
+        <textarea class="rating-sheet__textarea" value="{{selectedRatingComment}}" maxlength="100"
+          bindinput="handleRatingComment" placeholder="可填写 100 字以内评价" />
+        <view class="rating-sheet__counter">{{selectedRatingComment.length}}/100</view>
+        <t-button theme="primary" block loading="{{ratingSubmitting}}"
+          disabled="{{selectedMyRating && !selectedMyRating.canEdit}}" bind:tap="saveRating">提交评分</t-button>
+
+        <view class="rating-comments__head">
+          <view>公开评价</view>
+          <view>{{selectedRatingComments.length}} 条</view>
+        </view>
+        <view wx:if="{{selectedRatingComments.length === 0}}" class="rating-comments__empty">暂无公开评价</view>
+        <view wx:for="{{selectedRatingComments}}" wx:key="id" class="rating-comment">
+          <view class="rating-comment__top">
+            <view class="rating-comment__name">{{item.nickname}}</view>
+            <view class="rating-comment__score">{{item.score}}/10</view>
+          </view>
+          <view class="rating-comment__text">{{item.comment}}</view>
+          <view class="rating-comment__actions">
+            <text>{{item.createdAt}}</text>
+            <text data-id="{{item.id}}" catchtap="reportComment">举报</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>
