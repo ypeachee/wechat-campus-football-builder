@@ -163,7 +163,7 @@ V1 不建立评分汇总表：
 
 使用 GitHub 项目 [houbb/sensitive-word](https://github.com/houbb/sensitive-word)：
 
-- Maven：`com.github.houbb:sensitive-word:0.26.0`
+- Maven：`com.github.houbb:sensitive-word:0.29.5`
 - 许可证：Apache-2.0
 - 负责 DFA 敏感词匹配、全半角处理和常见变体处理
 - 数据库 `sensitive_term` 中的词条作为运行时补充
