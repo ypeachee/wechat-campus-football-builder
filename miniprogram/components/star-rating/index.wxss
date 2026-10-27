@@ -1,0 +1,4 @@
+.star-rating { display: inline-flex; align-items: center; gap: 8rpx; }
+.star-rating__star { color: #D8D5CB; font-size: 46rpx; line-height: 1; }
+.star-rating__star--active { color: #E5B53F; }
+.star-rating--readonly .star-rating__star { font-size: 32rpx; }

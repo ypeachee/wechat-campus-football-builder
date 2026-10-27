@@ -1,0 +1,5 @@
+<view class="star-rating {{readonly ? 'star-rating--readonly' : ''}}">
+  <view wx:for="{{[1,2,3,4,5]}}" wx:key="*this"
+    class="star-rating__star {{item <= displayStars ? 'star-rating__star--active' : ''}}"
+    data-value="{{item}}" aria-role="button" aria-label="{{item}}星" bindtap="select">★</view>
+</view>

@@ -236,3 +236,101 @@ export interface BracketView {
   thirdPlace: BracketTieView | null;
   champion: BracketTeamRef | null;
 }
+
+
+export type RatingStatus = "VISIBLE" | "PENDING" | "REJECTED" | "HIDDEN";
+export type SensitiveTermAction = "BLOCK" | "REVIEW";
+
+export interface PlayerRatingSummary {
+  playerId: number;
+  playerName: string;
+  jerseyNo: number | null;
+  teamId: number;
+  teamName: string;
+  averageScore: number;
+  ratingCount: number;
+  star1Count: number;
+  star2Count: number;
+  star3Count: number;
+  star4Count: number;
+  star5Count: number;
+}
+
+export interface RatingComment {
+  id: number;
+  nickname: string;
+  stars: number;
+  score: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface RatingCommentPage {
+  averageScore: number;
+  ratingCount: number;
+  page: number;
+  size: number;
+  total: number;
+  comments: RatingComment[];
+}
+
+export interface PlayerSeasonRatingSummary {
+  playerId: number;
+  seasonId: number | null;
+  averageScore: number;
+  ratingCount: number;
+}
+
+export interface OwnRating {
+  rated: boolean;
+  id: number | null;
+  stars: number | null;
+  score: number | null;
+  comment: string | null;
+  status: RatingStatus | null;
+  moderationReason: string | null;
+  canEdit: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface RatingSubmission {
+  id: number;
+  stars: number;
+  score: number;
+  status: RatingStatus;
+  moderationReason: string | null;
+  canEdit: boolean;
+}
+
+export interface RatingModerationItem {
+  id: number;
+  fixtureId: number;
+  playerId: number;
+  playerName: string;
+  teamName: string;
+  nickname: string;
+  stars: number;
+  comment: string | null;
+  status: RatingStatus;
+  moderationReason: string | null;
+  reporterCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RatingModerationPage {
+  total: number;
+  items: RatingModerationItem[];
+}
+
+export interface SensitiveTerm {
+  id: number;
+  term: string;
+  category: string;
+  action: SensitiveTermAction;
+  enabled: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
