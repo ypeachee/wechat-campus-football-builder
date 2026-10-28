@@ -7,6 +7,8 @@ import com.campusfootball.common.api.ErrorCode;
 import com.campusfootball.competition.Fixture;
 import com.campusfootball.competition.FixtureMapper;
 import com.campusfootball.competition.FixtureStatus;
+import com.campusfootball.notification.NotificationService;
+import com.campusfootball.notification.NotificationType;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,15 +29,17 @@ public class RatingService {
     private final FixtureMapper fixtureMapper;
     private final ContentModerationService contentModerationService;
     private final AuditService auditService;
+    private final NotificationService notificationService;
     private final Clock clock;
 
     public RatingService(RatingMapper ratingMapper, FixtureMapper fixtureMapper,
                          ContentModerationService contentModerationService,
-                         AuditService auditService, Clock clock) {
+                         AuditService auditService, NotificationService notificationService, Clock clock) {
         this.ratingMapper = ratingMapper;
         this.fixtureMapper = fixtureMapper;
         this.contentModerationService = contentModerationService;
         this.auditService = auditService;
+        this.notificationService = notificationService;
         this.clock = clock;
     }
 
@@ -69,6 +73,7 @@ public class RatingService {
             rating.setUpdatedAt(now);
             ratingMapper.updateSubmission(rating);
             auditService.record(userId, teamId, AuditAction.UPDATE, "PLAYER_RATING", rating.getId(), null, rating);
+            notifyPendingIfNeeded(rating);
             return result(rating, false);
         }
 
@@ -89,6 +94,7 @@ public class RatingService {
         applyModeratedContent(rating, userId, cleanedComment);
         ratingMapper.insert(rating);
         auditService.record(userId, teamId, AuditAction.CREATE, "PLAYER_RATING", rating.getId(), null, rating);
+        notifyPendingIfNeeded(rating);
         return result(rating, true);
     }
 
@@ -128,11 +134,21 @@ public class RatingService {
         report.setCreatedAt(now);
         try {
             ratingMapper.insertReport(report);
+            notificationService.notifyAdmins(NotificationType.RATING_MODERATION,
+                    "有新的评分举报", "评分 #" + ratingId + " 收到举报，请审核处理",
+                    "/pages/manage/index", "rating-report:" + ratingId + ":" + userId);
         } catch (org.springframework.dao.DuplicateKeyException ex) {
             throw conflict("你已举报过该评价");
         }
     }
 
+    private void notifyPendingIfNeeded(PlayerMatchRating rating) {
+        if (rating.getStatus() == RatingStatus.PENDING) {
+            notificationService.notifyAdmins(NotificationType.RATING_MODERATION,
+                    "评分待审核", "评分 #" + rating.getId() + " 含敏感词，等待审核处理",
+                    "/pages/manage/index", "rating-moderation:" + rating.getId());
+        }
+    }
     private void applyModeratedContent(PlayerMatchRating rating, long userId, String comment) {
         rating.setComment(comment);
         if (comment == null) {

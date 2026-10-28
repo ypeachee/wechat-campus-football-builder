@@ -136,6 +136,12 @@
             <view class="lineup-editor__title">{{editor.teamName}}</view>
             <view class="lineup-editor__hint">保存后整队阵容一次生效</view>
           </view>
+          <view class="lineup-toolbar">
+            <input class="lineup-search" value="{{editor.searchText}}" data-team-id="{{editor.teamId}}" bindinput="handleLineupSearch" placeholder="搜索姓名或位置" />
+            <view class="lineup-tool" data-team-id="{{editor.teamId}}" bindtap="copyPreviousLineup">复制上一场</view>
+            <view class="lineup-tool lineup-tool--danger" data-team-id="{{editor.teamId}}" bindtap="clearLineup">清空</view>
+          </view>
+          <view class="lineup-count">首发不限人数，按实际出场勾选</view>
 
           <block wx:if="{{editor.players.length > 0}}">
             <view class="lineup-editor__label">
@@ -143,7 +149,7 @@
               <text class="lineup-editor__label-hint">点击球员勾选</text>
             </view>
             <view class="lineup-player-list">
-              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
+              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId" hidden="{{!player.visible}}"
                 class="lineup-row {{player.suspended ? 'lineup-row--suspended' : player.starter ? 'lineup-row--selected' : ''}}"
                 data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
                 bindtap="toggleLineupStarter">
@@ -151,6 +157,7 @@
                   {{!player.suspended && player.starter ? "✓" : ""}}
                 </view>
                 <text class="lineup-player-name">{{player.label}}</text>
+                <text class="lineup-position">{{player.positionLabel}}</text>
                 <text wx:if="{{player.suspended}}" class="lineup-status lineup-status--danger">{{player.suspensionText}}</text>
                 <text wx:elif="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
               </view>
@@ -158,10 +165,10 @@
 
             <view class="lineup-editor__label lineup-editor__label--substitute">
               <text>替补名单</text>
-              <text class="lineup-editor__label-hint">首发球员已勾选并锁定</text>
+              <text class="lineup-editor__label-hint">首发球员已勾选</text>
             </view>
             <view class="lineup-player-list">
-              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
+              <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId" hidden="{{!player.visible}}"
                 class="lineup-row {{player.suspended ? 'lineup-row--suspended' : player.starter ? 'lineup-row--locked' : player.substitute ? 'lineup-row--selected' : ''}}"
                 data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
                 bindtap="toggleLineupSubstitute">
@@ -169,6 +176,7 @@
                   {{!player.suspended && (player.starter || player.substitute) ? "✓" : ""}}
                 </view>
                 <text class="lineup-player-name">{{player.label}}</text>
+                <text class="lineup-position">{{player.positionLabel}}</text>
                 <text wx:if="{{player.suspended}}" class="lineup-status lineup-status--danger">{{player.suspensionText}}</text>
                 <text wx:elif="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
                 <view wx:elif="{{player.substitute}}" class="lineup-minutes-wrap" catchtap="noop">

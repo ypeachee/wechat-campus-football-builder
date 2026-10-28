@@ -112,3 +112,5 @@
 .logout-action {
   margin-top: 30rpx;
 }
+
+.notification-entry{display:flex;align-items:center;justify-content:space-between;margin-top:18rpx}.notification-entry__title{font-size:26rpx;font-weight:800}.notification-entry__copy{margin-top:6rpx;color:#7C8983;font-size:20rpx}.notification-entry__arrow{color:#0B6B4B;font-size:38rpx}

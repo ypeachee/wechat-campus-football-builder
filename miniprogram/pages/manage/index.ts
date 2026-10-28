@@ -136,6 +136,10 @@ Page({
     wx.navigateTo({ url: "/pages/admin-audit/index" });
   },
 
+  goDisciplineCenter() {
+    wx.navigateTo({ url: "/pages/discipline/index" });
+  },
+
   goAdminCompetition() {
     wx.navigateTo({ url: "/pages/admin-competition/index" });
   },

@@ -1,0 +1,20 @@
+<view class="page-shell notifications-page">
+  <app-header title="消息中心" subtitle="{{unreadCount ? unreadCount + ' 条未读' : '比赛、阵容、停赛与审核提醒'}}" season-name="INBOX" />
+  <view wx:if="{{loading}}" class="notifications-loading"><t-loading theme="circular" size="44rpx" text="加载消息" /></view>
+  <view wx:elif="{{!loggedIn}}" class="surface-card"><empty-state title="请先登录" description="登录后查看与你相关的比赛和审核提醒。" action-text="前往登录" bind:action="goLogin" /></view>
+  <view wx:elif="{{error}}" class="surface-card"><empty-state title="消息加载失败" description="{{error}}" action-text="重试" bind:action="retry" /></view>
+  <block wx:else>
+    <view wx:if="{{items.length > 0}}" class="notification-toolbar">
+      <text class="notification-summary">{{unreadCount ? unreadCount + " 条未读消息" : "消息已全部读完"}}</text>
+      <text wx:if="{{unreadCount > 0}}" class="notification-read-all" bindtap="markAllRead">{{marking ? "处理中" : "全部已读"}}</text>
+    </view>
+    <view wx:if="{{items.length === 0}}" class="surface-card"><empty-state title="暂无消息" description="有比赛、阵容或审核动态时会在这里提醒你。" /></view>
+    <view wx:else class="notification-list">
+      <view wx:for="{{items}}" wx:key="id" class="notification-card {{item.read ? 'notification-card--read' : ''}}" data-id="{{item.id}}" data-link="{{item.linkUrl}}" bindtap="openNotification">
+        <view class="notification-card__top"><text class="notification-type">{{item.typeLabel}}</text><text class="notification-time">{{item.timeLabel}}</text></view>
+        <view class="notification-title"><text wx:if="{{!item.read}}" class="unread-dot"></text>{{item.title}}</view>
+        <view class="notification-content">{{item.content}}</view>
+      </view>
+    </view>
+  </block>
+</view>

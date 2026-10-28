@@ -44,6 +44,30 @@ class SuspensionIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void competitionRulesCanChangeYellowThresholdAndRedLength() throws Exception {
+        Setup s = setup();
+        long competitionId = jdbc.queryForObject(
+                "SELECT competition_id FROM season WHERE id = ?", Long.class, s.seasonId());
+        mockMvc.perform(put("/api/v1/admin/competitions/" + competitionId + "/discipline-rule")
+                        .header("Authorization", "Bearer " + s.adminToken())
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"yellowSuspensionThreshold\":2,\"redSuspensionMatches\":2,\"cardsCrossStages\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.yellowSuspensionThreshold").value(2))
+                .andExpect(jsonPath("$.redSuspensionMatches").value(2));
+
+        TestApiSupport.addEvent(mockMvc, s.adminToken(), s.fixtureId(), s.homeTeamId(),
+                s.playerId(), "YELLOW_CARD", null, 10, 0);
+        TestApiSupport.addEvent(mockMvc, s.adminToken(), s.fixtureId(), s.homeTeamId(),
+                s.playerId(), "YELLOW_CARD", null, 20, 0);
+        TestApiSupport.finish(mockMvc, s.adminToken(), s.fixtureId(), 1, 0);
+
+        assertThat(jdbc.queryForObject("""
+                SELECT matches_total FROM player_suspension
+                WHERE player_id = ? AND source_type = 'YELLOW_ACCUMULATION'
+                """, Integer.class, s.playerId())).isEqualTo(1);
+    }
+    @Test
     void redCardCreatesOneSuspension() throws Exception {
         Setup s = setup();
         TestApiSupport.addEvent(mockMvc, s.adminToken(), s.fixtureId(), s.homeTeamId(),

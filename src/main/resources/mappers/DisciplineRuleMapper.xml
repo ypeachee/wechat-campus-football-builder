@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.DisciplineRuleMapper">
+    <select id="findByCompetitionId" resultType="com.campusfootball.competition.DisciplineRule">
+        SELECT id AS competition_id, yellow_suspension_threshold, red_suspension_matches,
+               cards_cross_stages
+        FROM competition
+        WHERE id = #{competitionId}
+    </select>
+
+    <select id="findBySeasonId" resultType="com.campusfootball.competition.DisciplineRule">
+        SELECT c.id AS competition_id, c.yellow_suspension_threshold, c.red_suspension_matches,
+               c.cards_cross_stages
+        FROM season s
+        JOIN competition c ON c.id = s.competition_id
+        WHERE s.id = #{seasonId}
+    </select>
+
+    <update id="update">
+        UPDATE competition
+        SET yellow_suspension_threshold = #{rule.yellowSuspensionThreshold},
+            red_suspension_matches = #{rule.redSuspensionMatches},
+            cards_cross_stages = #{rule.cardsCrossStages},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{rule.competitionId}
+    </update>
+</mapper>

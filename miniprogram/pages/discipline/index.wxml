@@ -1,0 +1,44 @@
+<view class="page-shell discipline-page">
+  <app-header title="纪律中心" subtitle="{{roleText || '红黄牌与停赛'}}" season-name="DISCIPLINE" />
+  <view wx:if="{{loading}}" class="discipline-loading"><t-loading theme="circular" size="44rpx" text="加载纪律记录" /></view>
+  <view wx:elif="{{!session}}" class="surface-card"><empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" /></view>
+  <view wx:elif="{{error}}" class="surface-card"><empty-state title="加载失败" description="{{error}}" action-text="重试" bind:action="retry" /></view>
+  <block wx:else>
+    <view class="surface-card discipline-filters">
+      <picker mode="selector" range="{{competitions}}" range-key="name" value="{{competitionIndex}}" bindchange="handleCompetitionChange">
+        <view class="discipline-picker"><text>赛事</text><text>{{competitions[competitionIndex].name || "选择赛事"}}</text></view>
+      </picker>
+      <picker mode="selector" range="{{seasons}}" range-key="name" value="{{seasonIndex}}" bindchange="handleSeasonChange">
+        <view class="discipline-picker"><text>赛季</text><text>{{seasons[seasonIndex].name || "选择赛季"}}</text></view>
+      </picker>
+      <picker mode="selector" range="{{teams}}" range-key="name" value="{{teamIndex}}" bindchange="handleTeamChange">
+        <view class="discipline-picker"><text>球队</text><text>{{teams[teamIndex].name || "全部球队"}}</text></view>
+      </picker>
+    </view>
+
+    <view class="discipline-summary">
+      <view class="surface-card summary-cell"><text class="summary-number">{{suspensions.length}}</text><text class="summary-label">停赛记录</text></view>
+      <view class="surface-card summary-cell"><text class="summary-number">{{cards.length}}</text><text class="summary-label">已完赛红牌/黄牌</text></view>
+    </view>
+
+    <view class="section-head"><view><view class="section-title">停赛状态</view><view class="section-subtitle">当前与历史处罚，按球队隔离展示</view></view></view>
+    <view wx:if="{{suspensions.length === 0}}" class="surface-card"><empty-state title="暂无停赛记录" description="红黄牌达到规则阈值后会自动生成停赛。" /></view>
+    <view wx:else class="discipline-list">
+      <view wx:for="{{suspensions}}" wx:key="id" class="surface-card suspension-card">
+        <view class="suspension-top"><view><text class="suspension-player">{{item.jerseyNo ? item.jerseyNo + " · " : ""}}{{item.playerName}}</text><text class="suspension-team">{{item.teamName}}</text></view><text class="status-pill status-pill--{{item.status}}">{{item.statusText}}</text></view>
+        <view class="suspension-meta">{{item.sourceText}} · 剩余 {{item.matchesRemaining}}/{{item.matchesTotal}} 场</view>
+        <view class="suspension-reason">{{item.reason}}</view>
+        <view class="suspension-actions"><text class="text-link" data-id="{{item.teamId}}" bindtap="openTeam">查看球队管理 ›</text></view>
+      </view>
+    </view>
+
+    <view class="section-head"><view><view class="section-title">红黄牌历史</view><view class="section-subtitle">只统计已完赛比赛</view></view></view>
+    <view wx:if="{{cards.length === 0}}" class="surface-card"><empty-state title="暂无红黄牌" description="录入比赛事件后会在这里形成纪律档案。" /></view>
+    <view wx:else class="surface-card discipline-card-list">
+      <view wx:for="{{cards}}" wx:key="eventId" class="card-history-row">
+        <view class="card-history-main"><text class="card-type card-type--{{item.eventType}}">{{item.typeText}}</text><text class="card-history-player">{{item.jerseyNo ? item.jerseyNo + " · " : ""}}{{item.playerName}}</text><text class="card-history-team">{{item.teamName}}</text></view>
+        <view class="card-history-meta">{{item.fixtureLabel}} · {{item.minute}}'</view>
+      </view>
+    </view>
+  </block>
+</view>

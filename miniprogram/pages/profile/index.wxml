@@ -39,6 +39,13 @@
       </view>
     </view>
 
+    <view class="surface-card notification-entry" bindtap="goNotifications">
+      <view>
+        <view class="notification-entry__title">消息中心</view>
+        <view class="notification-entry__copy">比赛、阵容、停赛和审核提醒</view>
+      </view>
+      <view class="notification-entry__arrow">›</view>
+    </view>
     <view wx:if="{{verified}}" class="profile-actions">
       <role-gate roles="{{manageRoles}}">
         <view class="manage-entry" bindtap="goManage">

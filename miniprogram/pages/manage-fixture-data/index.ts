@@ -32,6 +32,8 @@ type Option = { id: number; name: string };
 type LineupPlayerView = {
   playerId: number;
   label: string;
+  positionLabel: string;
+  visible: boolean;
   starter: boolean;
   substitute: boolean;
   suspended: boolean;
@@ -42,6 +44,7 @@ type LineupEditorView = {
   teamId: number;
   teamName: string;
   players: LineupPlayerView[];
+  searchText: string;
   saving: boolean;
 };
 type EventForm = {
@@ -207,10 +210,12 @@ Page({
       const existing = fixture.appearances.filter((appearance) => appearance.teamId === team.id);
       const roster = [...homePlayers, ...awayPlayers]
         .filter((player) => player.teamId === team.id && player.status === "ACTIVE")
-        .sort((a, b) => (a.jerseyNo ?? 999) - (b.jerseyNo ?? 999) || a.name.localeCompare(b.name));
+        .sort((a, b) => positionRank(a.position) - positionRank(b.position)
+          || (a.jerseyNo ?? 999) - (b.jerseyNo ?? 999) || a.name.localeCompare(b.name));
       return {
         teamId: team.id,
         teamName: team.name,
+        searchText: "",
         saving: false,
         players: roster.map((player) => {
           const appearance = existing.find((item) => item.playerId === player.id);
@@ -218,6 +223,8 @@ Page({
           return {
             playerId: player.id,
             label: player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`,
+            positionLabel: positionLabel(player.position),
+            visible: true,
             starter,
             substitute: starter || Boolean(appearance && !appearance.starter),
             suspended: suspensionByPlayer.has(player.id),
@@ -404,6 +411,67 @@ Page({
       player.substitute = !player.substitute;
       if (player.substitute && !player.minutesPlayed) player.minutesPlayed = "30";
     });
+  },
+
+  handleLineupSearch(event: WechatMiniprogram.Input) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    const query = event.detail.value.trim().toLowerCase();
+    const editors = this.data.lineupEditors.map((editor) => ({
+      ...editor,
+      searchText: editor.teamId === teamId ? event.detail.value : editor.searchText,
+      players: editor.players.map((player) => ({
+        ...player,
+        visible: editor.teamId !== teamId || !query
+          || `${player.label} ${player.positionLabel}`.toLowerCase().includes(query)
+      }))
+    }));
+    this.setData({ lineupEditors: editors });
+  },
+
+  clearLineup(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    wx.showModal({
+      title: "清空阵容",
+      content: "清空当前球队的首发和替补勾选？保存后才会生效。",
+      success: (result) => {
+        if (!result.confirm) return;
+        const editors = this.data.lineupEditors.map((editor) => editor.teamId === teamId ? {
+          ...editor,
+          players: editor.players.map((player) => ({ ...player, starter: false, substitute: false, minutesPlayed: "30" }))
+        } : editor);
+        this.setData({ lineupEditors: editors });
+      }
+    });
+  },
+
+  async copyPreviousLineup(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId);
+    if (!teamId || !this.data.fixture) return;
+    for (let index = this.data.selectedFixtureIndex - 1; index >= 0; index -= 1) {
+      const option = this.data.fixtureOptions[index];
+      if (!option) continue;
+      const detail = await fetchFixtureDetail(option.id).catch(() => null);
+      const previous = detail?.appearances.filter((item) => item.teamId === teamId) ?? [];
+      if (previous.length === 0) continue;
+      const byPlayer = new Map(previous.map((item) => [item.playerId, item]));
+      const editors = this.data.lineupEditors.map((editor) => editor.teamId === teamId ? {
+        ...editor,
+        players: editor.players.map((player) => {
+          const appearance = byPlayer.get(player.playerId);
+          return {
+            ...player,
+            starter: Boolean(appearance?.starter),
+            substitute: Boolean(appearance),
+            minutesPlayed: appearance?.minutesPlayed === null || appearance?.minutesPlayed === undefined
+              ? "30" : String(appearance.minutesPlayed)
+          };
+        })
+      } : editor);
+      this.setData({ lineupEditors: editors });
+      wx.showToast({ title: "已复制上一场", icon: "success" });
+      return;
+    }
+    wx.showToast({ title: "没有可复制的上一场阵容", icon: "none" });
   },
 
   handleLineupMinutes(event: WechatMiniprogram.Input) {
@@ -727,3 +795,22 @@ Page({
     wx.navigateBack();
   }
 });
+
+function positionRank(position: string | null): number {
+  const value = (position ?? "").toUpperCase();
+  if (["GK", "门将", "守门员"].includes(value)) return 0;
+  if (["DF", "DEF", "后卫"].includes(value)) return 1;
+  if (["MF", "MID", "中场"].includes(value)) return 2;
+  if (["FW", "FWD", "前锋"].includes(value)) return 3;
+  return 4;
+}
+
+function positionLabel(position: string | null): string {
+  switch (positionRank(position)) {
+    case 0: return "门将";
+    case 1: return "后卫";
+    case 2: return "中场";
+    case 3: return "前锋";
+    default: return "其他";
+  }
+}

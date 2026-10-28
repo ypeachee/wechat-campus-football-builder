@@ -36,6 +36,25 @@ export interface TeamSummary {
 export type SuspensionSourceType = "YELLOW_ACCUMULATION" | "RED_CARD" | "MANUAL";
 export type SuspensionStatus = "ACTIVE" | "SERVED" | "CANCELLED";
 
+export interface DisciplineCardHistory {
+  eventId: number;
+  fixtureId: number;
+  fixtureLabel: string;
+  teamId: number;
+  teamName: string;
+  playerId: number;
+  jerseyNo: number | null;
+  playerName: string;
+  eventType: EventType;
+  minute: number;
+  kickoffAt: string | null;
+}
+
+export interface DisciplineCenter {
+  suspensions: PlayerSuspension[];
+  cards: DisciplineCardHistory[];
+}
+
 export interface PlayerSuspension {
   id: number;
   playerId: number;
@@ -46,6 +65,7 @@ export interface PlayerSuspension {
   seasonId: number;
   sourceType: SuspensionSourceType;
   sourceFixtureId: number | null;
+  sourceStageId: number | null;
   reason: string;
   matchesTotal: number;
   matchesServed: number;
@@ -175,6 +195,9 @@ export interface StandingRow {
   goalsFor: number;
   goalsAgainst: number;
   goalDifference: number;
+  yellowCards: number;
+  redCards: number;
+  fairPlayPoints: number;
   points: number;
 }
 
@@ -209,6 +232,13 @@ export type CompetitionStatus = "ACTIVE" | "INACTIVE";
 export type StageType = "LEAGUE" | "GROUP" | "KNOCKOUT";
 export type StageStatus = "DRAFT" | "ACTIVE" | "FINISHED";
 export type TieStatus = "PENDING" | "READY" | "FINISHED" | "CANCELLED";
+
+export interface DisciplineRule {
+  competitionId: number;
+  yellowSuspensionThreshold: number;
+  redSuspensionMatches: number;
+  cardsCrossStages: boolean;
+}
 
 export interface Competition {
   id: number;
@@ -395,4 +425,24 @@ export interface RefereeRatingSubmission {
   stars: number;
   score: number;
   canEdit: boolean;
+}
+
+export type NotificationType = "FIXTURE_START" | "LINEUP_DEADLINE" | "SUSPENSION" | "RATING_MODERATION";
+
+export interface AppNotification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  content: string;
+  linkUrl: string | null;
+  readAt: string | null;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface NotificationPage {
+  items: AppNotification[];
+  unreadCount: number;
+  page: number;
+  size: number;
 }

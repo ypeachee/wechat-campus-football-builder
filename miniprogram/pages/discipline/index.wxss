@@ -1,0 +1,33 @@
+.discipline-page { padding-top: 22rpx; }
+.discipline-loading { display: flex; justify-content: center; padding: 120rpx 0; }
+.discipline-filters { padding: 4rpx 20rpx; margin-bottom: 18rpx; }
+.discipline-picker { display: flex; justify-content: space-between; padding: 20rpx 0; border-bottom: 1rpx solid #EEECE5; font-size: 24rpx; }
+.discipline-picker:last-child { border-bottom: 0; }
+.discipline-picker text:first-child { color: #7C8983; font-size: 21rpx; }
+.discipline-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; margin-bottom: 20rpx; }
+.summary-cell { display: flex; flex-direction: column; align-items: center; padding: 24rpx 10rpx; }
+.summary-number { color: #0B6B4B; font-size: 42rpx; font-weight: 800; }
+.summary-label { margin-top: 6rpx; color: #7C8983; font-size: 20rpx; }
+.discipline-list { display: flex; flex-direction: column; gap: 14rpx; }
+.suspension-card { padding: 22rpx; }
+.suspension-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12rpx; }
+.suspension-player { display: block; font-size: 28rpx; font-weight: 800; }
+.suspension-team { display: block; margin-top: 6rpx; color: #7C8983; font-size: 21rpx; }
+.status-pill { flex: none; padding: 6rpx 12rpx; border-radius: 999rpx; font-size: 19rpx; font-weight: 700; }
+.status-pill--ACTIVE { color: #A34600; background: #FFF1E5; }
+.status-pill--SERVED { color: #0B6B4B; background: #E4F5EC; }
+.status-pill--CANCELLED { color: #7C8983; background: #F1F0EB; }
+.suspension-meta { margin-top: 16rpx; color: #0B6B4B; font-size: 21rpx; font-weight: 650; }
+.suspension-reason { margin-top: 8rpx; color: #4D5C55; font-size: 23rpx; line-height: 1.55; }
+.suspension-actions { margin-top: 16rpx; text-align: right; }
+.text-link { color: #0B6B4B; font-size: 21rpx; font-weight: 700; }
+.discipline-card-list { padding: 0 22rpx; }
+.card-history-row { padding: 20rpx 0; border-bottom: 1rpx solid #EEECE5; }
+.card-history-row:last-child { border-bottom: 0; }
+.card-history-main { display: flex; align-items: center; gap: 10rpx; flex-wrap: wrap; }
+.card-type { padding: 4rpx 9rpx; border-radius: 6rpx; font-size: 18rpx; font-weight: 800; }
+.card-type--YELLOW_CARD { color: #8A6500; background: #FFF5CC; }
+.card-type--RED_CARD { color: #A52A2A; background: #FFE8E8; }
+.card-history-player { font-size: 24rpx; font-weight: 700; }
+.card-history-team { color: #7C8983; font-size: 20rpx; }
+.card-history-meta { margin-top: 8rpx; color: #7C8983; font-size: 20rpx; }

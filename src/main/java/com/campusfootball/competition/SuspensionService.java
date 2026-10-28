@@ -4,6 +4,8 @@ import com.campusfootball.audit.AuditAction;
 import com.campusfootball.audit.AuditService;
 import com.campusfootball.common.api.AppException;
 import com.campusfootball.common.api.ErrorCode;
+import com.campusfootball.notification.NotificationService;
+import com.campusfootball.notification.NotificationType;
 import com.campusfootball.team.AuthorizationService;
 import com.campusfootball.team.Player;
 import com.campusfootball.team.PlayerMapper;
@@ -35,11 +37,14 @@ public class SuspensionService {
     private final SeasonMapper seasonMapper;
     private final AuthorizationService authorizationService;
     private final AuditService auditService;
+    private final DisciplineRuleMapper disciplineRuleMapper;
+    private final NotificationService notificationService;
 
     public SuspensionService(SuspensionMapper suspensionMapper, FixtureMapper fixtureMapper,
                              AppearanceMapper appearanceMapper, PlayerMapper playerMapper,
                              TeamMapper teamMapper, SeasonMapper seasonMapper,
-                             AuthorizationService authorizationService, AuditService auditService) {
+                             AuthorizationService authorizationService, AuditService auditService,
+                             DisciplineRuleMapper disciplineRuleMapper, NotificationService notificationService) {
         this.suspensionMapper = suspensionMapper;
         this.fixtureMapper = fixtureMapper;
         this.appearanceMapper = appearanceMapper;
@@ -48,21 +53,31 @@ public class SuspensionService {
         this.seasonMapper = seasonMapper;
         this.authorizationService = authorizationService;
         this.auditService = auditService;
+        this.disciplineRuleMapper = disciplineRuleMapper;
+        this.notificationService = notificationService;
     }
 
     @Transactional
     public void recalculateSeason(long seasonId) {
+        DisciplineRule rule = disciplineRuleMapper.findBySeasonId(seasonId)
+                .orElseGet(() -> DisciplineRule.defaults(0));
         List<CardEventRow> cards = suspensionMapper.findFinishedCardEventsBySeason(seasonId);
-        Map<Long, Integer> yellowCounts = new HashMap<>();
+        Map<PlayerStageKey, Integer> yellowCounts = new HashMap<>();
         Set<SourceKey> expected = new HashSet<>();
         for (CardEventRow card : cards) {
             if (card.getEventType() == EventType.RED_CARD) {
-                ensureAutomatic(card, SuspensionSourceType.RED_CARD, "直接红牌停赛1场", expected);
+                ensureAutomatic(card, SuspensionSourceType.RED_CARD,
+                        "直接红牌停赛" + rule.redSuspensionMatches() + "场", expected,
+                        rule.redSuspensionMatches(), rule);
             } else if (card.getEventType() == EventType.YELLOW_CARD) {
-                int count = yellowCounts.merge(card.getPlayerId(), 1, Integer::sum);
-                if (count % 3 == 0) {
+                PlayerStageKey key = new PlayerStageKey(card.getPlayerId(),
+                        rule.cardsCrossStages() ? null : card.getStageId());
+                int count = yellowCounts.merge(key, 1, Integer::sum);
+                if (count % rule.yellowSuspensionThreshold() == 0) {
+                    String scope = rule.cardsCrossStages() ? "赛季" : "本阶段";
                     ensureAutomatic(card, SuspensionSourceType.YELLOW_ACCUMULATION,
-                            "赛季累计3张黄牌停赛1场", expected);
+                            scope + "累计" + rule.yellowSuspensionThreshold() + "张黄牌停赛1场",
+                            expected, 1, rule);
                 }
             }
         }
@@ -74,14 +89,19 @@ public class SuspensionService {
             }
         }
     }
-
     private void ensureAutomatic(CardEventRow card, SuspensionSourceType type, String reason,
-                                 Set<SourceKey> expected) {
+                                 Set<SourceKey> expected, int matchesTotal, DisciplineRule rule) {
         SourceKey key = new SourceKey(type, card.getEventId());
         expected.add(key);
-        boolean alreadyExists = suspensionMapper.findBySourceEventId(card.getEventId()).stream()
-                .anyMatch(item -> item.getSourceType() == type);
-        if (alreadyExists) {
+        Optional<PlayerSuspension> existing = suspensionMapper.findBySourceEventId(card.getEventId()).stream()
+                .filter(item -> item.getSourceType() == type)
+                .findFirst();
+        if (existing.isPresent()) {
+            PlayerSuspension current = existing.get();
+            if (current.getMatchesServed() == 0
+                    && (current.getMatchesTotal() != matchesTotal || !reason.equals(current.getReason()))) {
+                suspensionMapper.updateAutomaticRule(current.getId(), reason, matchesTotal);
+            }
             return;
         }
         PlayerSuspension suspension = new PlayerSuspension();
@@ -91,14 +111,18 @@ public class SuspensionService {
         suspension.setSourceType(type);
         suspension.setSourceEventId(card.getEventId());
         suspension.setSourceFixtureId(card.getFixtureId());
+        suspension.setSourceStageId(rule.cardsCrossStages() ? null : card.getStageId());
         suspension.setReason(reason);
-        suspension.setMatchesTotal(1);
+        suspension.setMatchesTotal(matchesTotal);
         suspension.setMatchesServed(0);
         suspension.setStatus(SuspensionStatus.ACTIVE);
         suspension.setCreatedBy(card.getEventCreatedBy());
         suspensionMapper.insert(suspension);
+        Player player = playerMapper.findById(card.getPlayerId()).orElse(null);
+        notificationService.notifyTeamStaff(card.getTeamId(), NotificationType.SUSPENSION,
+                "球员停赛通知", (player == null ? "球员" : player.getName()) + " 新增停赛处罚：" + reason,
+                "/pages/discipline/index", "suspension:" + suspension.getId());
     }
-
     public void assertCardEventMutable(long eventId) {
         for (PlayerSuspension suspension : suspensionMapper.findBySourceEventId(eventId)) {
             if (suspension.getMatchesServed() != null && suspension.getMatchesServed() > 0) {
@@ -183,6 +207,22 @@ public class SuspensionService {
                 .map(this::toView).toList();
     }
 
+    public List<SuspensionView> findBySeasonForManagement(long actorUserId, long seasonId, Long teamId) {
+        UserRole role = authorizationService.currentRole(actorUserId);
+        seasonMapper.findById(seasonId).orElseThrow(() -> notFound("赛季不存在"));
+        if (role == UserRole.VIEWER) {
+            throw forbidden();
+        }
+        List<Long> managed = role == UserRole.TEAM_LEADER
+                ? authorizationService.managedTeamIds(actorUserId) : List.of();
+        if (role == UserRole.TEAM_LEADER && teamId != null && !managed.contains(teamId)) {
+            throw forbidden();
+        }
+        return suspensionMapper.findBySeasonAndOptionalTeam(seasonId, teamId).stream()
+                .filter(item -> role != UserRole.TEAM_LEADER || teamId != null || managed.contains(item.getTeamId()))
+                .map(this::toView)
+                .toList();
+    }
     public List<SuspensionView> findByFixture(long actorUserId, long fixtureId) {
         Fixture fixture = fixtureMapper.findById(fixtureId).orElseThrow(this::fixtureNotFound);
         UserRole role = authorizationService.currentRole(actorUserId);
@@ -243,6 +283,9 @@ public class SuspensionService {
         suspension.setStatus(SuspensionStatus.ACTIVE);
         suspension.setCreatedBy(actorUserId);
         suspensionMapper.insert(suspension);
+        notificationService.notifyTeamStaff(player.getTeamId(), NotificationType.SUSPENSION,
+                "球员停赛通知", player.getName() + " 被处以 " + matchesTotal + " 场停赛",
+                "/pages/discipline/index", "suspension:" + suspension.getId());
         auditService.record(actorUserId, player.getTeamId(), AuditAction.CREATE, "SUSPENSION",
                 suspension.getId(), null, suspension);
         return suspension.getId();
@@ -275,6 +318,10 @@ public class SuspensionService {
     }
 
     private boolean appliesToFixture(PlayerSuspension suspension, Fixture fixture) {
+        if (suspension.getSourceStageId() != null
+                && !suspension.getSourceStageId().equals(fixture.getStageId())) {
+            return false;
+        }
         if (suspension.getSourceFixtureId() == null) {
             return true;
         }
@@ -311,7 +358,7 @@ public class SuspensionService {
         return new SuspensionView(suspension.getId(), suspension.getPlayerId(),
                 player == null ? null : player.getJerseyNo(), player == null ? "未知球员" : player.getName(),
                 suspension.getTeamId(), team == null ? "未知球队" : team.getName(),
-                suspension.getSeasonId(), suspension.getSourceType(), suspension.getSourceFixtureId(),
+                suspension.getSeasonId(), suspension.getSourceType(), suspension.getSourceFixtureId(), suspension.getSourceStageId(),
                 suspension.getReason(), suspension.getMatchesTotal(), suspension.getMatchesServed(), remaining,
                 suspension.getStatus(), suspension.getCreatedAt());
     }
@@ -335,9 +382,12 @@ public class SuspensionService {
     private record SourceKey(SuspensionSourceType type, Long eventId) {
     }
 
+    private record PlayerStageKey(long playerId, Long stageId) {
+    }
+
     public record SuspensionView(long id, long playerId, Integer jerseyNo, String playerName,
                                  long teamId, String teamName, long seasonId,
-                                 SuspensionSourceType sourceType, Long sourceFixtureId,
+                                 SuspensionSourceType sourceType, Long sourceFixtureId, Long sourceStageId,
                                  String reason, int matchesTotal, int matchesServed, int matchesRemaining,
                                  SuspensionStatus status, LocalDateTime createdAt) {
     }

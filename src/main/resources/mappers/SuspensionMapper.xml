@@ -9,6 +9,7 @@
         <result property="sourceType" column="source_type"/>
         <result property="sourceEventId" column="source_event_id"/>
         <result property="sourceFixtureId" column="source_fixture_id"/>
+        <result property="sourceStageId" column="source_stage_id"/>
         <result property="reason" column="reason"/>
         <result property="matchesTotal" column="matches_total"/>
         <result property="matchesServed" column="matches_served"/>
@@ -21,6 +22,7 @@
     <resultMap id="CardEventRowMap" type="com.campusfootball.competition.CardEventRow">
         <result property="eventId" column="event_id"/>
         <result property="fixtureId" column="fixture_id"/>
+        <result property="stageId" column="stage_id"/>
         <result property="teamId" column="team_id"/>
         <result property="playerId" column="player_id"/>
         <result property="eventType" column="event_type"/>
@@ -30,7 +32,7 @@
     </resultMap>
 
     <select id="findFinishedCardEventsBySeason" resultMap="CardEventRowMap">
-        SELECT e.id AS event_id, e.fixture_id, e.team_id, e.player_id, e.event_type,
+        SELECT e.id AS event_id, e.fixture_id, f.stage_id, e.team_id, e.player_id, e.event_type,
                e.minute, f.kickoff_at, e.created_by AS event_created_by
         FROM fixture_event e
         JOIN fixture f ON f.id = e.fixture_id
@@ -55,6 +57,12 @@
         ORDER BY status, created_at, id
     </select>
 
+    <select id="findBySeasonAndOptionalTeam" resultMap="SuspensionMap">
+        SELECT * FROM player_suspension
+        WHERE season_id = #{seasonId}
+        <if test="teamId != null">AND team_id = #{teamId}</if>
+        ORDER BY status, created_at, id
+    </select>
     <select id="findAutomaticBySeason" resultMap="SuspensionMap">
         SELECT * FROM player_suspension
         WHERE season_id = #{seasonId} AND source_type IN ('YELLOW_ACCUMULATION', 'RED_CARD')
@@ -73,16 +81,22 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO player_suspension
-            (player_id, team_id, season_id, source_type, source_event_id, source_fixture_id,
+            (player_id, team_id, season_id, source_type, source_event_id, source_fixture_id, source_stage_id,
              reason, matches_total, matches_served, status, created_by)
         VALUES
-            (#{playerId}, #{teamId}, #{seasonId}, #{sourceType}, #{sourceEventId}, #{sourceFixtureId},
+            (#{playerId}, #{teamId}, #{seasonId}, #{sourceType}, #{sourceEventId}, #{sourceFixtureId}, #{sourceStageId},
              #{reason}, #{matchesTotal}, #{matchesServed}, #{status}, #{createdBy})
     </insert>
 
     <update id="updateProgress">
         UPDATE player_suspension
         SET matches_served = #{matchesServed}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateAutomaticRule">
+        UPDATE player_suspension
+        SET reason = #{reason}, matches_total = #{matchesTotal}, updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 

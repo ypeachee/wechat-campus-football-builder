@@ -45,7 +45,6 @@
         JOIN season s ON s.id = f.season_id
         JOIN player p ON p.id = a.player_id
         JOIN team t ON t.id = a.team_id
-        WHERE 1 = 1
         <include refid="fixtureFilters"/>
         GROUP BY p.id, p.name, a.team_id, t.name
         ORDER BY appearances DESC, p.name ASC
@@ -68,6 +67,19 @@
             FROM fixture f JOIN season s ON s.id = f.season_id
             WHERE f.home_score IS NOT NULL
             <include refid="fixtureFilters"/>
+        ),
+        cards AS (
+            SELECT e.team_id,
+                   SUM(CASE WHEN e.event_type = 'YELLOW_CARD' THEN 1 ELSE 0 END) AS yellow_cards,
+                   SUM(CASE WHEN e.event_type = 'RED_CARD' THEN 1 ELSE 0 END) AS red_cards,
+                   -SUM(CASE WHEN e.event_type = 'YELLOW_CARD' THEN 1 ELSE 0 END)
+                   - 3 * SUM(CASE WHEN e.event_type = 'RED_CARD' THEN 1 ELSE 0 END) AS fair_play_points
+            FROM fixture_event e
+            JOIN fixture f ON f.id = e.fixture_id
+            JOIN season s ON s.id = f.season_id
+            WHERE e.event_type IN ('YELLOW_CARD', 'RED_CARD')
+            <include refid="fixtureFilters"/>
+            GROUP BY e.team_id
         )
         SELECT st.team_id, t.name AS team_name,
                COUNT(r.team_id) AS played,
@@ -77,16 +89,21 @@
                COALESCE(SUM(r.goals_for), 0) AS goals_for,
                COALESCE(SUM(r.goals_against), 0) AS goals_against,
                COALESCE(SUM(r.goals_for), 0) - COALESCE(SUM(r.goals_against), 0) AS goal_difference,
+               COALESCE(c.yellow_cards, 0) AS yellow_cards,
+               COALESCE(c.red_cards, 0) AS red_cards,
+               COALESCE(c.fair_play_points, 0) AS fair_play_points,
                COALESCE(SUM(r.won), 0) * 3 + COALESCE(SUM(r.drawn), 0) AS points
         FROM season_team st
         JOIN season s ON s.id = st.season_id
         JOIN team t ON t.id = st.team_id
         LEFT JOIN results r ON r.team_id = st.team_id
+        LEFT JOIN cards c ON c.team_id = st.team_id
         WHERE 1 = 1
         <if test="filter.seasonId != null">AND st.season_id = #{filter.seasonId}</if>
         <if test="filter.competitionId != null">AND s.competition_id = #{filter.competitionId}</if>
-        GROUP BY st.team_id, t.name
-        ORDER BY points DESC, goal_difference DESC, goals_for DESC, won DESC, team_name ASC
+        GROUP BY st.team_id, t.name, c.yellow_cards, c.red_cards, c.fair_play_points
+        ORDER BY points DESC, goal_difference DESC, goals_for DESC,
+                 fair_play_points DESC, won DESC, team_name ASC
     </select>
 
     <select id="groupStandings" resultType="com.campusfootball.stats.StandingRow">
@@ -106,6 +123,19 @@
             FROM fixture f JOIN season s ON s.id = f.season_id
             WHERE f.home_score IS NOT NULL
             <include refid="fixtureFilters"/>
+        ),
+        cards AS (
+            SELECT e.team_id,
+                   SUM(CASE WHEN e.event_type = 'YELLOW_CARD' THEN 1 ELSE 0 END) AS yellow_cards,
+                   SUM(CASE WHEN e.event_type = 'RED_CARD' THEN 1 ELSE 0 END) AS red_cards,
+                   -SUM(CASE WHEN e.event_type = 'YELLOW_CARD' THEN 1 ELSE 0 END)
+                   - 3 * SUM(CASE WHEN e.event_type = 'RED_CARD' THEN 1 ELSE 0 END) AS fair_play_points
+            FROM fixture_event e
+            JOIN fixture f ON f.id = e.fixture_id
+            JOIN season s ON s.id = f.season_id
+            WHERE e.event_type IN ('YELLOW_CARD', 'RED_CARD')
+            <include refid="fixtureFilters"/>
+            GROUP BY e.team_id
         )
         SELECT gt.team_id, t.name AS team_name,
                COUNT(r.team_id) AS played,
@@ -115,6 +145,9 @@
                COALESCE(SUM(r.goals_for), 0) AS goals_for,
                COALESCE(SUM(r.goals_against), 0) AS goals_against,
                COALESCE(SUM(r.goals_for), 0) - COALESCE(SUM(r.goals_against), 0) AS goal_difference,
+               COALESCE(c.yellow_cards, 0) AS yellow_cards,
+               COALESCE(c.red_cards, 0) AS red_cards,
+               COALESCE(c.fair_play_points, 0) AS fair_play_points,
                COALESCE(SUM(r.won), 0) * 3 + COALESCE(SUM(r.drawn), 0) AS points
         FROM group_team gt
         JOIN competition_group cg ON cg.id = gt.group_id
@@ -122,12 +155,14 @@
         JOIN season s ON s.id = stg.season_id
         JOIN team t ON t.id = gt.team_id
         LEFT JOIN results r ON r.team_id = gt.team_id
+        LEFT JOIN cards c ON c.team_id = gt.team_id
         WHERE 1 = 1
         <if test="filter.groupId != null">AND gt.group_id = #{filter.groupId}</if>
         <if test="filter.stageId != null">AND cg.stage_id = #{filter.stageId}</if>
         <if test="filter.seasonId != null">AND stg.season_id = #{filter.seasonId}</if>
         <if test="filter.competitionId != null">AND s.competition_id = #{filter.competitionId}</if>
-        GROUP BY gt.team_id, t.name
-        ORDER BY points DESC, goal_difference DESC, goals_for DESC, won DESC, team_name ASC
+        GROUP BY gt.team_id, t.name, c.yellow_cards, c.red_cards, c.fair_play_points
+        ORDER BY points DESC, goal_difference DESC, goals_for DESC,
+                 fair_play_points DESC, won DESC, team_name ASC
     </select>
 </mapper>

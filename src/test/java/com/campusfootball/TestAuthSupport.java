@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public final class TestAuthSupport {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String[] DELETE_ORDER = {
-            "audit_log", "player_suspension_serving", "player_suspension", "fixture_event", "fixture_appearance", "fixture", "season_team", "season",
+            "app_notification", "audit_log", "player_suspension_serving", "player_suspension", "fixture_event", "fixture_appearance", "fixture", "season_team", "season",
             "team_manager", "player", "team", "app_user"
     };
 

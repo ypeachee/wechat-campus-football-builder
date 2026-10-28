@@ -88,6 +88,10 @@ Page({
     this.setData({ session: null, roleText: "", managedTeamsText: "", verified: false, error: "" });
   },
 
+  goNotifications() {
+    wx.navigateTo({ url: "/pages/notifications/index" });
+  },
+
   goManage() {
     wx.navigateTo({ url: "/pages/manage/index" });
   },

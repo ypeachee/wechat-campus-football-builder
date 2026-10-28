@@ -18,7 +18,7 @@
 }
 
 .standings-table {
-  min-width: 760rpx;
+  min-width: 900rpx;
   overflow: hidden;
   border-radius: 20rpx;
   background: #FFFFFF;
@@ -27,7 +27,7 @@
 
 .standings-row {
   display: grid;
-  grid-template-columns: 54rpx 220rpx repeat(5, 64rpx) 74rpx;
+  grid-template-columns: 54rpx 220rpx repeat(5, 64rpx) repeat(3, 58rpx) 74rpx;
   align-items: center;
   min-height: 74rpx;
   border-bottom: 1rpx solid #EEECE5;

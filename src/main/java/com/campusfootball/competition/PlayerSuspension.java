@@ -10,6 +10,7 @@ public class PlayerSuspension {
     private SuspensionSourceType sourceType;
     private Long sourceEventId;
     private Long sourceFixtureId;
+    private Long sourceStageId;
     private String reason;
     private Integer matchesTotal;
     private Integer matchesServed;
@@ -32,6 +33,8 @@ public class PlayerSuspension {
     public void setSourceEventId(Long sourceEventId) { this.sourceEventId = sourceEventId; }
     public Long getSourceFixtureId() { return sourceFixtureId; }
     public void setSourceFixtureId(Long sourceFixtureId) { this.sourceFixtureId = sourceFixtureId; }
+    public Long getSourceStageId() { return sourceStageId; }
+    public void setSourceStageId(Long sourceStageId) { this.sourceStageId = sourceStageId; }
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
     public Integer getMatchesTotal() { return matchesTotal; }

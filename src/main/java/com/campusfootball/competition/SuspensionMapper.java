@@ -14,6 +14,9 @@ public interface SuspensionMapper {
 
     List<PlayerSuspension> findBySeasonAndTeam(@Param("seasonId") long seasonId, @Param("teamId") long teamId);
 
+    List<PlayerSuspension> findBySeasonAndOptionalTeam(@Param("seasonId") long seasonId,
+                                                       @Param("teamId") Long teamId);
+
     List<PlayerSuspension> findAutomaticBySeason(@Param("seasonId") long seasonId);
 
     List<PlayerSuspension> findBySourceEventId(@Param("sourceEventId") long sourceEventId);
@@ -24,6 +27,9 @@ public interface SuspensionMapper {
 
     int updateProgress(@Param("id") long id, @Param("matchesServed") int matchesServed,
                        @Param("status") SuspensionStatus status);
+
+    int updateAutomaticRule(@Param("id") long id, @Param("reason") String reason,
+                            @Param("matchesTotal") int matchesTotal);
 
     int updateTotalAndStatus(@Param("id") long id, @Param("matchesTotal") int matchesTotal,
                              @Param("status") SuspensionStatus status);

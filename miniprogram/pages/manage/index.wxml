@@ -50,6 +50,11 @@
         <view class="admin-card__title">评分审核</view>
         <view class="admin-card__copy">审核评价与敏感词</view>
       </view>
+      <view class="admin-card" bindtap="goDisciplineCenter">
+        <view class="admin-card__index">Q</view>
+        <view class="admin-card__title">纪律中心</view>
+        <view class="admin-card__copy">红黄牌、停赛与处罚记录</view>
+      </view>
       <view class="admin-card" bindtap="goAdminCompetition">
         <view class="admin-card__index">C</view>
         <view class="admin-card__title">赛事层级</view>
@@ -67,6 +72,11 @@
         <view class="admin-card__index">D</view>
         <view class="admin-card__title">比赛阵容</view>
         <view class="admin-card__copy">维护本队出场名单</view>
+      </view>
+      <view class="admin-card" bindtap="goDisciplineCenter">
+        <view class="admin-card__index">Q</view>
+        <view class="admin-card__title">纪律中心</view>
+        <view class="admin-card__copy">本队红黄牌与停赛</view>
       </view>
     </view>
 

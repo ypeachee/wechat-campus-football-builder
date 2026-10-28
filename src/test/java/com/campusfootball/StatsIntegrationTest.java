@@ -100,6 +100,34 @@ class StatsIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$[3].teamId").value(t3));
     }
 
+    @Test
+    void fairPlayPointsBreakCompleteSportingTies() throws Exception {
+        long admin = data.findUserId("openid-admin");
+        long seasonId = data.createSeason("FairPlaySeason", SeasonStatus.ACTIVE);
+        long t1 = data.createTeam("FairA");
+        long t2 = data.createTeam("FairB");
+        long t3 = data.createTeam("FairC");
+        long t4 = data.createTeam("FairD");
+        data.addSeasonTeam(seasonId, t1);
+        data.addSeasonTeam(seasonId, t2);
+        data.addSeasonTeam(seasonId, t3);
+        data.addSeasonTeam(seasonId, t4);
+        long p1 = data.createPlayer(t1, "FairOne", 9);
+        long p2 = data.createPlayer(t2, "FairTwo", 9);
+        long f1 = data.createFixture(seasonId, t1, t3, FixtureStatus.FINISHED, admin, 1, 0, true);
+        long f2 = data.createFixture(seasonId, t2, t4, FixtureStatus.FINISHED, admin, 1, 0, true);
+        data.createEvent(f1, t1, p1, EventType.YELLOW_CARD, null, 10, admin);
+        data.createEvent(f2, t2, p2, EventType.RED_CARD, null, 10, admin);
+
+        mockMvc.perform(get("/api/v1/standings").param("seasonId", Long.toString(seasonId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].teamId").value(t1))
+                .andExpect(jsonPath("$[0].yellowCards").value(1))
+                .andExpect(jsonPath("$[0].fairPlayPoints").value(-1))
+                .andExpect(jsonPath("$[1].teamId").value(t2))
+                .andExpect(jsonPath("$[1].redCards").value(1))
+                .andExpect(jsonPath("$[1].fairPlayPoints").value(-3));
+    }
     private Dataset seedMainDataset() {
         long admin = data.findUserId("openid-admin");
         long seasonId = data.createSeason("StatsSeason", SeasonStatus.ACTIVE);

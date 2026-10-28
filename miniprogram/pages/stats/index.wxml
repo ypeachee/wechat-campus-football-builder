@@ -45,6 +45,9 @@
             <view class="standings-cell">平</view>
             <view class="standings-cell">负</view>
             <view class="standings-cell">净胜</view>
+            <view class="standings-cell">黄</view>
+            <view class="standings-cell">红</view>
+            <view class="standings-cell">公平</view>
             <view class="standings-cell standings-cell--points">分</view>
           </view>
           <view wx:for="{{standings}}" wx:key="teamId" class="standings-row">
@@ -55,6 +58,9 @@
             <view class="standings-cell numeric">{{item.drawn}}</view>
             <view class="standings-cell numeric">{{item.lost}}</view>
             <view class="standings-cell numeric">{{item.goalDifference}}</view>
+            <view class="standings-cell numeric">{{item.yellowCards}}</view>
+            <view class="standings-cell numeric">{{item.redCards}}</view>
+            <view class="standings-cell numeric">{{item.fairPlayPoints}}</view>
             <view class="standings-cell standings-cell--points numeric">{{item.points}}</view>
           </view>
         </view>

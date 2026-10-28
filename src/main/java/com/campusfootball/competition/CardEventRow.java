@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class CardEventRow {
     private Long eventId;
     private Long fixtureId;
+    private Long stageId;
     private Long teamId;
     private Long playerId;
     private EventType eventType;
@@ -16,6 +17,8 @@ public class CardEventRow {
     public void setEventId(Long eventId) { this.eventId = eventId; }
     public Long getFixtureId() { return fixtureId; }
     public void setFixtureId(Long fixtureId) { this.fixtureId = fixtureId; }
+    public Long getStageId() { return stageId; }
+    public void setStageId(Long stageId) { this.stageId = stageId; }
     public Long getTeamId() { return teamId; }
     public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Long getPlayerId() { return playerId; }

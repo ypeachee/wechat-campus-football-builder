@@ -1,10 +1,19 @@
 import { request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { Competition, CompetitionGroup, CompetitionStatus, CompetitionType, Season, SeasonStatus, Stage, StageStatus, StageType } from "../types/domain";
+import type { Competition, CompetitionGroup, CompetitionStatus, CompetitionType, DisciplineRule, Season, SeasonStatus, Stage, StageStatus, StageType } from "../types/domain";
 
 export function fetchAllCompetitions(): Promise<Competition[]> { return request("/api/v1/admin/competitions"); }
 export function createCompetition(name: string, type: CompetitionType, description?: string): Promise<IdResponse> {
   return request("/api/v1/admin/competitions", { method: "POST", data: { name, type, description } });
+}
+export function fetchDisciplineRule(competitionId: number): Promise<DisciplineRule> {
+  return request(`/api/v1/admin/competitions/${competitionId}/discipline-rule`);
+}
+export function updateDisciplineRule(competitionId: number, threshold: number, redMatches: number,
+                                    cardsCrossStages: boolean): Promise<DisciplineRule> {
+  return request(`/api/v1/admin/competitions/${competitionId}/discipline-rule`, {
+    method: "PUT", data: { yellowSuspensionThreshold: threshold, redSuspensionMatches: redMatches, cardsCrossStages }
+  });
 }
 export function fetchAdminSeasons(competitionId: number): Promise<Season[]> {
   return request(`/api/v1/admin/seasons?competitionId=${competitionId}`);

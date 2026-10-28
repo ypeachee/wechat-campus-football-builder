@@ -1,7 +1,7 @@
 import { refreshSession } from "../../services/auth";
-import { addGroupTeam, createCompetition, createGroup, createSeason, createStage, fetchAdminGroups, fetchAdminSeasons, fetchAllCompetitions } from "../../services/admin-hierarchy";
+import { addGroupTeam, createCompetition, createGroup, createSeason, createStage, fetchAdminGroups, fetchAdminSeasons, fetchAllCompetitions, fetchDisciplineRule, updateDisciplineRule } from "../../services/admin-hierarchy";
 import { fetchAdminTeams } from "../../services/manage";
-import type { Competition, CompetitionGroup, Season, Stage, TeamSummary } from "../../types/domain";
+import type { Competition, CompetitionGroup, DisciplineRule, Season, Stage, TeamSummary } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 
 Page({
@@ -9,7 +9,8 @@ Page({
     verified: false, loading: true, error: "",
     competitions: [] as Competition[], seasons: [] as Season[], stages: [] as Stage[], groups: [] as CompetitionGroup[], teams: [] as TeamSummary[],
     competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0, groupTeamIndex: 0,
-    competitionName: "", competitionType: "CUP", seasonName: "", stageName: "", stageType: "GROUP", groupName: "", groupTeamName: ""
+    competitionName: "", competitionType: "CUP", seasonName: "", stageName: "", stageType: "GROUP", groupName: "", groupTeamName: "",
+    disciplineRule: null as DisciplineRule | null, disciplineThreshold: "3", disciplineRedMatches: "1", cardsCrossStages: true
   },
   onLoad() { void this.load(); },
   onPullDownRefresh() { void this.load(); },
@@ -25,6 +26,7 @@ Page({
     finally { this.setData({ loading: false }); wx.stopPullDownRefresh(); }
   },
   async loadSeasons() {
+    await this.loadDisciplineRule();
     const competition = this.data.competitions[this.data.competitionIndex];
     const seasons = competition ? await fetchAdminSeasons(competition.id) : [];
     this.setData({ seasons, seasonIndex: 0, stages: [], groups: [], stageIndex: 0, groupIndex: 0 });
@@ -42,6 +44,38 @@ Page({
     this.setData({ groups, groupIndex: 0 });
   },
   async handleCompetitionChange(e: WechatMiniprogram.PickerChange) { this.setData({ competitionIndex: Number(e.detail.value) }); await this.loadSeasons(); },
+  async loadDisciplineRule() {
+    const competition = this.data.competitions[this.data.competitionIndex];
+    if (!competition) { this.setData({ disciplineRule: null }); return; }
+    const rule = await fetchDisciplineRule(competition.id);
+    this.setData({
+      disciplineRule: rule,
+      disciplineThreshold: String(rule.yellowSuspensionThreshold),
+      disciplineRedMatches: String(rule.redSuspensionMatches),
+      cardsCrossStages: rule.cardsCrossStages
+    });
+  },
+  handleDisciplineInput(e: WechatMiniprogram.Input) {
+    this.setData({ [String(e.currentTarget.dataset.field)]: e.detail.value });
+  },
+  handleCardsCrossStages(e: WechatMiniprogram.SwitchChange) {
+    this.setData({ cardsCrossStages: e.detail.value });
+  },
+  async saveDisciplineRule() {
+    const competition = this.data.competitions[this.data.competitionIndex];
+    const threshold = Number(this.data.disciplineThreshold);
+    const redMatches = Number(this.data.disciplineRedMatches);
+    if (!competition || !Number.isInteger(threshold) || threshold < 1 || threshold > 9
+        || !Number.isInteger(redMatches) || redMatches < 1 || redMatches > 20) {
+      wx.showToast({ title: "停赛规则参数不合法", icon: "none" });
+      return;
+    }
+    try {
+      const rule = await updateDisciplineRule(competition.id, threshold, redMatches, this.data.cardsCrossStages);
+      this.setData({ disciplineRule: rule, disciplineThreshold: String(rule.yellowSuspensionThreshold), disciplineRedMatches: String(rule.redSuspensionMatches), cardsCrossStages: rule.cardsCrossStages });
+      wx.showToast({ title: "纪律规则已保存", icon: "success" });
+    } catch (error) { wx.showToast({ title: errorMessage(error), icon: "none" }); }
+  },
   async handleSeasonChange(e: WechatMiniprogram.PickerChange) { this.setData({ seasonIndex: Number(e.detail.value) }); await this.loadStages(); },
   async handleStageChange(e: WechatMiniprogram.PickerChange) { this.setData({ stageIndex: Number(e.detail.value) }); await this.loadGroups(); },
   handleGroupChange(e: WechatMiniprogram.PickerChange) { this.setData({ groupIndex: Number(e.detail.value) }); },
