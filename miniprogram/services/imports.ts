@@ -8,14 +8,14 @@ export type ImportKind = "teams" | "players";
 export type ImportStage = "preview" | "commit";
 
 export function uploadImportFile(kind: ImportKind, stage: ImportStage, filePath: string,
-                                 overwrite: boolean): Promise<ImportPreview | ImportResult> {
+                                 overwrite: boolean, teamId?: number): Promise<ImportPreview | ImportResult> {
   const session = getSession();
   return new Promise((resolve, reject) => {
     wx.uploadFile({
       url: `${getApiBaseUrl()}/api/v1/manage/import/${kind}/${stage}`,
       filePath,
       name: "file",
-      formData: { overwrite: overwrite ? "true" : "false" },
+      formData: { overwrite: overwrite ? "true" : "false", ...(teamId ? { teamId: String(teamId) } : {}) },
       header: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
       timeout: 30000,
       success: (response) => {

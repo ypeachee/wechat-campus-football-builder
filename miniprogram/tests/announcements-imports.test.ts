@@ -36,11 +36,11 @@ describe("announcement, dashboard and import services", () => {
     });
     (globalThis as unknown as { wx: { uploadFile: typeof upload } }).wx.uploadFile = upload;
 
-    await uploadImportFile("players", "preview", "wxfile://players.csv", true);
+    await uploadImportFile("players", "preview", "wxfile://players.csv", true, 12);
     expect(upload).toHaveBeenCalledWith(expect.objectContaining({
       filePath: "wxfile://players.csv",
       name: "file",
-      formData: { overwrite: "true" },
+      formData: { overwrite: "true", teamId: "12" },
       header: { Authorization: "Bearer token-1" }
     }));
   });

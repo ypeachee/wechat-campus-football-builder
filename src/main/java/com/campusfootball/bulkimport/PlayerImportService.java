@@ -25,7 +25,7 @@ import java.util.Set;
 
 @Service
 public class PlayerImportService {
-    private static final List<String> REQUIRED_HEADERS = List.of("球队名称", "姓名", "号码", "位置");
+    private static final List<String> REQUIRED_HEADERS = List.of("号码", "姓名");
 
     private final TabularFileReader fileReader;
     private final TeamMapper teamMapper;
@@ -42,15 +42,15 @@ public class PlayerImportService {
         this.auditService = auditService;
     }
 
-    public ImportPreview preview(long actorUserId, MultipartFile file, boolean overwrite) {
-        Parsed parsed = parse(actorUserId, file, overwrite);
+    public ImportPreview preview(long actorUserId, Long teamId, MultipartFile file, boolean overwrite) {
+        Parsed parsed = parse(actorUserId, teamId, file, overwrite);
         return new ImportPreview(parsed.totalRows(), parsed.validRows().size(), parsed.createCount(),
                 parsed.updateCount(), parsed.errors(), parsed.sample());
     }
 
     @Transactional
-    public ImportResult commit(long actorUserId, MultipartFile file, boolean overwrite) {
-        Parsed parsed = parse(actorUserId, file, overwrite);
+    public ImportResult commit(long actorUserId, Long teamId, MultipartFile file, boolean overwrite) {
+        Parsed parsed = parse(actorUserId, teamId, file, overwrite);
         if (!parsed.errors().isEmpty()) {
             throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED,
                     "导入校验失败，共 " + parsed.errors().size() + " 行错误；请先预览并修正");
@@ -63,7 +63,7 @@ public class PlayerImportService {
             player.setTeamId(row.teamId());
             player.setName(row.name());
             player.setJerseyNo(row.jerseyNo());
-            player.setPosition(blankToNull(row.position()));
+            if (existing == null) player.setPosition(null);
             player.setStatus(PlayerStatus.ACTIVE);
             if (existing == null) {
                 playerMapper.insert(player);
@@ -79,7 +79,7 @@ public class PlayerImportService {
         }
         return new ImportResult(created, updated, 0);
     }
-    private Parsed parse(long actorUserId, MultipartFile file, boolean overwrite) {
+    private Parsed parse(long actorUserId, Long teamId, MultipartFile file, boolean overwrite) {
         TabularData data = fileReader.read(file);
         for (String required : REQUIRED_HEADERS) {
             if (!data.headers().contains(required)) {
@@ -92,17 +92,13 @@ public class PlayerImportService {
         Set<String> seenJerseys = new HashSet<>();
         int createCount = 0;
         int updateCount = 0;
+        Team team = teamMapper.findById(teamId == null ? 0 : teamId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "球队不存在"));
+        authorizationService.requireCanManageTeam(actorUserId, team.getId());
         for (TabularRow row : data.rows()) {
-            String teamName = row.get("球队名称").trim();
-            Team team = teamMapper.findFirstByName(teamName).orElse(null);
-            if (team == null) {
-                errors.add(new ImportError(row.rowNumber(), "球队不存在：" + teamName));
-                continue;
-            }
-            try {
-                authorizationService.requireCanManageTeam(actorUserId, team.getId());
-            } catch (AppException ex) {
-                errors.add(new ImportError(row.rowNumber(), "没有该球队的导入权限"));
+            String fileTeamName = row.get("球队名称").trim();
+            if (!fileTeamName.isBlank() && !fileTeamName.equals(team.getName())) {
+                errors.add(new ImportError(row.rowNumber(), "文件球队与所选球队不一致"));
                 continue;
             }
             String name = row.get("姓名").trim();
@@ -126,18 +122,13 @@ public class PlayerImportService {
                 errors.add(new ImportError(row.rowNumber(), "文件内同队球衣号码重复"));
                 continue;
             }
-            String position = row.get("位置").trim();
-            if (position.length() > 20) {
-                errors.add(new ImportError(row.rowNumber(), "位置不能超过 20 个字符"));
-                continue;
-            }
             boolean exists = playerMapper.findActiveByTeamAndJersey(team.getId(), jerseyNo).isPresent();
             if (exists && !overwrite) {
                 errors.add(new ImportError(row.rowNumber(), "同队号码已存在；如需更新请开启覆盖"));
                 continue;
             }
             if (exists) updateCount++; else createCount++;
-            validRows.add(new PlayerRow(row.rowNumber(), team.getId(), name, jerseyNo, position));
+            validRows.add(new PlayerRow(row.rowNumber(), team.getId(), name, jerseyNo));
         }
         List<Map<String, String>> sample = data.rows().stream().limit(20)
                 .map(row -> (Map<String, String>) new LinkedHashMap<>(row.values())).toList();
@@ -148,7 +139,7 @@ public class PlayerImportService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private record PlayerRow(int rowNumber, long teamId, String name, int jerseyNo, String position) {
+    private record PlayerRow(int rowNumber, long teamId, String name, int jerseyNo) {
     }
 
     private record Parsed(int totalRows, List<PlayerRow> validRows, List<ImportError> errors,

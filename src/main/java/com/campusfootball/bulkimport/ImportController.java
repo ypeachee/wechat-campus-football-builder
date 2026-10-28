@@ -36,13 +36,15 @@ public class ImportController {
 
     @PostMapping(value = "/players/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportPreview previewPlayers(@RequestParam("file") MultipartFile file,
+                                        @RequestParam(required = false) Long teamId,
                                         @RequestParam(defaultValue = "false") boolean overwrite) {
-        return playerImportService.preview(currentUser.require().userId(), file, overwrite);
+        return playerImportService.preview(currentUser.require().userId(), teamId, file, overwrite);
     }
 
     @PostMapping(value = "/players/commit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportResult commitPlayers(@RequestParam("file") MultipartFile file,
+                                      @RequestParam(required = false) Long teamId,
                                       @RequestParam(defaultValue = "false") boolean overwrite) {
-        return playerImportService.commit(currentUser.require().userId(), file, overwrite);
+        return playerImportService.commit(currentUser.require().userId(), teamId, file, overwrite);
     }
 }
