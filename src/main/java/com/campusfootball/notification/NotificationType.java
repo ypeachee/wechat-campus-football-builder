@@ -4,5 +4,6 @@ public enum NotificationType {
     FIXTURE_START,
     LINEUP_DEADLINE,
     SUSPENSION,
-    RATING_MODERATION
+    RATING_MODERATION,
+    SYSTEM
 }

@@ -427,7 +427,7 @@ export interface RefereeRatingSubmission {
   canEdit: boolean;
 }
 
-export type NotificationType = "FIXTURE_START" | "LINEUP_DEADLINE" | "SUSPENSION" | "RATING_MODERATION";
+export type NotificationType = "FIXTURE_START" | "LINEUP_DEADLINE" | "SUSPENSION" | "RATING_MODERATION" | "SYSTEM";
 
 export interface AppNotification {
   id: number;

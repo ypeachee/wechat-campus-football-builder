@@ -65,6 +65,7 @@ function typeLabel(type: AppNotification["type"]): string {
     case "FIXTURE_START": return "比赛提醒";
     case "LINEUP_DEADLINE": return "阵容提醒";
     case "SUSPENSION": return "停赛通知";
+    case "SYSTEM": return "系统消息";
     default: return "审核通知";
   }
 }
