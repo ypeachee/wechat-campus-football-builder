@@ -54,7 +54,7 @@ docker compose up -d mysql
 参考 `.env.example`。PowerShell 示例：
 
 ```powershell
-$env:DB_URL='jdbc:mysql://127.0.0.1:3306/campus_football?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'
+$env:DB_URL='jdbc:mysql://127.0.0.1:3306/campus_football?useUnicode=true&characterEncoding=utf8&connectionTimeZone=Asia/Shanghai&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false'
 $env:DB_USERNAME='campus'
 $env:DB_PASSWORD='campus'
 $env:JWT_SECRET='replace-with-a-secret-at-least-32-bytes-long'
@@ -86,7 +86,7 @@ $env:ADMIN_WECHAT_OPENID=''
 如果本机暂时无法运行 Docker Linux 引擎，可以让集成测试连接外部 MySQL 8：
 
 ```powershell
-$env:TEST_DB_URL='jdbc:mysql://127.0.0.1:3307/campus_football?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'
+$env:TEST_DB_URL='jdbc:mysql://127.0.0.1:3307/campus_football?useUnicode=true&characterEncoding=utf8&connectionTimeZone=Asia/Shanghai&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false'
 $env:TEST_DB_USERNAME='campus'
 $env:TEST_DB_PASSWORD='campus'
 .\mvnw.cmd test

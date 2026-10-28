@@ -10,7 +10,9 @@ services:
       MYSQL_USER: ${MYSQL_USER:-campus}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.production}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.production}
+      TZ: Asia/Shanghai
     command:
+      - --default-time-zone=+08:00
       - --innodb-buffer-pool-size=64M
       - --innodb-log-buffer-size=8M
       - --performance-schema=OFF
@@ -33,7 +35,7 @@ services:
     restart: unless-stopped
     mem_limit: 420m
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-campus_football}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-campus_football}?useUnicode=true&characterEncoding=utf8&connectionTimeZone=Asia/Shanghai&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false
       DB_USERNAME: ${MYSQL_USER:-campus}
       DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.production}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.production}
