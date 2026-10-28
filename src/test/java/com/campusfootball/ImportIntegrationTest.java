@@ -55,7 +55,7 @@ class ImportIntegrationTest extends IntegrationTestBase {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = TestApiSupport.createTeam(mockMvc, admin, "预览球队");
         MockMultipartFile players = new MockMultipartFile("file", "players.csv", "text/csv",
-                "号码,姓名\n100,王五\n".getBytes(StandardCharsets.UTF_8));
+                "号码,姓名\n123456789012345678901,王五\n".getBytes(StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/v1/manage/import/players/preview")
                         .file(players).param("teamId", Long.toString(teamId)).param("overwrite", "false")
