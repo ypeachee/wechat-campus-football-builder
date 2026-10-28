@@ -202,3 +202,38 @@ npm run verify
 - 验收清单：[docs/acceptance/ratings-moderation-acceptance.md](docs/acceptance/ratings-moderation-acceptance.md)
 
 > 启用评价功能后，小程序属于包含用户生成内容的服务。基础信息、服务内容、隐私保护指引和举报能力必须同步更新。
+
+## 公告与运营待办
+
+- `GET/POST /api/v1/admin/announcements`：公告历史与发布
+- `GET /api/v1/admin/announcements/{id}`：公告送达与已读统计
+- `GET /api/v1/manage/dashboard`：待审核评分、待处理举报、明日比赛、当前停赛
+
+公告支持全部用户、管理员、球队工作人员、指定球队、指定用户。超级管理员可发送全部范围；授权管理员只能发送指定球队公告。
+
+## 定时比赛提醒
+
+服务端每小时检查一次未来 24 小时的已排期比赛：
+
+- 进入 24 小时窗口时发送比赛提醒
+- 进入 2 小时窗口时发送阵容确认提醒
+- 通知对象为双方球队管理员和领队
+- 使用唯一去重键保证重复执行不会重复发送
+
+## CSV / XLSX 批量导入
+
+接口位于 `/api/v1/manage/import`，支持先 `preview` 再 `commit`：
+
+- 球队表头：`球队名称,简称,教练,主场,状态`
+- 球员表头：`球队名称,姓名,号码,位置`
+- 单文件最大 2 MB、最多 1000 行
+- 预览返回行号级错误
+- 提交为事务操作，任一校验失败不会部分写入
+
+## 球队分享与小程序码
+
+- `GET /api/v1/teams/{id}/qr`：生成球队小程序码并缓存 24 小时
+- 球队详情支持微信分享、朋友圈分享、分享卡片和保存二维码
+- `WECHAT_CODE_ENV_VERSION` 控制小程序码版本，可设为 `develop`、`trial` 或 `release`
+
+当前体验阶段使用 `trial`；正式发布后改为 `release`。
