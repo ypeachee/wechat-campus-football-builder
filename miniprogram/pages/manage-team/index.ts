@@ -1,15 +1,18 @@
 import { refreshSession } from "../../services/auth";
 import {
   createManagedPlayer,
+  createSuspension,
   createTeam,
   fetchAdminTeams,
   fetchManagedTeamPlayers,
+  fetchTeamSuspensions,
   updateManagedPlayer,
-  updateManagedTeam
+  updateManagedTeam,
+  updateSuspension
 } from "../../services/manage";
-import { fetchTeam } from "../../services/teams";
+import { fetchSeasons, fetchTeam } from "../../services/teams";
 import { SubmitLock, withSubmitLock } from "../../state/submit-lock";
-import type { PlayerStatus, PlayerSummary, Session, TeamStatus, TeamSummary } from "../../types/domain";
+import type { PlayerStatus, PlayerSuspension, PlayerSummary, Season, Session, SuspensionStatus, TeamStatus, TeamSummary } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 import { hasFieldErrors, validatePlayerForm, validateTeamForm, type FieldErrors } from "../../utils/validation";
 
@@ -19,6 +22,12 @@ type TeamFormState = {
   coachName: string;
   homeVenue: string;
   status: TeamStatus;
+};
+
+type ManagedPlayerView = PlayerSummary & {
+  suspended: boolean;
+  suspensionText: string;
+  suspensionRemaining: number;
 };
 
 type PlayerFormState = {
@@ -41,7 +50,15 @@ Page({
     submitting: false,
     error: "",
     team: null as TeamSummary | null,
-    players: [] as PlayerSummary[],
+    players: [] as ManagedPlayerView[],
+    seasons: [] as Season[],
+    selectedSeasonId: 0,
+    selectedSeasonIndex: 0,
+    suspensionItems: [] as PlayerSuspension[],
+    activeSuspensionItems: [] as PlayerSuspension[],
+    suspensionPlayerOptions: [] as Array<{ id: number; name: string }>,
+    suspensionForm: { playerIndex: 0, matchesTotal: "1", reason: "" },
+    suspensionSubmitting: false,
     teamForm: { name: "", shortName: "", coachName: "", homeVenue: "", status: "ACTIVE" } as TeamFormState,
     teamErrors: {} as FieldErrors,
     playerDialogVisible: false,
@@ -94,12 +111,25 @@ Page({
         this.setData({ error: "球队不存在", verified: false });
         return;
       }
-      const players = await fetchManagedTeamPlayers(this.data.teamId);
+      const [players, seasons] = await Promise.all([
+        fetchManagedTeamPlayers(this.data.teamId),
+        fetchSeasons()
+      ]);
+      const selectedSeasonId = seasons.find((season) => season.status === "ACTIVE")?.id ?? seasons[0]?.id ?? 0;
+      const suspensionItems = selectedSeasonId
+        ? await fetchTeamSuspensions(this.data.teamId, selectedSeasonId)
+        : [];
       this.setData({
         isAdmin,
         verified: true,
         team,
-        players,
+        seasons,
+        selectedSeasonId,
+        selectedSeasonIndex: Math.max(0, seasons.findIndex((season) => season.id === selectedSeasonId)),
+        players: buildManagedPlayers(players, suspensionItems),
+        suspensionItems,
+        activeSuspensionItems: suspensionItems.filter((item) => item.status === "ACTIVE" && item.matchesRemaining > 0),
+        suspensionPlayerOptions: buildSuspensionPlayerOptions(players, suspensionItems),
         teamForm: {
           name: team.name,
           shortName: team.shortName ?? "",
@@ -272,10 +302,120 @@ Page({
     }
   },
 
+  async selectSuspensionSeason(event: WechatMiniprogram.PickerChange) {
+    const index = Number(event.detail.value);
+    const season = this.data.seasons[index];
+    if (!season) return;
+    this.setData({ selectedSeasonId: season.id, selectedSeasonIndex: index });
+    await this.reloadPlayers();
+  },
+
+  handleSuspensionPlayerChange(event: WechatMiniprogram.PickerChange) {
+    this.setData({ "suspensionForm.playerIndex": Number(event.detail.value) });
+  },
+
+  handleSuspensionMatchesInput(event: WechatMiniprogram.Input) {
+    this.setData({ "suspensionForm.matchesTotal": event.detail.value });
+  },
+
+  handleSuspensionReasonInput(event: WechatMiniprogram.Input) {
+    this.setData({ "suspensionForm.reason": event.detail.value });
+  },
+
+  async createManualSuspension() {
+    if (!this.data.isAdmin || this.data.suspensionSubmitting) return;
+    const player = this.data.players[this.data.suspensionForm.playerIndex];
+    const matches = Number(this.data.suspensionForm.matchesTotal);
+    const reason = this.data.suspensionForm.reason.trim();
+    if (!player || !Number.isInteger(matches) || matches < 1 || matches > 20) {
+      wx.showToast({ title: "停赛场次必须为1到20场", icon: "none" });
+      return;
+    }
+    if (!reason) {
+      wx.showToast({ title: "请填写禁赛原因", icon: "none" });
+      return;
+    }
+    this.setData({ suspensionSubmitting: true });
+    try {
+      await createSuspension(player.id, this.data.selectedSeasonId, matches, reason);
+      this.setData({ suspensionForm: { playerIndex: 0, matchesTotal: "1", reason: "" } });
+      await this.reloadPlayers();
+      wx.showToast({ title: "禁赛已添加", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: errorMessage(error), icon: "none" });
+    } finally {
+      this.setData({ suspensionSubmitting: false });
+    }
+  },
+
+  extendSuspension(event: WechatMiniprogram.BaseEvent) {
+    const id = Number(event.currentTarget.dataset.id);
+    const item = this.data.suspensionItems.find((suspension) => suspension.id === id);
+    if (!item) return;
+    void this.updateSuspensionStatus(id, item.matchesTotal + 1, "ACTIVE");
+  },
+
+  cancelSuspension(event: WechatMiniprogram.BaseEvent) {
+    const id = Number(event.currentTarget.dataset.id);
+    const item = this.data.suspensionItems.find((suspension) => suspension.id === id);
+    if (!item) return;
+    wx.showModal({
+      title: "解除禁赛",
+      content: `确认解除 ${item.playerName} 的剩余 ${item.matchesRemaining} 场禁赛？`,
+      success: (result) => {
+        if (result.confirm) void this.updateSuspensionStatus(id, item.matchesTotal, "CANCELLED");
+      }
+    });
+  },
+
+  async updateSuspensionStatus(id: number, matchesTotal: number, status: SuspensionStatus) {
+    if (!this.data.isAdmin || this.data.suspensionSubmitting) return;
+    this.setData({ suspensionSubmitting: true });
+    try {
+      await updateSuspension(id, matchesTotal, status);
+      await this.reloadPlayers();
+      wx.showToast({ title: status === "CANCELLED" ? "禁赛已解除" : "禁赛已延长", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: errorMessage(error), icon: "none" });
+    } finally {
+      this.setData({ suspensionSubmitting: false });
+    }
+  },
+
   async reloadPlayers() {
-    this.setData({ players: await fetchManagedTeamPlayers(this.data.teamId) });
+    const players = await fetchManagedTeamPlayers(this.data.teamId);
+    const suspensionItems = this.data.selectedSeasonId
+      ? await fetchTeamSuspensions(this.data.teamId, this.data.selectedSeasonId)
+      : [];
+    this.setData({
+      players: buildManagedPlayers(players, suspensionItems),
+      suspensionItems,
+      activeSuspensionItems: suspensionItems.filter((item) => item.status === "ACTIVE" && item.matchesRemaining > 0),
+      suspensionPlayerOptions: buildSuspensionPlayerOptions(players, suspensionItems)
+    });
   }
 });
+
+function buildManagedPlayers(players: PlayerSummary[], suspensions: PlayerSuspension[]): ManagedPlayerView[] {
+  return players.map((player) => {
+    const active = suspensions.filter((item) =>
+      item.playerId === player.id && item.status === "ACTIVE" && item.matchesRemaining > 0);
+    const remaining = active.reduce((total, item) => total + item.matchesRemaining, 0);
+    return {
+      ...player,
+      suspended: remaining > 0,
+      suspensionRemaining: remaining,
+      suspensionText: remaining > 0 ? `停赛 ${remaining} 场` : ""
+    };
+  });
+}
+
+function buildSuspensionPlayerOptions(players: PlayerSummary[], suspensions: PlayerSuspension[]) {
+  return buildManagedPlayers(players, suspensions).map((player) => ({
+    id: player.id,
+    name: player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`
+  }));
+}
 
 function canManageTeamWithSession(session: Session, teamId: number): boolean {
   return session.role === "ADMIN"

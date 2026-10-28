@@ -23,15 +23,17 @@ public class AppearanceService {
     private final AuthorizationService authorizationService;
     private final PlayerMapper playerMapper;
     private final AuditService auditService;
+    private final SuspensionService suspensionService;
 
     public AppearanceService(AppearanceMapper appearanceMapper, FixtureWriteGuard writeGuard,
                              AuthorizationService authorizationService, PlayerMapper playerMapper,
-                             AuditService auditService) {
+                             AuditService auditService, SuspensionService suspensionService) {
         this.appearanceMapper = appearanceMapper;
         this.writeGuard = writeGuard;
         this.authorizationService = authorizationService;
         this.playerMapper = playerMapper;
         this.auditService = auditService;
+        this.suspensionService = suspensionService;
     }
 
     public java.util.List<FixtureAppearance> findByFixture(long fixtureId) {
@@ -49,6 +51,7 @@ public class AppearanceService {
         if (player.getTeamId() != teamId) {
             throw conflict("球员不属于该出场球队");
         }
+        suspensionService.assertPlayersEligible(fixtureId, teamId, java.util.List.of(playerId));
         if (appearanceMapper.countByFixtureAndPlayer(fixtureId, playerId) > 0) {
             throw conflict("该球员已有出场记录");
         }
@@ -94,6 +97,7 @@ public class AppearanceService {
                 throw conflict("已有比赛事件的球员必须保留在阵容中");
             }
         }
+        suspensionService.assertPlayersEligible(fixtureId, teamId, selected);
 
         List<FixtureAppearance> before = appearanceMapper.findByFixtureAndTeam(fixtureId, teamId);
         appearanceMapper.deleteByFixtureAndTeam(fixtureId, teamId);
@@ -131,6 +135,8 @@ public class AppearanceService {
         Fixture fixture = writeGuard.requireWritable(existing.getFixtureId());
         validateWriteAccess(actorUserId, fixture, existing.getTeamId());
         validateMinutes(minutesPlayed);
+        suspensionService.assertPlayersEligible(existing.getFixtureId(), existing.getTeamId(),
+                java.util.List.of(existing.getPlayerId()));
         appearanceMapper.update(appearanceId, starter, minutesPlayed);
         FixtureAppearance updated = get(appearanceId);
         auditService.record(actorUserId, existing.getTeamId(), AuditAction.UPDATE, "APPEARANCE",

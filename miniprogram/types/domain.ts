@@ -33,6 +33,27 @@ export interface TeamSummary {
   status: TeamStatus;
 }
 
+export type SuspensionSourceType = "YELLOW_ACCUMULATION" | "RED_CARD" | "MANUAL";
+export type SuspensionStatus = "ACTIVE" | "SERVED" | "CANCELLED";
+
+export interface PlayerSuspension {
+  id: number;
+  playerId: number;
+  jerseyNo: number | null;
+  playerName: string;
+  teamId: number;
+  teamName: string;
+  seasonId: number;
+  sourceType: SuspensionSourceType;
+  sourceFixtureId: number | null;
+  reason: string;
+  matchesTotal: number;
+  matchesServed: number;
+  matchesRemaining: number;
+  status: SuspensionStatus;
+  createdAt: string;
+}
+
 export interface TeamManagerAssignment {
   userId: number;
   role: Exclude<UserRole, "ADMIN" | "VIEWER">;

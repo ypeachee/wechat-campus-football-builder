@@ -46,6 +46,14 @@
         <view wx:elif="{{!canWriteData}}" class="fixture-banner__notice">当前比赛状态不允许录入数据。</view>
       </view>
 
+      <view wx:if="{{fixtureSuspensions.length > 0}}" class="surface-card fixture-suspensions">
+        <view class="fixture-suspensions__title">本场停赛</view>
+        <view wx:for="{{fixtureSuspensions}}" wx:key="id" class="fixture-suspension-row">
+          <text>{{item.jerseyNo === null ? "" : item.jerseyNo + " "}}{{item.playerName}}</text>
+          <text>停赛 {{item.matchesRemaining}} 场</text>
+        </view>
+      </view>
+
       <view class="section-head">
         <view>
           <view class="section-title">比赛事件</view>
@@ -136,14 +144,15 @@
             </view>
             <view class="lineup-player-list">
               <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
-                class="lineup-row {{player.starter ? 'lineup-row--selected' : ''}}"
+                class="lineup-row {{player.suspended ? 'lineup-row--suspended' : player.starter ? 'lineup-row--selected' : ''}}"
                 data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
                 bindtap="toggleLineupStarter">
-                <view class="lineup-checkbox {{player.starter ? 'lineup-checkbox--checked' : ''}}">
-                  {{player.starter ? "✓" : ""}}
+                <view class="lineup-checkbox {{!player.suspended && player.starter ? 'lineup-checkbox--checked' : ''}} {{player.suspended ? 'lineup-checkbox--locked' : ''}}">
+                  {{!player.suspended && player.starter ? "✓" : ""}}
                 </view>
                 <text class="lineup-player-name">{{player.label}}</text>
-                <text wx:if="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
+                <text wx:if="{{player.suspended}}" class="lineup-status lineup-status--danger">{{player.suspensionText}}</text>
+                <text wx:elif="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
               </view>
             </view>
 
@@ -153,14 +162,15 @@
             </view>
             <view class="lineup-player-list">
               <view wx:for="{{editor.players}}" wx:for-item="player" wx:key="playerId"
-                class="lineup-row {{player.starter ? 'lineup-row--locked' : player.substitute ? 'lineup-row--selected' : ''}}"
+                class="lineup-row {{player.suspended ? 'lineup-row--suspended' : player.starter ? 'lineup-row--locked' : player.substitute ? 'lineup-row--selected' : ''}}"
                 data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"
                 bindtap="toggleLineupSubstitute">
-                <view class="lineup-checkbox {{player.starter || player.substitute ? 'lineup-checkbox--checked' : ''}} {{player.starter ? 'lineup-checkbox--locked' : ''}}">
-                  {{player.starter || player.substitute ? "✓" : ""}}
+                <view class="lineup-checkbox {{!player.suspended && (player.starter || player.substitute) ? 'lineup-checkbox--checked' : ''}} {{player.suspended || player.starter ? 'lineup-checkbox--locked' : ''}}">
+                  {{!player.suspended && (player.starter || player.substitute) ? "✓" : ""}}
                 </view>
                 <text class="lineup-player-name">{{player.label}}</text>
-                <text wx:if="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
+                <text wx:if="{{player.suspended}}" class="lineup-status lineup-status--danger">{{player.suspensionText}}</text>
+                <text wx:elif="{{player.starter}}" class="lineup-status lineup-status--starter">首发</text>
                 <view wx:elif="{{player.substitute}}" class="lineup-minutes-wrap" catchtap="noop">
                   <input class="lineup-minutes" type="number" maxlength="3" value="{{player.minutesPlayed}}"
                     data-team-id="{{editor.teamId}}" data-player-id="{{player.playerId}}"

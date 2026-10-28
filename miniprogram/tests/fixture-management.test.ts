@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { request } from "../services/http";
 import { ApiError } from "../services/http";
 import { createFixture, finishFixture, setFixtureLocked } from "../services/competition";
-import { createEvent, replaceTeamLineup } from "../services/manage";
+import { createEvent, createSuspension, fetchFixtureSuspensions, fetchTeamSuspensions, replaceTeamLineup, updateSuspension } from "../services/manage";
 import { fetchAuditLogs } from "../services/audit";
 import { requireRole, saveSession, clearSession } from "../state/session";
 import { errorMessage } from "../utils/error";
@@ -67,6 +67,28 @@ describe("fixture management", () => {
     });
   });
 
+  it("loads and updates player suspensions", async () => {
+    requestMock.mockResolvedValueOnce([]);
+    requestMock.mockResolvedValueOnce([]);
+    requestMock.mockResolvedValueOnce({ id: 31 });
+    requestMock.mockResolvedValueOnce(undefined);
+
+    await fetchTeamSuspensions(2, 5);
+    await fetchFixtureSuspensions(10);
+    await createSuspension(8, 5, 2, "纪律处罚");
+    await updateSuspension(31, 3, "ACTIVE");
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, "/api/v1/manage/teams/2/suspensions?seasonId=5");
+    expect(requestMock).toHaveBeenNthCalledWith(2, "/api/v1/manage/fixtures/10/suspensions");
+    expect(requestMock).toHaveBeenNthCalledWith(3, "/api/v1/manage/suspensions", {
+      method: "POST",
+      data: { playerId: 8, seasonId: 5, matchesTotal: 2, reason: "纪律处罚" }
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(4, "/api/v1/manage/suspensions/31", {
+      method: "PUT",
+      data: { matchesTotal: 3, status: "ACTIVE" }
+    });
+  });
   it("locks fixtures and fetches audit logs", async () => {
     requestMock.mockResolvedValueOnce(undefined);
     requestMock.mockResolvedValueOnce([]);

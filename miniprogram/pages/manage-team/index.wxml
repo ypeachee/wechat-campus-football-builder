@@ -66,10 +66,49 @@
             <view class="player-management-row__name">{{item.name}}</view>
             <view class="player-management-row__meta">{{item.position || "位置待定"}}</view>
           </view>
+          <text wx:if="{{item.suspended}}" class="player-suspension-badge">{{item.suspensionText}}</text>
           <t-tag size="small" variant="light" theme="{{item.status === 'ACTIVE' ? 'success' : 'default'}}">
             {{item.status === "ACTIVE" ? "在队" : "停用"}}
           </t-tag>
           <view class="player-management-row__edit" data-id="{{item.id}}" bindtap="openEditPlayer">编辑</view>
+        </view>
+      </view>
+
+      <view class="section-head">
+        <view>
+          <view class="section-title">禁赛情况</view>
+          <view class="section-subtitle">累计3黄停1场，红牌停1场</view>
+        </view>
+        <picker wx:if="{{seasons.length > 1}}" mode="selector" range="{{seasons}}" range-key="name"
+          value="{{selectedSeasonIndex}}" bindchange="selectSuspensionSeason">
+          <view class="text-button">{{seasons[selectedSeasonIndex].name}}</view>
+        </picker>
+      </view>
+
+      <view class="surface-card suspension-card">
+        <view wx:if="{{activeSuspensionItems.length === 0}}" class="suspension-empty">当前没有执行中的禁赛</view>
+        <view wx:for="{{activeSuspensionItems}}" wx:key="id" class="suspension-row">
+          <view class="suspension-row__main">
+            <view class="suspension-row__title">{{item.jerseyNo === null ? "" : item.jerseyNo + " "}}{{item.playerName}} · 剩余 {{item.matchesRemaining}} 场</view>
+            <view class="suspension-row__meta">{{item.reason}} · 已执行 {{item.matchesServed}}/{{item.matchesTotal}}</view>
+          </view>
+          <view wx:if="{{isAdmin}}" class="suspension-actions">
+            <text data-id="{{item.id}}" bindtap="extendSuspension">加停1场</text>
+            <text class="suspension-actions__danger" data-id="{{item.id}}" bindtap="cancelSuspension">解除</text>
+          </view>
+        </view>
+
+        <view wx:if="{{isAdmin}}" class="suspension-form">
+          <view class="form-label">手动添加禁赛</view>
+          <picker mode="selector" range="{{suspensionPlayerOptions}}" range-key="name"
+            value="{{suspensionForm.playerIndex}}" bindchange="handleSuspensionPlayerChange">
+            <view class="picker-value">{{suspensionPlayerOptions[suspensionForm.playerIndex].name || "选择球员"}}</view>
+          </picker>
+          <input class="form-input suspension-input" type="number" value="{{suspensionForm.matchesTotal}}"
+            bindinput="handleSuspensionMatchesInput" placeholder="停赛场次 1-20" />
+          <input class="form-input suspension-input" value="{{suspensionForm.reason}}"
+            bindinput="handleSuspensionReasonInput" maxlength="255" placeholder="禁赛原因" />
+          <t-button theme="danger" block loading="{{suspensionSubmitting}}" bind:tap="createManualSuspension">添加禁赛</t-button>
         </view>
       </view>
     </block>

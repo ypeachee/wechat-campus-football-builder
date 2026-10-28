@@ -1,6 +1,6 @@
 import { request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { EventType, PlayerStatus, PlayerSummary, TeamManagerAssignment, TeamStatus, TeamSummary, UserRole } from "../types/domain";
+import type { EventType, PlayerStatus, PlayerSuspension, PlayerSummary, SuspensionStatus, TeamManagerAssignment, TeamStatus, TeamSummary, UserRole } from "../types/domain";
 
 export type CreateTeamPayload = {
   name: string;
@@ -68,6 +68,29 @@ export function grantTeamManager(teamId: number, userId: number,
 
 export function revokeTeamManager(teamId: number, userId: number): Promise<void> {
   return request<void>(`/api/v1/admin/teams/${teamId}/managers/${userId}`, { method: "DELETE" });
+}
+
+export function fetchTeamSuspensions(teamId: number, seasonId: number): Promise<PlayerSuspension[]> {
+  return request<PlayerSuspension[]>(`/api/v1/manage/teams/${teamId}/suspensions?seasonId=${seasonId}`);
+}
+
+export function fetchFixtureSuspensions(fixtureId: number): Promise<PlayerSuspension[]> {
+  return request<PlayerSuspension[]>(`/api/v1/manage/fixtures/${fixtureId}/suspensions`);
+}
+
+export function createSuspension(playerId: number, seasonId: number, matchesTotal: number,
+                                 reason: string): Promise<IdResponse> {
+  return request<IdResponse>("/api/v1/manage/suspensions", {
+    method: "POST",
+    data: { playerId, seasonId, matchesTotal, reason }
+  });
+}
+
+export function updateSuspension(id: number, matchesTotal: number, status: SuspensionStatus): Promise<void> {
+  return request<void>(`/api/v1/manage/suspensions/${id}`, {
+    method: "PUT",
+    data: { matchesTotal, status }
+  });
 }
 
 export type LineupSubstitutePayload = {

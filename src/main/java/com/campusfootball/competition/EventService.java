@@ -18,15 +18,17 @@ public class EventService {
     private final AuthorizationService authorizationService;
     private final PlayerMapper playerMapper;
     private final AuditService auditService;
+    private final SuspensionService suspensionService;
 
     public EventService(EventMapper eventMapper, FixtureWriteGuard writeGuard,
                         AuthorizationService authorizationService, PlayerMapper playerMapper,
-                        AuditService auditService) {
+                        AuditService auditService, SuspensionService suspensionService) {
         this.eventMapper = eventMapper;
         this.writeGuard = writeGuard;
         this.authorizationService = authorizationService;
         this.playerMapper = playerMapper;
         this.auditService = auditService;
+        this.suspensionService = suspensionService;
     }
 
     public java.util.List<FixtureEvent> findByFixture(long fixtureId) {
@@ -41,6 +43,7 @@ public class EventService {
         validateMinute(minute, stoppageMinute);
         Player player = playerMapper.findById(playerId).orElseThrow(() -> notFound("球员不存在"));
         validateEventRules(fixture, teamId, player, eventType, relatedPlayerId);
+        suspensionService.assertPlayersEligible(fixtureId, teamId, java.util.List.of(playerId));
 
         FixtureEvent event = new FixtureEvent();
         event.setFixtureId(fixtureId);
@@ -53,6 +56,9 @@ public class EventService {
         event.setNote(note);
         event.setCreatedBy(actorUserId);
         eventMapper.insert(event);
+        if (fixture.getStatus() == FixtureStatus.FINISHED) {
+            suspensionService.recalculateSeason(fixture.getSeasonId());
+        }
         auditService.record(actorUserId, teamId, AuditAction.CREATE, "EVENT", event.getId(), null, event);
         return event.getId();
     }
@@ -66,7 +72,14 @@ public class EventService {
         validateMinute(minute, stoppageMinute);
         Player player = playerMapper.findById(playerId).orElseThrow(() -> notFound("球员不存在"));
         validateEventRules(fixture, existing.getTeamId(), player, eventType, relatedPlayerId);
+        if (existing.getEventType() == EventType.YELLOW_CARD || existing.getEventType() == EventType.RED_CARD) {
+            suspensionService.assertCardEventMutable(eventId);
+        }
+        suspensionService.assertPlayersEligible(existing.getFixtureId(), existing.getTeamId(), java.util.List.of(playerId));
         eventMapper.update(eventId, playerId, eventType, relatedPlayerId, minute, stoppageMinute, note);
+        if (fixture.getStatus() == FixtureStatus.FINISHED) {
+            suspensionService.recalculateSeason(fixture.getSeasonId());
+        }
         auditService.record(actorUserId, existing.getTeamId(), AuditAction.UPDATE, "EVENT", eventId,
                 existing, get(eventId));
     }
@@ -76,7 +89,13 @@ public class EventService {
         FixtureEvent existing = get(eventId);
         Fixture fixture = writeGuard.requireWritable(existing.getFixtureId());
         validateWriteAccess(actorUserId, fixture, existing.getTeamId());
+        if (existing.getEventType() == EventType.YELLOW_CARD || existing.getEventType() == EventType.RED_CARD) {
+            suspensionService.prepareCardEventDelete(eventId);
+        }
         eventMapper.delete(eventId);
+        if (fixture.getStatus() == FixtureStatus.FINISHED) {
+            suspensionService.recalculateSeason(fixture.getSeasonId());
+        }
         auditService.record(actorUserId, existing.getTeamId(), AuditAction.DELETE, "EVENT", eventId, existing, null);
     }
 

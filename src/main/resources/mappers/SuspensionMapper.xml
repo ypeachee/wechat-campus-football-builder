@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.competition.SuspensionMapper">
+    <resultMap id="SuspensionMap" type="com.campusfootball.competition.PlayerSuspension">
+        <id property="id" column="id"/>
+        <result property="playerId" column="player_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="seasonId" column="season_id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceEventId" column="source_event_id"/>
+        <result property="sourceFixtureId" column="source_fixture_id"/>
+        <result property="reason" column="reason"/>
+        <result property="matchesTotal" column="matches_total"/>
+        <result property="matchesServed" column="matches_served"/>
+        <result property="status" column="status"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="CardEventRowMap" type="com.campusfootball.competition.CardEventRow">
+        <result property="eventId" column="event_id"/>
+        <result property="fixtureId" column="fixture_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="playerId" column="player_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="minute" column="minute"/>
+        <result property="kickoffAt" column="kickoff_at"/>
+        <result property="eventCreatedBy" column="event_created_by"/>
+    </resultMap>
+
+    <select id="findFinishedCardEventsBySeason" resultMap="CardEventRowMap">
+        SELECT e.id AS event_id, e.fixture_id, e.team_id, e.player_id, e.event_type,
+               e.minute, f.kickoff_at, e.created_by AS event_created_by
+        FROM fixture_event e
+        JOIN fixture f ON f.id = e.fixture_id
+        WHERE f.season_id = #{seasonId}
+          AND f.status = 'FINISHED'
+          AND e.event_type IN ('YELLOW_CARD', 'RED_CARD')
+        ORDER BY COALESCE(f.kickoff_at, '1000-01-01 00:00:00'), f.id, e.minute, e.id
+    </select>
+
+    <select id="findSeasonIdsWithFinishedCards" resultType="long">
+        SELECT DISTINCT f.season_id
+        FROM fixture_event e
+        JOIN fixture f ON f.id = e.fixture_id
+        WHERE f.status = 'FINISHED'
+          AND e.event_type IN ('YELLOW_CARD', 'RED_CARD')
+        ORDER BY f.season_id
+    </select>
+
+    <select id="findBySeasonAndTeam" resultMap="SuspensionMap">
+        SELECT * FROM player_suspension
+        WHERE season_id = #{seasonId} AND team_id = #{teamId}
+        ORDER BY status, created_at, id
+    </select>
+
+    <select id="findAutomaticBySeason" resultMap="SuspensionMap">
+        SELECT * FROM player_suspension
+        WHERE season_id = #{seasonId} AND source_type IN ('YELLOW_ACCUMULATION', 'RED_CARD')
+        ORDER BY id
+    </select>
+
+    <select id="findBySourceEventId" resultMap="SuspensionMap">
+        SELECT * FROM player_suspension
+        WHERE source_event_id = #{sourceEventId}
+        ORDER BY id
+    </select>
+
+    <select id="findById" resultMap="SuspensionMap">
+        SELECT * FROM player_suspension WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO player_suspension
+            (player_id, team_id, season_id, source_type, source_event_id, source_fixture_id,
+             reason, matches_total, matches_served, status, created_by)
+        VALUES
+            (#{playerId}, #{teamId}, #{seasonId}, #{sourceType}, #{sourceEventId}, #{sourceFixtureId},
+             #{reason}, #{matchesTotal}, #{matchesServed}, #{status}, #{createdBy})
+    </insert>
+
+    <update id="updateProgress">
+        UPDATE player_suspension
+        SET matches_served = #{matchesServed}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateTotalAndStatus">
+        UPDATE player_suspension
+        SET matches_total = #{matchesTotal}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM player_suspension WHERE id = #{id}
+    </delete>
+
+    <select id="countServing" resultType="int">
+        SELECT COUNT(*) FROM player_suspension_serving
+        WHERE suspension_id = #{suspensionId} AND fixture_id = #{fixtureId}
+    </select>
+
+    <insert id="insertServing">
+        INSERT INTO player_suspension_serving (suspension_id, fixture_id)
+        VALUES (#{suspensionId}, #{fixtureId})
+    </insert>
+</mapper>

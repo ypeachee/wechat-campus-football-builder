@@ -22,10 +22,12 @@ public class FixtureService {
     private final FixtureWriteGuard writeGuard;
     private final AuditService auditService;
     private final BracketService bracketService;
+    private final SuspensionService suspensionService;
 
     public FixtureService(FixtureMapper fixtureMapper, SeasonMapper seasonMapper, StageMapper stageMapper,
                           GroupMapper groupMapper, AuthorizationService authorizationService,
-                          FixtureWriteGuard writeGuard, AuditService auditService, BracketService bracketService) {
+                          FixtureWriteGuard writeGuard, AuditService auditService, BracketService bracketService,
+                          SuspensionService suspensionService) {
         this.fixtureMapper = fixtureMapper;
         this.seasonMapper = seasonMapper;
         this.stageMapper = stageMapper;
@@ -34,6 +36,7 @@ public class FixtureService {
         this.writeGuard = writeGuard;
         this.auditService = auditService;
         this.bracketService = bracketService;
+        this.suspensionService = suspensionService;
     }
 
     public Fixture get(long fixtureId) {
@@ -181,6 +184,8 @@ public class FixtureService {
             throw conflict("淘汰赛平局必须提供不同的点球比分");
         }
         fixtureMapper.finish(fixtureId, homeScore, awayScore, homePenaltyScore, awayPenaltyScore);
+        suspensionService.recalculateSeason(existing.getSeasonId());
+        suspensionService.serveAfterFinish(get(fixtureId));
         if (existing.getKnockoutTieId() != null) {
             bracketService.finishTie(actorUserId, existing.getKnockoutTieId(), homeScore, awayScore,
                     homePenaltyScore, awayPenaltyScore);

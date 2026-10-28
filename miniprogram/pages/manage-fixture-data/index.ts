@@ -4,6 +4,7 @@ import {
   createAppearance,
   createEvent,
   replaceTeamLineup,
+  fetchFixtureSuspensions,
   deleteAppearance,
   deleteEvent,
   fetchAdminTeams,
@@ -18,6 +19,7 @@ import type {
   EventType,
   FixtureDetail,
   FixtureSummary,
+  PlayerSuspension,
   PlayerSummary,
   Season,
   Session,
@@ -32,6 +34,8 @@ type LineupPlayerView = {
   label: string;
   starter: boolean;
   substitute: boolean;
+  suspended: boolean;
+  suspensionText: string;
   minutesPlayed: string;
 };
 type LineupEditorView = {
@@ -66,6 +70,7 @@ Page({
     isAdmin: false,
     isTeamLeader: false,
     canWriteEvents: false,
+    fixtureSuspensions: [] as PlayerSuspension[],
     loading: true,
     submitting: false,
     error: "",
@@ -173,11 +178,17 @@ Page({
 
   async loadFixture(fixtureId: number, session: Session) {
     const fixture = await fetchFixtureDetail(fixtureId);
-    const [homePlayers, awayPlayers] = (session.role === "ADMIN" || session.role === "TEAM_MANAGER")
-      ? await Promise.all([fetchManagedTeamPlayers(fixture.homeTeam.id), fetchManagedTeamPlayers(fixture.awayTeam.id)])
-      : await Promise.all([fetchTeamPlayers(fixture.homeTeam.id), fetchTeamPlayers(fixture.awayTeam.id)]);
+    const [homePlayers, awayPlayers, fixtureSuspensions] = (session.role === "ADMIN" || session.role === "TEAM_MANAGER")
+      ? await Promise.all([fetchManagedTeamPlayers(fixture.homeTeam.id), fetchManagedTeamPlayers(fixture.awayTeam.id),
+          fetchFixtureSuspensions(fixture.id)])
+      : await Promise.all([fetchTeamPlayers(fixture.homeTeam.id), fetchTeamPlayers(fixture.awayTeam.id),
+          fetchFixtureSuspensions(fixture.id)]);
     const playerMap = new Map<number, PlayerSummary>();
     [...homePlayers, ...awayPlayers].forEach((player) => playerMap.set(player.id, player));
+    const suspensionByPlayer = new Map<number, number>();
+    fixtureSuspensions.forEach((item) => {
+      suspensionByPlayer.set(item.playerId, (suspensionByPlayer.get(item.playerId) ?? 0) + item.matchesRemaining);
+    });
     const playerLabel = (id: number | null) => {
       if (id === null) return "";
       const player = playerMap.get(id);
@@ -209,6 +220,9 @@ Page({
             label: player.jerseyNo === null ? player.name : `${player.jerseyNo} ${player.name}`,
             starter,
             substitute: starter || Boolean(appearance && !appearance.starter),
+            suspended: suspensionByPlayer.has(player.id),
+            suspensionText: suspensionByPlayer.has(player.id)
+              ? `停赛 ${suspensionByPlayer.get(player.id)} 场` : "",
             minutesPlayed: appearance?.minutesPlayed === null || appearance?.minutesPlayed === undefined
               ? "30" : String(appearance.minutesPlayed)
           };
@@ -219,6 +233,7 @@ Page({
       fixture,
       statusLabel: fixtureStatusLabel(fixture.status),
       canWriteData,
+      fixtureSuspensions,
       teamOptions,
       homePlayers,
       awayPlayers,
@@ -374,6 +389,7 @@ Page({
     const teamId = Number(event.currentTarget.dataset.teamId);
     const playerId = Number(event.currentTarget.dataset.playerId);
     this.updateLineupPlayer(teamId, playerId, (player) => {
+      if (player.suspended) return;
       player.starter = !player.starter;
       player.substitute = player.starter;
       if (player.starter) player.minutesPlayed = "90";
@@ -384,7 +400,7 @@ Page({
     const teamId = Number(event.currentTarget.dataset.teamId);
     const playerId = Number(event.currentTarget.dataset.playerId);
     this.updateLineupPlayer(teamId, playerId, (player) => {
-      if (player.starter) return;
+      if (player.suspended || player.starter) return;
       player.substitute = !player.substitute;
       if (player.substitute && !player.minutesPlayed) player.minutesPlayed = "30";
     });
@@ -415,9 +431,9 @@ Page({
     const editorIndex = this.data.lineupEditors.findIndex((item) => item.teamId === teamId);
     const editor = this.data.lineupEditors[editorIndex];
     if (!this.data.fixture || !editor) return;
-    const starters = editor.players.filter((player) => player.starter).map((player) => player.playerId);
+    const starters = editor.players.filter((player) => player.starter && !player.suspended).map((player) => player.playerId);
     const substitutes = editor.players
-      .filter((player) => !player.starter && player.substitute)
+      .filter((player) => !player.starter && player.substitute && !player.suspended)
       .map((player) => ({ playerId: player.playerId, minutesPlayed: Number(player.minutesPlayed) || 0 }));
     if (substitutes.some((item) => item.minutesPlayed < 0 || item.minutesPlayed > 130)) {
       wx.showToast({ title: "替补出场分钟必须为 0–130", icon: "none" });

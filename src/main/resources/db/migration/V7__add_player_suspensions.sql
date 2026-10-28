@@ -1,0 +1,41 @@
+CREATE TABLE player_suspension (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    player_id BIGINT NOT NULL,
+    team_id BIGINT NOT NULL,
+    season_id BIGINT NOT NULL,
+    source_type VARCHAR(32) NOT NULL,
+    source_event_id BIGINT NULL,
+    source_fixture_id BIGINT NULL,
+    reason VARCHAR(255) NOT NULL,
+    matches_total SMALLINT NOT NULL,
+    matches_served SMALLINT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_by BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_player_suspension_source (source_type, source_event_id),
+    KEY idx_player_suspension_team_season_status (team_id, season_id, status),
+    KEY idx_player_suspension_player_season (player_id, season_id),
+    CONSTRAINT fk_player_suspension_player FOREIGN KEY (player_id) REFERENCES player (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_suspension_team FOREIGN KEY (team_id) REFERENCES team (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_suspension_season FOREIGN KEY (season_id) REFERENCES season (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_suspension_event FOREIGN KEY (source_event_id) REFERENCES fixture_event (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_suspension_fixture FOREIGN KEY (source_fixture_id) REFERENCES fixture (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_player_suspension_created_by FOREIGN KEY (created_by) REFERENCES app_user (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_player_suspension_source CHECK (source_type IN ('YELLOW_ACCUMULATION', 'RED_CARD', 'MANUAL')),
+    CONSTRAINT chk_player_suspension_matches CHECK (matches_total >= 1 AND matches_served >= 0 AND matches_served <= matches_total),
+    CONSTRAINT chk_player_suspension_status CHECK (status IN ('ACTIVE', 'SERVED', 'CANCELLED'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE player_suspension_serving (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    suspension_id BIGINT NOT NULL,
+    fixture_id BIGINT NOT NULL,
+    served_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_player_suspension_serving (suspension_id, fixture_id),
+    KEY idx_player_suspension_serving_fixture (fixture_id),
+    CONSTRAINT fk_suspension_serving_suspension FOREIGN KEY (suspension_id) REFERENCES player_suspension (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_suspension_serving_fixture FOREIGN KEY (fixture_id) REFERENCES fixture (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -392,3 +392,38 @@
 .lineup-editor__save {
   margin-top: 24rpx;
 }
+
+.fixture-suspensions {
+  margin-top: 14rpx;
+  border-left: 6rpx solid #C7392F;
+}
+
+.fixture-suspensions__title {
+  color: #C7392F;
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.fixture-suspension-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12rpx;
+  color: #5E6B65;
+  font-size: 21rpx;
+}
+
+.fixture-suspension-row text:last-child {
+  color: #C7392F;
+  font-weight: 700;
+}
+
+.lineup-row--suspended {
+  background: #F5F3EE;
+  color: #9A9F9C;
+  opacity: 0.78;
+}
+
+.lineup-status--danger {
+  color: #C7392F;
+  font-weight: 700;
+}
