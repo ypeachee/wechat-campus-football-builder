@@ -18,6 +18,19 @@
     </view>
 
     <view class="surface-card form-card">
+      <view class="form-title">纪律与停赛规则</view>
+      <view class="form-hint">按当前选中的赛事统一生效。默认 3 黄停 1 场、红牌停 1 场。</view>
+      <view class="field-label">累计几张黄牌停赛</view>
+      <input class="form-input" type="number" value="{{disciplineThreshold}}" data-field="disciplineThreshold" bindinput="handleDisciplineInput" placeholder="例如 3" />
+      <view class="field-label">红牌停赛场次</view>
+      <input class="form-input" type="number" value="{{disciplineRedMatches}}" data-field="disciplineRedMatches" bindinput="handleDisciplineInput" placeholder="例如 1" />
+      <view class="switch-row">
+        <view><view class="field-label">跨阶段累计</view><view class="form-hint">关闭后，小组赛与淘汰赛分别计算黄牌。</view></view>
+        <switch checked="{{cardsCrossStages}}" bindchange="handleCardsCrossStages" color="#0B6B4B" />
+      </view>
+      <t-button theme="primary" block bind:tap="saveDisciplineRule">保存纪律规则</t-button>
+    </view>
+    <view class="surface-card form-card">
       <view class="form-title">当前赛季</view>
       <picker mode="selector" range="{{seasons}}" range-key="name" value="{{seasonIndex}}" bindchange="handleSeasonChange"><view class="picker-value">{{seasons.length ? seasons[seasonIndex].name : "选择赛季"}}</view></picker>
       <input class="form-input" value="{{stageName}}" data-field="stageName" bindinput="input" placeholder="阶段名称，例如 小组赛 / 淘汰赛" />
