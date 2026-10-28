@@ -43,7 +43,8 @@ services:
       WECHAT_CODE_ENV_VERSION: ${WECHAT_CODE_ENV_VERSION:-release}
       ADMIN_WECHAT_OPENID: ${ADMIN_WECHAT_OPENID:-}
       SERVER_PORT: 8080
-      JAVA_OPTS: ${JAVA_OPTS:--Xms32m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:ActiveProcessorCount=2 -Xss256k -Djava.security.egd=file:/dev/urandom}
+      TZ: Asia/Shanghai
+      JAVA_OPTS: ${JAVA_OPTS:--Xms32m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:ActiveProcessorCount=2 -Xss256k -Duser.timezone=Asia/Shanghai -Djava.security.egd=file:/dev/urandom}
     depends_on:
       mysql:
         condition: service_healthy

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.sql.Timestamp;
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +23,12 @@ class NotificationIntegrationTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ScheduledNotificationService scheduledNotificationService;
+
+    @Autowired
+    private Clock clock;
+
     @Test
     void teamStaffReceiveUpcomingFixtureRemindersAndCanMarkThemRead() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
@@ -34,7 +40,7 @@ class NotificationIntegrationTest extends IntegrationTestBase {
         long fixtureId = TestApiSupport.createFixture(mockMvc, admin, seasonId, home, away);
         TestApiSupport.changeStatus(mockMvc, admin, fixtureId, FixtureStatus.SCHEDULED.name());
         jdbc.update("UPDATE fixture SET kickoff_at = ? WHERE id = ?",
-                Timestamp.valueOf(LocalDateTime.now().plusHours(2)), fixtureId);
+                LocalDateTime.now(clock).plusMinutes(90), fixtureId);
 
         JsonNode leader = TestAuthSupport.login(mockMvc, "leader-code");
         long leaderId = leader.get("userId").asLong();

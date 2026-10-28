@@ -6,7 +6,7 @@ COPY src ./src
 RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
-RUN apk add --no-cache curl \
+RUN apk add --no-cache curl tzdata \
     && addgroup -S app \
     && adduser -S app -G app
 WORKDIR /app

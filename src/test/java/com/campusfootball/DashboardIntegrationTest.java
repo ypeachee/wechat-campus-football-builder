@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -21,6 +20,9 @@ class DashboardIntegrationTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private Clock clock;
+
     @Test
     void dashboardReturnsScopedOperationalCounts() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
@@ -32,7 +34,7 @@ class DashboardIntegrationTest extends IntegrationTestBase {
         long fixtureId = TestApiSupport.createFixture(mockMvc, admin, seasonId, home, away);
         TestApiSupport.changeStatus(mockMvc, admin, fixtureId, FixtureStatus.SCHEDULED.name());
         jdbc.update("UPDATE fixture SET kickoff_at = ? WHERE id = ?",
-                Timestamp.valueOf(LocalDate.now().plusDays(1).atTime(18, 0)), fixtureId);
+                LocalDateTime.now(clock).toLocalDate().plusDays(1).atTime(18, 0), fixtureId);
         long playerId = TestApiSupport.createPlayer(mockMvc, admin, home, "DashboardPlayer", 18);
         mockMvc.perform(post("/api/v1/manage/suspensions")
                         .header("Authorization", "Bearer " + admin)
