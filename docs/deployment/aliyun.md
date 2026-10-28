@@ -207,7 +207,7 @@ V6 数据库迁移会自动为历史球队授权补充 `TEAM_MANAGER` 角色，�
 
 ## 10. 配置微信小程序合法域名
 
-微信公众平台 -> 开发管理 -> 开发设置 -> 服务器域名 -> request 合法域名，添加：
+微信公众平台 -> 开发管理 -> 开发设置 -> 服务器域名，在 request、uploadFile、downloadFile 三类合法域名中都添加：
 
 ```text
 https://api.cugbsoccer.xyz
