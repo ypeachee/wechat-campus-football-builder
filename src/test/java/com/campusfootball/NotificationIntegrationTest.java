@@ -50,6 +50,8 @@ class NotificationIntegrationTest extends IntegrationTestBase {
                         .content("{\"userId\":" + leaderId + ",\"role\":\"TEAM_LEADER\"}"))
                 .andExpect(status().isOk());
 
+        scheduledNotificationService.runAt(LocalDateTime.now(clock));
+
         mockMvc.perform(get("/api/v1/notifications")
                         .header("Authorization", "Bearer " + leader.get("token").asText()))
                 .andExpect(status().isOk())
