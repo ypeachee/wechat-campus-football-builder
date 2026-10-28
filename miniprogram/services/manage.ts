@@ -1,6 +1,6 @@
 import { request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { EventType, PlayerStatus, PlayerSuspension, PlayerSummary, SuspensionStatus, TeamManagerAssignment, TeamStatus, TeamSummary, UserRole } from "../types/domain";
+import type { EventType, PlayerStatus, PlayerSuspension, PlayerSummary, SuspensionStatus, TeamManagerAssignment, TeamStatus, TeamSummary, UserRole, UserSearchItem } from "../types/domain";
 
 export type CreateTeamPayload = {
   name: string;
@@ -52,6 +52,10 @@ export function fetchAdminTeams(): Promise<TeamSummary[]> {
 
 export function fetchAdminTeamPlayers(teamId: number): Promise<PlayerSummary[]> {
   return request<PlayerSummary[]>(`/api/v1/admin/teams/${teamId}/players`);
+}
+
+export function searchUsers(query: string): Promise<UserSearchItem[]> {
+  return request<UserSearchItem[]>(`/api/v1/admin/users?query=${encodeURIComponent(query.trim())}`);
 }
 
 export function fetchTeamManagers(teamId: number): Promise<TeamManagerAssignment[]> {

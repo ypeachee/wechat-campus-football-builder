@@ -54,6 +54,13 @@ export interface PlayerSuspension {
   createdAt: string;
 }
 
+export interface UserSearchItem {
+  id: number;
+  nickname: string | null;
+  role: UserRole;
+  status: UserStatus;
+}
+
 export interface TeamManagerAssignment {
   userId: number;
   role: Exclude<UserRole, "ADMIN" | "VIEWER">;

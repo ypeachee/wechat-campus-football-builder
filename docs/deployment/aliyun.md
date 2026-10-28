@@ -222,7 +222,13 @@ const RELEASE_API_BASE_URL = "https://api.cugbsoccer.xyz";
 
 之后重新编译、上传体验版，用真机测试登录和公开接口。
 
-## 11. 日常运维
+## 11. 备份与监控
+
+数据库备份、OSS 异地备份、健康检查和外部可用性监控见：
+
+[backup-and-monitoring.md](backup-and-monitoring.md)
+
+## 12. 日常运维
 
 查看状态：
 

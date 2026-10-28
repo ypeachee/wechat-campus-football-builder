@@ -5,9 +5,10 @@
   "description": "Native WeChat Mini Program for the campus football league",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "check:wxml": "node ../scripts/check-wxml.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run typecheck && npm test"
+    "verify": "npm run typecheck && npm run check:wxml && npm test"
   },
   "dependencies": {
     "tdesign-miniprogram": "1.17.0"

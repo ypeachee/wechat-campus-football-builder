@@ -1,7 +1,7 @@
 import { refreshSession } from "../../services/auth";
-import { fetchAdminTeams, fetchTeamManagers, grantTeamManager, revokeTeamManager } from "../../services/manage";
+import { fetchAdminTeams, fetchTeamManagers, grantTeamManager, revokeTeamManager, searchUsers as searchUsersApi } from "../../services/manage";
 import { SubmitLock, withSubmitLock } from "../../state/submit-lock";
-import type { TeamManagerAssignment, TeamSummary } from "../../types/domain";
+import type { TeamManagerAssignment, TeamSummary, UserSearchItem } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 import { roleLabel } from "../../utils/status";
 
@@ -21,6 +21,9 @@ Page({
     selectedTeam: null as TeamSummary | null,
     managers: [] as AssignmentView[],
     grantUserId: "",
+    userQuery: "",
+    userSearching: false,
+    userResults: [] as Array<UserSearchItem & { roleText: string }>,
     grantRole: "TEAM_LEADER" as AssignmentRole,
     grantRoleOptions: [
       { value: "TEAM_MANAGER", label: "授权管理员" },
@@ -77,6 +80,31 @@ Page({
       selectedTeam: this.data.teams.find((team) => team.id === teamId) ?? null,
       managers
     });
+  },
+
+  handleUserQueryInput(event: WechatMiniprogram.Input) {
+    this.setData({ userQuery: event.detail.value });
+  },
+
+  async searchUsers() {
+    if (this.data.userSearching) return;
+    this.setData({ userSearching: true });
+    try {
+      const results = await searchUsersApi(this.data.userQuery);
+      this.setData({
+        userResults: results.map((item) => ({ ...item, roleText: roleLabel(item.role) }))
+      });
+    } catch (error) {
+      wx.showToast({ title: errorMessage(error), icon: "none" });
+    } finally {
+      this.setData({ userSearching: false });
+    }
+  },
+
+  selectUser(event: WechatMiniprogram.BaseEvent) {
+    const userId = Number(event.currentTarget.dataset.id);
+    if (!userId) return;
+    this.setData({ grantUserId: String(userId), userResults: [] });
   },
 
   handleUserIdInput(event: WechatMiniprogram.Input) {

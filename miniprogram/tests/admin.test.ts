@@ -7,7 +7,7 @@ import {
   fetchSeasonTeams,
   removeSeasonTeam
 } from "../services/competition";
-import { fetchTeamManagers, grantTeamManager, revokeTeamManager } from "../services/manage";
+import { fetchTeamManagers, grantTeamManager, revokeTeamManager, searchUsers } from "../services/manage";
 
 vi.mock("../services/http", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../services/http")>();
@@ -45,6 +45,11 @@ describe("admin services", () => {
     expect(requestMock).toHaveBeenNthCalledWith(3, "/api/v1/admin/teams/7/managers/21", { method: "DELETE" });
   });
 
+  it("searches users by id or nickname", async () => {
+    requestMock.mockResolvedValueOnce([]);
+    await searchUsers(" 王涛 ");
+    expect(requestMock).toHaveBeenCalledWith("/api/v1/admin/users?query=%E7%8E%8B%E6%B6%9B");
+  });
   it("preserves conflicts", async () => {
     const conflict = new Error("conflict");
     requestMock.mockRejectedValueOnce(conflict);

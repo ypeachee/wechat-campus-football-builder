@@ -37,6 +37,23 @@
       </view>
 
       <view class="grant-section">
+        <view class="form-label">搜索用户</view>
+        <view class="user-search-row">
+          <input class="grant-input" value="{{userQuery}}" bindinput="handleUserQueryInput"
+            bindconfirm="searchUsers" confirm-type="search" placeholder="输入用户 ID 或昵称" />
+          <t-button theme="default" size="small" variant="outline" loading="{{userSearching}}" bind:tap="searchUsers">搜索</t-button>
+        </view>
+        <view wx:if="{{userResults.length > 0}}" class="user-search-results">
+          <view wx:for="{{userResults}}" wx:key="id" class="user-search-item"
+            data-id="{{item.id}}" bindtap="selectUser">
+            <view>
+              <view class="user-search-item__name">{{item.nickname || "未设置昵称"}}</view>
+              <view class="user-search-item__meta">ID {{item.id}} · {{item.roleText}}</view>
+            </view>
+            <text class="user-search-item__select">选择</text>
+          </view>
+        </view>
+
         <view class="form-label">授权类型</view>
         <view class="grant-role-row">
           <view
@@ -52,7 +69,7 @@
           <input class="grant-input" type="number" value="{{grantUserId}}" bindinput="handleUserIdInput" placeholder="输入用户 ID" />
           <t-button theme="primary" size="small" loading="{{submitting}}" bind:tap="grantManager">授权</t-button>
         </view>
-        <view class="grant-hint">用户首次登录后可在“我的”页查看自己的 ID。授权管理员可管理全部数据；领队只能维护本队人员和本队阵容。</view>
+        <view class="grant-hint">可搜索用户 ID 或昵称，也可以手动输入用户 ID。授权管理员可管理全部数据；领队只能维护本队人员和本队阵容。</view>
       </view>
     </view>
   </block>

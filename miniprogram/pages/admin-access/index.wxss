@@ -146,3 +146,46 @@
   color: #0B6B4B;
   font-weight: 700;
 }
+.user-search-row {
+  display: flex;
+  gap: 10rpx;
+  margin-bottom: 20rpx;
+}
+
+.user-search-results {
+  margin-bottom: 22rpx;
+  overflow: hidden;
+  border: 1rpx solid #E4E2D9;
+  border-radius: 14rpx;
+}
+
+.user-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 18rpx;
+  border-bottom: 1rpx solid #EEECE5;
+  background: #FFFFFF;
+}
+
+.user-search-item:last-child {
+  border-bottom: 0;
+}
+
+.user-search-item__name {
+  color: #14201D;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.user-search-item__meta {
+  margin-top: 4rpx;
+  color: #7C8983;
+  font-size: 19rpx;
+}
+
+.user-search-item__select {
+  color: #0B6B4B;
+  font-size: 21rpx;
+  font-weight: 700;
+}

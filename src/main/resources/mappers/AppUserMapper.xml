@@ -21,6 +21,21 @@
         SELECT * FROM app_user WHERE id = #{id}
     </select>
 
+    <select id="searchForManagement" resultMap="AppUserMap">
+        SELECT id, wechat_openid, unionid, nickname, avatar_url, role_code, status, created_at, updated_at
+        FROM app_user
+        WHERE status = 'ACTIVE'
+        <if test="query != null and query != ''">
+            AND (CAST(id AS CHAR) = #{query} OR nickname LIKE CONCAT('%', #{query}, '%'))
+        </if>
+        ORDER BY
+        <if test="query != null and query != ''">
+            CASE WHEN CAST(id AS CHAR) = #{query} THEN 0 ELSE 1 END,
+        </if>
+            created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO app_user (wechat_openid, unionid, nickname, avatar_url, role_code, status)
         VALUES (#{wechatOpenid}, #{unionid}, #{nickname}, #{avatarUrl}, #{roleCode}, #{status})
