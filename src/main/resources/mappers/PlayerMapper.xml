@@ -26,6 +26,11 @@
         SELECT * FROM player WHERE id = #{id}
     </select>
 
+    <select id="findActiveByTeamAndJersey" resultMap="PlayerMap">
+        SELECT * FROM player
+        WHERE team_id = #{teamId} AND jersey_no = #{jerseyNo} AND status = 'ACTIVE'
+        ORDER BY id LIMIT 1
+    </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO player (team_id, name, jersey_no, position, birth_date, photo_url, status)
         VALUES (#{teamId}, #{name}, #{jerseyNo}, #{position}, #{birthDate}, #{photoUrl}, #{status})

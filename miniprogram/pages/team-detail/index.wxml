@@ -25,6 +25,11 @@
       </view>
     </view>
 
+    <view class="team-share-actions">
+      <button class="share-team-button" open-type="share">分享球队</button>
+      <button class="qr-team-button" bindtap="showQr">球队二维码</button>
+    </view>
+
     <view class="section-head">
       <view>
         <view class="section-title">球员名单</view>
@@ -53,4 +58,13 @@
       </view>
     </view>
   </block>
-</view>
+
+  <view wx:if="{{qrVisible}}" class="qr-mask" bindtap="closeQr">
+    <view class="qr-modal" catchtap="noop">
+      <view class="qr-modal__title">{{team.name}}</view>
+      <image class="qr-modal__image" src="{{qrUrl}}" mode="aspectFit" show-menu-by-longpress />
+      <view class="qr-modal__copy">微信扫码查看球队主页</view>
+      <t-button theme="primary" block bind:tap="saveQr">保存到相册</t-button>
+    </view>
+  </view>
+  <canvas type="2d" id="shareCanvas" class="share-canvas"></canvas></view>

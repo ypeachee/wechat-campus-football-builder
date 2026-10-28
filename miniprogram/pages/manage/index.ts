@@ -1,5 +1,6 @@
 import { refreshSession } from "../../services/auth";
 import { fetchAdminTeams } from "../../services/manage";
+import { fetchManagementDashboard } from "../../services/dashboard";
 import {
   createSensitiveTerm, deleteSensitiveTerm, fetchModerationRatings, fetchSensitiveTerms,
   importSensitiveTerms, moderateRating, updateSensitiveTerm
@@ -7,7 +8,7 @@ import {
 import { fetchTeam } from "../../services/teams";
 import { getSession } from "../../state/session";
 import type {
-  RatingModerationItem, RatingStatus, SensitiveTerm, SensitiveTermAction, Session, TeamSummary
+  DashboardView, RatingModerationItem, RatingStatus, SensitiveTerm, SensitiveTermAction, Session, TeamSummary
 } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
 import { roleLabel } from "../../utils/status";
@@ -35,6 +36,7 @@ type ManageData = {
   ratingImportText: string;
   ratingImportAction: SensitiveTermAction;
   ratingPanelBusy: boolean;
+  dashboard: DashboardView | null;
 };
 
 Page({
@@ -64,7 +66,8 @@ Page({
     ratingTermAction: "REVIEW" as SensitiveTermAction,
     ratingImportText: "",
     ratingImportAction: "REVIEW" as SensitiveTermAction,
-    ratingPanelBusy: false
+    ratingPanelBusy: false,
+    dashboard: null
   } as ManageData,
 
   onShow() {
@@ -91,10 +94,13 @@ Page({
         this.setData({ session: null, verified: false, loading: false });
         return;
       }
-      const teams = isAuthorizedAdmin
-        ? await fetchAdminTeams()
-        : (await Promise.all(session.managedTeamIds.map((teamId) => fetchTeam(teamId).catch(() => null))))
-            .filter((team): team is TeamSummary => team !== null);
+      const [teams, dashboard] = await Promise.all([
+        isAuthorizedAdmin
+          ? fetchAdminTeams()
+          : Promise.all(session.managedTeamIds.map((teamId) => fetchTeam(teamId).catch(() => null)))
+              .then((items) => items.filter((team): team is TeamSummary => team !== null)),
+        fetchManagementDashboard().catch(() => null)
+      ]);
       this.setData({
         session,
         roleText: roleLabel(session.role),
@@ -102,7 +108,8 @@ Page({
         isSuperAdmin,
         isTeamLeader: isLeader,
         verified: true,
-        teams
+        teams,
+        dashboard
       });
     } catch (error) {
       this.setData({ error: errorMessage(error), verified: false });
@@ -138,6 +145,32 @@ Page({
 
   goDisciplineCenter() {
     wx.navigateTo({ url: "/pages/discipline/index" });
+  },
+
+  goAnnouncements() {
+    wx.navigateTo({ url: "/pages/admin-announcements/index" });
+  },
+
+  goImportData() {
+    wx.navigateTo({ url: "/pages/import-data/index" });
+  },
+
+  openPendingRatings() {
+    this.setData({ ratingFilter: "PENDING", ratingPanelVisible: true });
+    void this.loadRatingPanel().catch((error) => wx.showToast({ title: errorMessage(error), icon: "none" }));
+  },
+
+  openReportedRatings() {
+    this.setData({ ratingFilter: "REPORTED", ratingPanelVisible: true });
+    void this.loadRatingPanel().catch((error) => wx.showToast({ title: errorMessage(error), icon: "none" }));
+  },
+
+  goTomorrowFixtures() {
+    this.goFixtureData();
+  },
+
+  goSuspensions() {
+    this.goDisciplineCenter();
   },
 
   goAdminCompetition() {

@@ -29,7 +29,8 @@ public interface NotificationMapper {
 
     List<Long> findTeamStaffUserIds(@Param("teamId") long teamId);
 
-    List<UpcomingFixtureRow> findUpcomingFixturesForUser(@Param("userId") long userId,
-                                                          @Param("from") LocalDateTime from,
-                                                          @Param("until") LocalDateTime until);
+    List<Long> findAllTeamStaffUserIds();
+
+    List<UpcomingFixtureRow> findScheduledBetween(@Param("from") LocalDateTime from,
+                                                  @Param("until") LocalDateTime until);
 }

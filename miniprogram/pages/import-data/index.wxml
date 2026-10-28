@@ -1,0 +1,36 @@
+<view class="page-shell import-page">
+  <app-header title="批量导入" subtitle="CSV / Excel 一次导入球队或球员" season-name="IMPORT" />
+  <view wx:if="{{loading}}" class="import-loading"><t-loading theme="circular" size="44rpx" text="校验权限" /></view>
+  <view wx:elif="{{!session}}" class="surface-card"><empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" /></view>
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-title">选择导入内容</view>
+      <picker mode="selector" range="{{kindOptions}}" range-key="label" value="{{kindIndex}}" bindchange="selectKind">
+        <view class="picker-value">{{kindOptions[kindIndex].label}}</view>
+      </picker>
+      <view class="import-tip">
+        {{kindOptions[kindIndex].value === "teams" ? "表头：球队名称,简称,教练,主场,状态" : "表头：球队名称,姓名,号码,位置"}}
+      </view>
+      <view class="switch-row"><view><view class="field-label">覆盖已有数据</view><view class="import-tip">关闭时，重复球队或号码会作为错误返回。</view></view><switch checked="{{overwrite}}" bindchange="toggleOverwrite" color="#0B6B4B" /></view>
+      <t-button theme="default" variant="outline" block bind:tap="chooseFile">{{fileName || "从微信会话选择 CSV/XLSX"}}</t-button>
+      <view class="form-actions">
+        <t-button theme="primary" block loading="{{previewing}}" disabled="{{!filePath}}" bind:tap="previewFile">预览校验</t-button>
+      </view>
+    </view>
+
+    <view wx:if="{{preview}}" class="surface-card preview-card">
+      <view class="preview-title">校验结果</view>
+      <view class="preview-stats"><view><text class="preview-number">{{preview.totalRows}}</text><text>总行数</text></view><view><text class="preview-number">{{preview.createCount}}</text><text>新建</text></view><view><text class="preview-number">{{preview.updateCount}}</text><text>更新</text></view><view><text class="preview-number preview-number--error">{{preview.errors.length}}</text><text>错误</text></view></view>
+      <view wx:if="{{preview.errors.length > 0}}" class="error-list">
+        <view wx:for="{{preview.errors}}" wx:key="rowNumber" class="error-row"><text>第 {{item.rowNumber}} 行</text><text>{{item.message}}</text></view>
+      </view>
+      <view wx:else class="preview-ok">校验通过，可以导入 {{preview.validRows}} 行。</view>
+      <t-button theme="primary" block loading="{{committing}}" disabled="{{preview.errors.length > 0}}" bind:tap="commitImport">确认导入</t-button>
+    </view>
+
+    <view wx:if="{{result}}" class="surface-card result-card">
+      <view class="result-title">导入完成</view>
+      <view class="result-copy">新建 {{result.created}} 条，更新 {{result.updated}} 条，跳过 {{result.skipped}} 条。</view>
+    </view>
+  </block>
+</view>

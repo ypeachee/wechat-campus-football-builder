@@ -2,6 +2,7 @@ package com.campusfootball;
 
 import com.campusfootball.competition.FixtureStatus;
 import com.campusfootball.competition.SeasonStatus;
+import com.campusfootball.notification.ScheduledNotificationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

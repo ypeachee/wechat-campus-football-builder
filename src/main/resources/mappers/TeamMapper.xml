@@ -25,6 +25,9 @@
         SELECT * FROM team WHERE id = #{id}
     </select>
 
+    <select id="findFirstByName" resultMap="TeamMap">
+        SELECT * FROM team WHERE name = #{name} ORDER BY id LIMIT 1
+    </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO team (name, short_name, logo_url, coach_name, home_venue, status)
         VALUES (#{name}, #{shortName}, #{logoUrl}, #{coachName}, #{homeVenue}, #{status})

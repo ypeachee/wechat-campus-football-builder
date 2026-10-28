@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.dashboard.DashboardMapper">
+    <select id="countTomorrowFixtures" resultType="long">
+        SELECT COUNT(DISTINCT f.id)
+        FROM fixture f
+        WHERE f.status = 'SCHEDULED'
+          AND f.kickoff_at &gt;= #{from}
+          AND f.kickoff_at &lt; #{until}
+          AND (
+            #{allTeams} = TRUE
+            OR EXISTS (
+              SELECT 1 FROM team_manager tm
+              WHERE tm.user_id = #{userId}
+                AND tm.team_id IN (f.home_team_id, f.away_team_id)
+            )
+          )
+    </select>
+
+    <select id="countActiveSuspensions" resultType="long">
+        SELECT COUNT(*)
+        FROM player_suspension ps
+        WHERE ps.status = 'ACTIVE'
+          AND (
+            #{allTeams} = TRUE
+            OR EXISTS (
+              SELECT 1 FROM team_manager tm
+              WHERE tm.user_id = #{userId} AND tm.team_id = ps.team_id
+            )
+          )
+    </select>
+</mapper>

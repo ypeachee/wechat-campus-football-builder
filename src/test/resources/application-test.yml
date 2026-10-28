@@ -12,3 +12,5 @@ app:
     admin-openid: openid-admin
   rate-limit:
     enabled: false
+  notifications:
+    scheduled-enabled: false

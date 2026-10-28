@@ -50,17 +50,23 @@
         WHERE tm.team_id = #{teamId} AND u.status = 'ACTIVE'
     </select>
 
-    <select id="findUpcomingFixturesForUser" resultType="com.campusfootball.notification.UpcomingFixtureRow">
-        SELECT DISTINCT f.id AS fixture_id, ht.name AS home_team_name, at.name AS away_team_name,
-               f.kickoff_at
+    <select id="findAllTeamStaffUserIds" resultType="long">
+        SELECT DISTINCT tm.user_id
+        FROM team_manager tm
+        JOIN app_user u ON u.id = tm.user_id
+        WHERE u.status = 'ACTIVE'
+        ORDER BY tm.user_id
+    </select>
+    <select id="findScheduledBetween" resultType="com.campusfootball.notification.UpcomingFixtureRow">
+        SELECT f.id AS fixture_id, f.home_team_id, f.away_team_id,
+               ht.name AS home_team_name, at.name AS away_team_name, f.kickoff_at
         FROM fixture f
-        JOIN team_manager tm ON tm.user_id = #{userId}
-          AND (tm.team_id = f.home_team_id OR tm.team_id = f.away_team_id)
         JOIN team ht ON ht.id = f.home_team_id
         JOIN team at ON at.id = f.away_team_id
         WHERE f.status = 'SCHEDULED'
           AND f.kickoff_at IS NOT NULL
-          AND f.kickoff_at BETWEEN #{from} AND #{until}
+          AND f.kickoff_at > #{from}
+          AND f.kickoff_at &lt;= #{until}
         ORDER BY f.kickoff_at, f.id
     </select>
 </mapper>

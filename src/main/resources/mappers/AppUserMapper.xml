@@ -36,6 +36,15 @@
         LIMIT #{limit}
     </select>
 
+    <select id="findActiveIds" resultType="long">
+        SELECT id FROM app_user WHERE status = 'ACTIVE' ORDER BY id
+    </select>
+
+    <select id="findActiveIdsByRole" resultType="long">
+        SELECT id FROM app_user
+        WHERE status = 'ACTIVE' AND role_code = #{role}
+        ORDER BY id
+    </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO app_user (wechat_openid, unionid, nickname, avatar_url, role_code, status)
         VALUES (#{wechatOpenid}, #{unionid}, #{nickname}, #{avatarUrl}, #{roleCode}, #{status})

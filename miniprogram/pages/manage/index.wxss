@@ -108,3 +108,12 @@
 .rating-admin-term__main text:last-child { color: #7C8983; font-size: 19rpx; }
 .rating-admin-link { color: #0B6B4B; font-size: 21rpx; }
 .rating-admin-link--danger { color: #C7392F; }
+
+.todo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12rpx; margin-bottom: 18rpx; }
+.todo-card { padding: 20rpx; border-radius: 18rpx; background: #E8F2ED; border: 1rpx solid #C9E2D6; }
+.todo-card--rating { background: #EEF3FF; border-color: #D4DEFA; }
+.todo-card--report { background: #FFF3E7; border-color: #F4D7B7; }
+.todo-card--suspension { background: #FFF0EE; border-color: #F1CFCB; }
+.todo-card__number { color: #0B6B4B; font-size: 40rpx; font-weight: 850; }
+.todo-card--report .todo-card__number, .todo-card--suspension .todo-card__number { color: #A34600; }
+.todo-card__label { margin-top: 4rpx; color: #5E6B65; font-size: 21rpx; }

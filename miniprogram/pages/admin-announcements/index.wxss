@@ -1,0 +1,14 @@
+.announcement-page { padding-top: 22rpx; }
+.announcement-loading { display: flex; justify-content: center; padding: 120rpx 0; }
+.form-card { margin-top: 18rpx; }
+.form-title { margin-bottom: 14rpx; font-size: 29rpx; font-weight: 800; }
+.form-input, .form-textarea, .picker-value { width: 100%; min-height: 70rpx; padding: 0 16rpx; margin-top: 12rpx; display: flex; align-items: center; border-radius: 14rpx; background: #F8F6F0; border: 1rpx solid #E4E2D9; box-sizing: border-box; font-size: 24rpx; }
+.form-textarea { min-height: 180rpx; padding-top: 16rpx; }
+.field-label { margin-top: 16rpx; color: #4D5C55; font-size: 22rpx; font-weight: 650; }
+.announcement-list { display: flex; flex-direction: column; gap: 12rpx; }
+.announcement-item { padding: 20rpx; }
+.announcement-item__top { display: flex; justify-content: space-between; gap: 12rpx; }
+.announcement-item__title { font-size: 25rpx; font-weight: 800; }
+.announcement-item__time { flex: none; color: #9AA49F; font-size: 18rpx; }
+.announcement-item__content { margin-top: 10rpx; color: #4D5C55; font-size: 22rpx; line-height: 1.55; white-space: pre-wrap; }
+.announcement-item__meta { margin-top: 12rpx; color: #0B6B4B; font-size: 19rpx; }

@@ -14,6 +14,10 @@ public interface AppUserMapper {
 
     List<AppUser> searchForManagement(@Param("query") String query, @Param("limit") int limit);
 
+    List<Long> findActiveIds();
+
+    List<Long> findActiveIdsByRole(@Param("role") UserRole role);
+
     int insert(AppUser user);
 
     int updateRole(@Param("id") long id, @Param("role") UserRole role);

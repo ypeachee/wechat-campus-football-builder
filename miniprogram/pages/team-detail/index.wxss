@@ -87,3 +87,15 @@
   color: #A2ADA8;
   font-size: 38rpx;
 }
+
+.team-share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; margin-top: 16rpx; }
+.share-team-button, .qr-team-button { height: 76rpx; margin: 0; padding: 0; border-radius: 14rpx; font-size: 23rpx; font-weight: 700; line-height: 76rpx; }
+.share-team-button { background: #0B6B4B; color: #FFFFFF; }
+.share-team-button::after, .qr-team-button::after { border: 0; }
+.qr-team-button { background: #E4F5EC; color: #0B6B4B; border: 1rpx solid #AAD9C2; }
+.qr-mask { position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; padding: 48rpx; background: rgba(0, 0, 0, 0.58); }
+.qr-modal { width: 100%; max-width: 620rpx; padding: 30rpx; border-radius: 24rpx; background: #FFFFFF; box-sizing: border-box; text-align: center; }
+.qr-modal__title { margin-bottom: 20rpx; font-size: 30rpx; font-weight: 800; }
+.qr-modal__image { width: 430rpx; height: 430rpx; display: block; margin: 0 auto; }
+.qr-modal__copy { margin: 14rpx 0 22rpx; color: #7C8983; font-size: 21rpx; }
+.share-canvas { position: fixed; left: -9999rpx; top: -9999rpx; width: 750px; height: 600px; pointer-events: none; }

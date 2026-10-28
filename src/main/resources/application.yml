@@ -7,6 +7,10 @@ spring:
     password: ${DB_PASSWORD:campus}
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
   jackson:
     time-zone: Asia/Shanghai
     default-property-inclusion: non_null
@@ -23,8 +27,11 @@ app:
   wechat:
     app-id: ${WECHAT_APP_ID:}
     app-secret: ${WECHAT_APP_SECRET:}
+    code-env-version: ${WECHAT_CODE_ENV_VERSION:release}
   bootstrap:
     admin-openid: ${ADMIN_WECHAT_OPENID:}
+  notifications:
+    scheduled-enabled: ${NOTIFICATION_SCHEDULER_ENABLED:true}
   rate-limit:
     enabled: ${RATE_LIMIT_ENABLED:true}
     login-per-minute: ${RATE_LIMIT_LOGIN_PER_MINUTE:8}

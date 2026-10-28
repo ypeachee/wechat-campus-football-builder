@@ -1,0 +1,38 @@
+<view class="page-shell announcement-page">
+  <app-header title="公告发布" subtitle="向小程序用户发送系统消息" season-name="ANNOUNCEMENT" />
+  <view wx:if="{{loading}}" class="announcement-loading"><t-loading theme="circular" size="44rpx" text="加载公告" /></view>
+  <view wx:elif="{{!session}}" class="surface-card"><empty-state title="无权限" description="{{error}}" action-text="返回" bind:action="goBack" /></view>
+  <view wx:elif="{{error}}" class="surface-card"><empty-state title="加载失败" description="{{error}}" action-text="重试" bind:action="load" /></view>
+  <block wx:else>
+    <view class="surface-card form-card">
+      <view class="form-title">新建公告</view>
+      <input class="form-input" maxlength="120" value="{{title}}" data-field="title" bindinput="input" placeholder="公告标题" />
+      <textarea class="form-textarea" maxlength="500" value="{{content}}" data-field="content" bindinput="input" placeholder="公告正文，最多 500 字" />
+      <view class="field-label">发送范围</view>
+      <picker mode="selector" range="{{audienceOptions}}" range-key="label" value="{{audienceIndex}}" bindchange="selectAudience">
+        <view class="picker-value">{{audienceOptions[audienceIndex].label || "选择范围"}}</view>
+      </picker>
+      <block wx:if="{{audienceOptions[audienceIndex].value === 'TEAM'}}">
+        <view class="field-label">目标球队</view>
+        <picker mode="selector" range="{{teams}}" range-key="name" value="{{teamIndex}}" bindchange="selectTeam">
+          <view class="picker-value">{{teams[teamIndex].name || "选择球队"}}</view>
+        </picker>
+      </block>
+      <block wx:if="{{audienceOptions[audienceIndex].value === 'USER'}}">
+        <view class="field-label">目标用户 ID</view>
+        <input class="form-input" type="number" value="{{targetUserId}}" data-field="targetUserId" bindinput="input" placeholder="例如 12" />
+      </block>
+      <t-button theme="primary" block loading="{{submitting}}" bind:tap="submit">立即发送</t-button>
+    </view>
+
+    <view class="section-head"><view><view class="section-title">发送记录</view><view class="section-subtitle">共 {{announcements.length}} 条记录</view></view></view>
+    <view wx:if="{{announcements.length === 0}}" class="surface-card"><empty-state title="暂无公告" description="发布后会显示在这里。" /></view>
+    <view wx:else class="announcement-list">
+      <view wx:for="{{announcements}}" wx:key="id" class="surface-card announcement-item">
+        <view class="announcement-item__top"><text class="announcement-item__title">{{item.title}}</text><text class="announcement-item__time">{{item.timeLabel}}</text></view>
+        <view class="announcement-item__content">{{item.content}}</view>
+        <view class="announcement-item__meta">{{item.audienceLabel}} · 发送 {{item.deliveredCount}} · 已读 {{item.readCount}}</view>
+      </view>
+    </view>
+  </block>
+</view>

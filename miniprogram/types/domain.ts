@@ -446,3 +446,53 @@ export interface NotificationPage {
   page: number;
   size: number;
 }
+
+export type AnnouncementAudience = "ALL" | "ADMIN" | "TEAM_STAFF" | "TEAM" | "USER";
+
+export interface AnnouncementView {
+  id: number;
+  title: string;
+  content: string;
+  audience: AnnouncementAudience;
+  targetTeamId: number | null;
+  targetUserId: number | null;
+  createdBy: number;
+  recipientCount: number;
+  deliveredCount: number;
+  readCount: number;
+  createdAt: string;
+}
+
+export interface AnnouncementPage {
+  items: AnnouncementView[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface ImportError {
+  rowNumber: number;
+  message: string;
+}
+
+export interface ImportPreview {
+  totalRows: number;
+  validRows: number;
+  createCount: number;
+  updateCount: number;
+  errors: ImportError[];
+  sample: Array<Record<string, string>>;
+}
+
+export interface ImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+}
+
+export interface DashboardView {
+  pendingRatings: number | null;
+  reportedRatings: number | null;
+  tomorrowFixtures: number;
+  activeSuspensions: number;
+}

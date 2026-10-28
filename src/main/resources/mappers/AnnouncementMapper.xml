@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.announcement.AnnouncementMapper">
+    <resultMap id="AnnouncementMap" type="com.campusfootball.announcement.Announcement">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="audience" column="audience"/>
+        <result property="targetTeamId" column="target_team_id"/>
+        <result property="targetUserId" column="target_user_id"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="recipientCount" column="recipient_count"/>
+        <result property="deliveredCount" column="delivered_count"/>
+        <result property="readCount" column="read_count"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO announcement (title, content, audience, target_team_id, target_user_id,
+                                  created_by, recipient_count)
+        VALUES (#{title}, #{content}, #{audience}, #{targetTeamId}, #{targetUserId},
+                #{createdBy}, #{recipientCount})
+    </insert>
+
+    <update id="updateRecipientCount">
+        UPDATE announcement SET recipient_count = #{recipientCount} WHERE id = #{id}
+    </update>
+
+    <sql id="AnnouncementSelect">
+        SELECT a.id, a.title, a.content, a.audience, a.target_team_id, a.target_user_id,
+               a.created_by, a.recipient_count, a.created_at,
+               (SELECT COUNT(*) FROM app_notification n
+                WHERE n.dedupe_key = CONCAT('announcement:', a.id)) AS delivered_count,
+               (SELECT COUNT(*) FROM app_notification n
+                WHERE n.dedupe_key = CONCAT('announcement:', a.id) AND n.read_at IS NOT NULL) AS read_count
+        FROM announcement a
+    </sql>
+
+    <select id="findById" resultMap="AnnouncementMap">
+        <include refid="AnnouncementSelect"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findPage" resultMap="AnnouncementMap">
+        <include refid="AnnouncementSelect"/>
+        <where>
+            <if test="createdBy != null">a.created_by = #{createdBy}</if>
+        </where>
+        ORDER BY a.created_at DESC, a.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM announcement a
+        <where>
+            <if test="createdBy != null">a.created_by = #{createdBy}</if>
+        </where>
+    </select>
+</mapper>

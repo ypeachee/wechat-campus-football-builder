@@ -84,7 +84,7 @@ ReminderRunResult runAt(LocalDateTime now);
 - 2 小时阵容提醒：`kickoffAt > now && kickoffAt <= now.plusHours(2)`
 - 使用 `fixture-start:{fixtureId}` 和 `lineup-deadline:{fixtureId}` 去重。
 
-新增 `@Scheduled(cron = "0 */5 * * * *")` 包装器，并在应用入口启用 scheduling。
+新增 `@Scheduled(cron = "0 0 * * * *")` 包装器，并在应用入口启用 scheduling。
 
 从 `NotificationService.list()` 删除懒生成调用。
 

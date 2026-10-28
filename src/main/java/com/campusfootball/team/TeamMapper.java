@@ -14,6 +14,8 @@ public interface TeamMapper {
 
     Optional<Team> findById(@Param("id") long id);
 
+    Optional<Team> findFirstByName(@Param("name") String name);
+
     int insert(Team team);
 
     int update(Team team);

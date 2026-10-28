@@ -9,5 +9,6 @@ public enum ErrorCode {
     RATE_LIMITED,
     FIXTURE_LOCKED,
     WECHAT_LOGIN_FAILED,
+    WECHAT_QR_FAILED,
     INTERNAL_ERROR
 }
