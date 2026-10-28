@@ -72,6 +72,8 @@ $env:ADMIN_WECHAT_OPENID=''
 
 默认端口为 `8080`，可通过 `SERVER_PORT` 修改。
 
+生产部署（阿里云、域名、HTTPS、Docker Compose）：[docs/deployment/aliyun.md](docs/deployment/aliyun.md)
+
 ## 测试
 
 默认使用 Testcontainers MySQL：

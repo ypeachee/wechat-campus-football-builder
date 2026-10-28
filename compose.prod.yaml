@@ -1,0 +1,82 @@
+name: campus-football
+
+services:
+  mysql:
+    image: mysql:8.0.36
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-campus_football}
+      MYSQL_USER: ${MYSQL_USER:-campus}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.production}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.production}
+    command:
+      - --innodb-buffer-pool-size=128M
+      - --performance-schema=OFF
+      - --max-connections=50
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - internal
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-campus_football}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USERNAME: ${MYSQL_USER:-campus}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.production}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.production}
+      JWT_TTL: ${JWT_TTL:-PT2H}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:?Set WECHAT_APP_ID in .env.production}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:?Set WECHAT_APP_SECRET in .env.production}
+      ADMIN_WECHAT_OPENID: ${ADMIN_WECHAT_OPENID:-}
+      SERVER_PORT: 8080
+      JAVA_OPTS: ${JAVA_OPTS:--Xms128m -Xmx512m -XX:+UseG1GC}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/v1/seasons"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-api.cugbsoccer.xyz}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

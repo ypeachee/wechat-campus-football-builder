@@ -1,0 +1,27 @@
+[Unit]
+Description=CUGB Campus Football API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=campusfootball
+Group=campusfootball
+WorkingDirectory=/opt/campus-football
+EnvironmentFile=/opt/campus-football/.env
+ExecStart=/usr/bin/java -Xms48m -Xmx192m -XX:MaxMetaspaceSize=112m -XX:ReservedCodeCacheSize=24m -Xss256k -XX:+UseSerialGC -Djava.security.egd=file:/dev/urandom -jar /opt/campus-football/campus-football.jar
+Restart=on-failure
+RestartSec=8
+TimeoutStartSec=180
+SuccessExitStatus=143
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/campus-football
+MemoryHigh=340M
+MemoryMax=430M
+MemorySwapMax=1G
+
+[Install]
+WantedBy=multi-user.target

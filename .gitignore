@@ -13,3 +13,12 @@ miniprogram/.env
 
 # Local verification uploads must never enter the mini program package or repository.
 miniprogram/assets/
+
+# Production secrets and database backups
+.env.production
+backup-*.sql
+
+.env.low-memory
+
+# Local deployment credentials
+.deploy/

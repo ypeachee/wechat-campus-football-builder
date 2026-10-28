@@ -1,6 +1,6 @@
 const DEVELOP_API_BASE_URL = "http://127.0.0.1:8080";
-const TRIAL_API_BASE_URL = "https://staging-api.your-domain.example";
-const RELEASE_API_BASE_URL = "https://api.your-domain.example";
+const TRIAL_API_BASE_URL = "https://api.cugbsoccer.xyz";
+const RELEASE_API_BASE_URL = "https://api.cugbsoccer.xyz";
 
 export function resolveApiBaseUrl(envVersion: string): string {
   if (envVersion === "develop") {

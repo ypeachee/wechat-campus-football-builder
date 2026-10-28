@@ -1,0 +1,10 @@
+.git
+.gitignore
+.worktrees
+target
+miniprogram
+docs
+skills
+assets
+.env
+*.log
