@@ -33,7 +33,7 @@ type ManagedPlayerView = PlayerSummary & {
 type PlayerFormState = {
   id: number | null;
   name: string;
-  jerseyNo: number | null;
+  jerseyNo: string | null;
   position: string;
   status: PlayerStatus;
 };
@@ -226,7 +226,7 @@ Page({
       playerForm: {
         id: player.id,
         name: player.name,
-        jerseyNo: player.jerseyNo,
+        jerseyNo: player.jerseyNo === null ? null : String(player.jerseyNo),
         position: player.position ?? "",
         status: player.status
       }

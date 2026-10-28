@@ -1,0 +1,2 @@
+ALTER TABLE player
+    MODIFY COLUMN jersey_no VARCHAR(20) NULL;

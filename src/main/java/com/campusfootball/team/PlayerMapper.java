@@ -15,13 +15,13 @@ public interface PlayerMapper {
     Optional<Player> findById(@Param("id") long id);
 
     Optional<Player> findActiveByTeamAndJersey(@Param("teamId") long teamId,
-                                                @Param("jerseyNo") int jerseyNo);
+                                                @Param("jerseyNo") String jerseyNo);
 
     int insert(Player player);
 
     int update(Player player);
 
     int countActiveJersey(@Param("teamId") long teamId,
-                          @Param("jerseyNo") int jerseyNo,
+                          @Param("jerseyNo") String jerseyNo,
                           @Param("excludeId") Long excludeId);
 }

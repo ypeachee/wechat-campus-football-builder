@@ -16,10 +16,10 @@ describe("management form validation", () => {
   });
 
   it("validates player names and jersey numbers", () => {
-    expect(validatePlayerForm({ name: "", jerseyNo: 9 }).name).toBe("请输入球员姓名");
-    expect(validatePlayerForm({ name: "Player", jerseyNo: 1000 }).jerseyNo)
-      .toBe("球衣号码必须是 0 到 999 的整数");
-    expect(validatePlayerForm({ name: "Player", jerseyNo: 9 }).jerseyNo)
+    expect(validatePlayerForm({ name: "", jerseyNo: "A1" }).name).toBe("请输入球员姓名");
+    expect(validatePlayerForm({ name: "Player", jerseyNo: "ABCDEFGHIJKLMNOPQRSTU" }).jerseyNo)
+      .toBe("球衣号码不能超过 20 个字符");
+    expect(validatePlayerForm({ name: "Player", jerseyNo: "A1" }).jerseyNo)
       .toBeUndefined();
   });
 

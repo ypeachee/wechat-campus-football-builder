@@ -3,7 +3,6 @@ package com.campusfootball.team;
 import com.campusfootball.common.api.IdResponse;
 import com.campusfootball.common.security.CurrentUser;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,14 +64,14 @@ public class TeamManagementController {
     }
 
     public record CreatePlayerRequest(@NotBlank @Size(max = 64) String name,
-                                      @Min(0) @jakarta.validation.constraints.Max(999) Integer jerseyNo,
+                                      @Size(max = 20) String jerseyNo,
                                       @Size(max = 20) String position,
                                       LocalDate birthDate,
                                       @Size(max = 512) String photoUrl) {
     }
 
     public record UpdatePlayerRequest(@NotBlank @Size(max = 64) String name,
-                                      @Min(0) @jakarta.validation.constraints.Max(999) Integer jerseyNo,
+                                      @Size(max = 20) String jerseyNo,
                                       @Size(max = 20) String position,
                                       LocalDate birthDate,
                                       @Size(max = 512) String photoUrl,

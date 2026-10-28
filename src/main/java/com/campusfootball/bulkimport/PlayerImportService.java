@@ -106,18 +106,12 @@ public class PlayerImportService {
                 errors.add(new ImportError(row.rowNumber(), "球员姓名必须为 1–64 个字符"));
                 continue;
             }
-            int jerseyNo;
-            try {
-                jerseyNo = Integer.parseInt(row.get("号码").trim());
-            } catch (NumberFormatException ex) {
-                errors.add(new ImportError(row.rowNumber(), "球衣号码必须是整数"));
+            String jerseyNo = row.get("号码").trim();
+            if (jerseyNo.isBlank() || jerseyNo.length() > 20) {
+                errors.add(new ImportError(row.rowNumber(), "号码必须为 1–20 个字符"));
                 continue;
             }
-            if (jerseyNo < 1 || jerseyNo > 99) {
-                errors.add(new ImportError(row.rowNumber(), "球衣号码必须在 1–99 之间"));
-                continue;
-            }
-            String key = team.getId() + ":" + jerseyNo;
+            String key = team.getId() + ":" + jerseyNo.toLowerCase(Locale.ROOT);
             if (!seenJerseys.add(key)) {
                 errors.add(new ImportError(row.rowNumber(), "文件内同队球衣号码重复"));
                 continue;
@@ -139,7 +133,7 @@ public class PlayerImportService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private record PlayerRow(int rowNumber, long teamId, String name, int jerseyNo) {
+    private record PlayerRow(int rowNumber, long teamId, String name, String jerseyNo) {
     }
 
     private record Parsed(int totalRows, List<PlayerRow> validRows, List<ImportError> errors,

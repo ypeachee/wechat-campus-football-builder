@@ -35,7 +35,7 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$[0].name").value("Alpha"));
         mockMvc.perform(get("/api/v1/teams/" + teamId + "/players"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].jerseyNo").value(9));
+                .andExpect(jsonPath("$[0].jerseyNo").value("9"));
         mockMvc.perform(get("/api/v1/players/" + playerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Striker"));

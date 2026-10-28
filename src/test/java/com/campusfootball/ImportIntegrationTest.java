@@ -37,7 +37,7 @@ class ImportIntegrationTest extends IntegrationTestBase {
 
         long importedTeamId = jdbc.queryForObject("SELECT id FROM team WHERE name = '导入蓝队'", Long.class);
         MockMultipartFile players = new MockMultipartFile("file", "players.csv", "text/csv",
-                "号码,姓名\n8,王五\n".getBytes(StandardCharsets.UTF_8));
+                "号码,姓名\nA1,王五\n".getBytes(StandardCharsets.UTF_8));
         mockMvc.perform(multipart("/api/v1/manage/import/players/commit")
                         .file(players).param("teamId", Long.toString(importedTeamId)).param("overwrite", "false")
                         .header("Authorization", "Bearer " + admin))
@@ -46,7 +46,7 @@ class ImportIntegrationTest extends IntegrationTestBase {
 
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM player p JOIN team t ON t.id = p.team_id
-                WHERE t.name = '导入蓝队' AND p.jersey_no = 8
+                WHERE t.name = '导入蓝队' AND p.jersey_no = 'A1'
                 """, Integer.class)).isEqualTo(1);
     }
 

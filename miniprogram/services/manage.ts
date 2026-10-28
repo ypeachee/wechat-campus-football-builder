@@ -16,7 +16,7 @@ export type UpdateTeamPayload = CreateTeamPayload & {
 
 export type CreatePlayerPayload = {
   name: string;
-  jerseyNo?: number | null;
+  jerseyNo?: string | number | null;
   position?: string | null;
   birthDate?: string | null;
   photoUrl?: string | null;

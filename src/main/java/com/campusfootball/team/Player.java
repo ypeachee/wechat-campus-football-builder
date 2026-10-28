@@ -7,7 +7,7 @@ public class Player {
     private Long id;
     private Long teamId;
     private String name;
-    private Integer jerseyNo;
+    private String jerseyNo;
     private String position;
     private LocalDate birthDate;
     private String photoUrl;
@@ -21,8 +21,9 @@ public class Player {
     public void setTeamId(Long teamId) { this.teamId = teamId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public Integer getJerseyNo() { return jerseyNo; }
-    public void setJerseyNo(Integer jerseyNo) { this.jerseyNo = jerseyNo; }
+    public String getJerseyNo() { return jerseyNo; }
+    public void setJerseyNo(String jerseyNo) { this.jerseyNo = jerseyNo; }
+    public void setJerseyNo(Integer jerseyNo) { this.jerseyNo = jerseyNo == null ? null : jerseyNo.toString(); }
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
     public LocalDate getBirthDate() { return birthDate; }

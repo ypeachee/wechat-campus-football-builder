@@ -385,7 +385,7 @@ public class SuspensionService {
     private record PlayerStageKey(long playerId, Long stageId) {
     }
 
-    public record SuspensionView(long id, long playerId, Integer jerseyNo, String playerName,
+    public record SuspensionView(long id, long playerId, String jerseyNo, String playerName,
                                  long teamId, String teamName, long seasonId,
                                  SuspensionSourceType sourceType, Long sourceFixtureId, Long sourceStageId,
                                  String reason, int matchesTotal, int matchesServed, int matchesRemaining,

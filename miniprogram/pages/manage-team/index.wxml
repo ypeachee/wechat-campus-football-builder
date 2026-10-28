@@ -129,7 +129,7 @@
       </view>
       <view class="form-field">
         <view class="form-label">球衣号码</view>
-        <input class="form-input" type="number" value="{{playerForm.jerseyNo === null ? '' : playerForm.jerseyNo}}" bindinput="handlePlayerJerseyInput" placeholder="0-999，可留空" />
+        <input class="form-input" value="{{playerForm.jerseyNo === null ? '' : playerForm.jerseyNo}}" maxlength="20" bindinput="handlePlayerJerseyInput" placeholder="如 9、A1、C10，可留空" />
         <view wx:if="{{playerErrors.jerseyNo}}" class="form-error">{{playerErrors.jerseyNo}}</view>
       </view>
       <view class="form-field">

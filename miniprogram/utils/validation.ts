@@ -13,7 +13,7 @@ export type TeamForm = {
 
 export type PlayerForm = {
   name: string;
-  jerseyNo?: number | null;
+  jerseyNo?: string | number | null;
   position?: string;
   birthDate?: string | null;
   photoUrl?: string | null;
@@ -37,8 +37,9 @@ export function validatePlayerForm(form: PlayerForm): FieldErrors {
     errors.name = "请输入球员姓名";
   }
   if (form.jerseyNo !== undefined && form.jerseyNo !== null) {
-    if (!Number.isInteger(form.jerseyNo) || form.jerseyNo < 0 || form.jerseyNo > 999) {
-      errors.jerseyNo = "球衣号码必须是 0 到 999 的整数";
+    const normalized = String(form.jerseyNo).trim();
+    if (normalized.length > 20) {
+      errors.jerseyNo = "球衣号码不能超过 20 个字符";
     }
   }
   return errors;

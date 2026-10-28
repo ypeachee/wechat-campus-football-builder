@@ -48,7 +48,7 @@ public class TeamController {
         }
     }
 
-    public record PlayerResponse(long id, long teamId, String name, Integer jerseyNo, String position,
+    public record PlayerResponse(long id, long teamId, String name, String jerseyNo, String position,
                                  LocalDate birthDate, String photoUrl, PlayerStatus status) {
         static PlayerResponse from(Player player) {
             return new PlayerResponse(player.getId(), player.getTeamId(), player.getName(), player.getJerseyNo(),

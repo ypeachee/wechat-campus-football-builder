@@ -43,7 +43,7 @@ export interface DisciplineCardHistory {
   teamId: number;
   teamName: string;
   playerId: number;
-  jerseyNo: number | null;
+  jerseyNo: string | number | null;
   playerName: string;
   eventType: EventType;
   minute: number;
@@ -58,7 +58,7 @@ export interface DisciplineCenter {
 export interface PlayerSuspension {
   id: number;
   playerId: number;
-  jerseyNo: number | null;
+  jerseyNo: string | number | null;
   playerName: string;
   teamId: number;
   teamName: string;
@@ -90,7 +90,7 @@ export interface PlayerSummary {
   id: number;
   teamId: number;
   name: string;
-  jerseyNo: number | null;
+  jerseyNo: string | number | null;
   position: string | null;
   birthDate: string | null;
   photoUrl: string | null;
@@ -307,7 +307,7 @@ export type SensitiveTermAction = "BLOCK" | "REVIEW";
 export interface PlayerRatingSummary {
   playerId: number;
   playerName: string;
-  jerseyNo: number | null;
+  jerseyNo: string | number | null;
   teamId: number;
   teamName: string;
   averageScore: number;

@@ -56,7 +56,7 @@ public class PlayerService {
     }
 
     @Transactional
-    public long createPlayer(long actorUserId, long teamId, String name, Integer jerseyNo,
+    public long createPlayer(long actorUserId, long teamId, String name, String jerseyNo,
                              String position, LocalDate birthDate, String photoUrl) {
         authorizationService.requireCanManageTeam(actorUserId, teamId);
         teamMapper.findById(teamId).orElseThrow(() -> new AppException(
@@ -65,7 +65,7 @@ public class PlayerService {
         Player player = new Player();
         player.setTeamId(teamId);
         player.setName(name);
-        player.setJerseyNo(jerseyNo);
+        player.setJerseyNo(normalizeJerseyNo(jerseyNo));
         player.setPosition(position);
         player.setBirthDate(birthDate);
         player.setPhotoUrl(photoUrl);
@@ -76,7 +76,7 @@ public class PlayerService {
     }
 
     @Transactional
-    public void updatePlayer(long actorUserId, long playerId, String name, Integer jerseyNo,
+    public void updatePlayer(long actorUserId, long playerId, String name, String jerseyNo,
                              String position, LocalDate birthDate, String photoUrl, PlayerStatus requestedStatus) {
         Player existing = playerMapper.findById(playerId).orElseThrow(this::notFound);
         authorizationService.requireCanManageTeam(actorUserId, existing.getTeamId());
@@ -84,7 +84,7 @@ public class PlayerService {
 
         Player updated = copy(existing);
         updated.setName(name);
-        updated.setJerseyNo(jerseyNo);
+        updated.setJerseyNo(normalizeJerseyNo(jerseyNo));
         updated.setPosition(position);
         updated.setBirthDate(birthDate);
         updated.setPhotoUrl(photoUrl);
@@ -93,15 +93,26 @@ public class PlayerService {
         auditService.record(actorUserId, existing.getTeamId(), AuditAction.UPDATE, "PLAYER", playerId, existing, updated);
     }
 
-    private void ensureJerseyAvailable(long teamId, Integer jerseyNo, Long excludeId) {
-        if (jerseyNo == null) {
+    private void ensureJerseyAvailable(long teamId, String jerseyNo, Long excludeId) {
+        String normalized = normalizeJerseyNo(jerseyNo);
+        if (normalized == null) {
             return;
         }
-        if (playerMapper.countActiveJersey(teamId, jerseyNo, excludeId) > 0) {
+        if (normalized.length() > 20) {
+            throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED,
+                    "球衣号码不能超过 20 个字符");
+        }
+        if (playerMapper.countActiveJersey(teamId, normalized, excludeId) > 0) {
             throw new AppException(HttpStatus.CONFLICT, ErrorCode.CONFLICT, "球队内球衣号码已被占用");
         }
     }
 
+    private String normalizeJerseyNo(String jerseyNo) {
+        if (jerseyNo == null || jerseyNo.isBlank()) {
+            return null;
+        }
+        return jerseyNo.trim();
+    }
     private Player copy(Player source) {
         Player copy = new Player();
         copy.setId(source.getId());

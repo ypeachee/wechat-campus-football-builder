@@ -211,7 +211,7 @@ Page({
       const roster = [...homePlayers, ...awayPlayers]
         .filter((player) => player.teamId === team.id && player.status === "ACTIVE")
         .sort((a, b) => positionRank(a.position) - positionRank(b.position)
-          || (a.jerseyNo ?? 999) - (b.jerseyNo ?? 999) || a.name.localeCompare(b.name));
+          || jerseySort(a.jerseyNo, b.jerseyNo) || a.name.localeCompare(b.name));
       return {
         teamId: team.id,
         teamName: team.name,
@@ -813,4 +813,8 @@ function positionLabel(position: string | null): string {
     case 3: return "前锋";
     default: return "其他";
   }
+}
+
+function jerseySort(left: string | number | null, right: string | number | null): number {
+  return String(left ?? "999").localeCompare(String(right ?? "999"), "zh-CN", { numeric: true });
 }

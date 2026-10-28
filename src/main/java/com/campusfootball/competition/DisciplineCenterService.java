@@ -74,7 +74,7 @@ public class DisciplineCenterService {
     }
 
     public record CardHistoryView(long eventId, long fixtureId, String fixtureLabel,
-                                  long teamId, String teamName, long playerId, Integer jerseyNo,
+                                  long teamId, String teamName, long playerId, String jerseyNo,
                                   String playerName, EventType eventType, Integer minute,
                                   LocalDateTime kickoffAt) {
     }
