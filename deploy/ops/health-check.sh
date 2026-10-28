@@ -45,7 +45,7 @@ fi
 CORES=$(nproc)
 LOAD_1=$(awk '{print $1}' /proc/loadavg)
 LOAD_LIMIT=$((CORES * 2))
-if awk -v load="$LOAD_1" -v limit="$LOAD_LIMIT" 'BEGIN { exit !(load > limit) }'; then
+if awk -v load_value="$LOAD_1" -v load_threshold="$LOAD_LIMIT" 'BEGIN { exit !(load_value > load_threshold) }'; then
   add_issue "load average ${LOAD_1} exceeds ${LOAD_LIMIT}"
 fi
 
