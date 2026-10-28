@@ -19,11 +19,11 @@ public class TeamShareController {
         this.qrCodeService = qrCodeService;
     }
 
-    @GetMapping(value = "/{teamId}/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/{teamId}/qr", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> qr(@PathVariable long teamId) {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(24, TimeUnit.HOURS).cachePublic())
-                .contentType(MediaType.IMAGE_PNG)
+                .contentType(MediaType.IMAGE_JPEG)
                 .body(qrCodeService.get(teamId));
     }
 }

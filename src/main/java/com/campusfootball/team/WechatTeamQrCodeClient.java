@@ -3,12 +3,16 @@ package com.campusfootball.team;
 import com.campusfootball.rating.WechatAccessTokenService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -16,6 +20,7 @@ import java.util.Map;
 
 @Component
 public class WechatTeamQrCodeClient implements TeamQrCodeClient {
+    private static final Logger log = LoggerFactory.getLogger(WechatTeamQrCodeClient.class);
     private final RestClient restClient;
     private final WechatAccessTokenService accessTokenService;
     private final ObjectMapper objectMapper;
@@ -41,12 +46,13 @@ public class WechatTeamQrCodeClient implements TeamQrCodeClient {
             body.put("width", 430);
             body.put("auto_color", false);
             body.put("is_hyaline", false);
+            String payload = objectMapper.writeValueAsString(body);
             ResponseEntity<byte[]> response = restClient.post()
                     .uri(uri -> uri.path("/wxa/getwxacodeunlimit")
                             .queryParam("access_token", accessTokenService.getAccessToken())
                             .build())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
+                    .body(payload)
                     .retrieve()
                     .toEntity(byte[].class);
             byte[] bytes = response.getBody();
@@ -54,10 +60,16 @@ public class WechatTeamQrCodeClient implements TeamQrCodeClient {
             if (bytes == null || bytes.length == 0
                     || contentType == null || !"image".equalsIgnoreCase(contentType.getType())) {
                 String detail = bytes == null ? "empty response" : objectMapper.readTree(bytes).toString();
-                throw new IllegalStateException("WeChat QR response is invalid: " + detail);
+                log.warn("WeChat QR response rejected: {}", detail);
+                throw new IllegalStateException("WeChat QR response is invalid");
             }
             return bytes;
         } catch (RestClientException | IOException ex) {
+            if (ex instanceof RestClientResponseException responseException) {
+                log.warn("WeChat QR request rejected: status={} body={}", responseException.getStatusCode().value(), responseException.getResponseBodyAsString());
+            } else {
+                log.warn("WeChat QR request failed: {}", ex.getClass().getSimpleName());
+            }
             throw new IllegalStateException("Unable to generate WeChat QR code", ex);
         }
     }
