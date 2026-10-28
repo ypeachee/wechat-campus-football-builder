@@ -20,7 +20,7 @@ describe("role gates and session refresh", () => {
     expect(requireRole(["ADMIN", "TEAM_MANAGER"])).toBe(false);
   });
 
-  it("scopes team managers to managed teams", () => {
+  it("allows authorized managers on every team gate", () => {
     saveSession({
       token: "token",
       userId: 2,
@@ -29,7 +29,19 @@ describe("role gates and session refresh", () => {
       managedTeamIds: [3]
     });
     expect(requireRole(["TEAM_MANAGER"], 3)).toBe(true);
-    expect(requireRole(["TEAM_MANAGER"], 4)).toBe(false);
+    expect(requireRole(["TEAM_MANAGER"], 4)).toBe(true);
+  });
+
+  it("scopes team leaders to assigned teams", () => {
+    saveSession({
+      token: "leader",
+      userId: 5,
+      nickname: null,
+      role: "TEAM_LEADER",
+      managedTeamIds: [3]
+    });
+    expect(requireRole(["TEAM_LEADER"], 3)).toBe(true);
+    expect(requireRole(["TEAM_LEADER"], 4)).toBe(false);
   });
 
   it("allows admins on every team gate", () => {

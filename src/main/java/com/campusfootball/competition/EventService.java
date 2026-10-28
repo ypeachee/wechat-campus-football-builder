@@ -88,13 +88,8 @@ public class EventService {
         if (teamId != fixture.getHomeTeamId() && teamId != fixture.getAwayTeamId()) {
             throw conflict("球队不是本场比赛参赛球队");
         }
-        boolean admin = authorizationService.isAdmin(actorUserId);
-        if (!admin) {
-            authorizationService.requireCanManageTeam(actorUserId, teamId);
-            if (fixture.getStatus() != FixtureStatus.LIVE && fixture.getStatus() != FixtureStatus.FINISHED) {
-                throw forbidden("球队管理员只能维护进行中或已完赛比赛的数据");
-            }
-            return;
+        if (!authorizationService.isManagementAdmin(actorUserId)) {
+            throw forbidden("领队只能维护本队出场，不能录入或修改比赛事件");
         }
         if (fixture.getStatus() != FixtureStatus.SCHEDULED
                 && fixture.getStatus() != FixtureStatus.LIVE

@@ -64,6 +64,8 @@ Page({
   data: {
     verified: false,
     isAdmin: false,
+    isTeamLeader: false,
+    canWriteEvents: false,
     loading: true,
     submitting: false,
     error: "",
@@ -114,15 +116,19 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) {
+      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER" && session.role !== "TEAM_LEADER")) {
         this.setData({ verified: false, error: "没有比赛数据录入权限" });
         return;
       }
-      const seasons = session.role === "ADMIN" ? await fetchAdminSeasons() : await fetchSeasons();
+      const isAuthorizedAdmin = session.role === "ADMIN" || session.role === "TEAM_MANAGER";
+      const isLeader = session.role === "TEAM_LEADER";
+      const seasons = isAuthorizedAdmin ? await fetchAdminSeasons() : await fetchSeasons();
       const selectedSeasonId = selectDefaultSeason(seasons) ?? getSelectedSeasonId() ?? 0;
       this.setData({
         verified: true,
-        isAdmin: session.role === "ADMIN",
+        isAdmin: isAuthorizedAdmin,
+        isTeamLeader: isLeader,
+        canWriteEvents: isAuthorizedAdmin,
         seasons,
         selectedSeasonId,
         selectedSeasonName: seasons.find((season) => season.id === selectedSeasonId)?.name ?? "",
@@ -141,11 +147,11 @@ Page({
 
   async loadFixtures(seasonId: number, session: Session) {
     const [fixtures, teams] = await Promise.all([
-      session.role === "ADMIN" ? fetchAdminFixtures(seasonId) : fetchPublicFixtures(seasonId),
-      session.role === "ADMIN" ? fetchAdminTeams() : fetchTeams()
+      (session.role === "ADMIN" || session.role === "TEAM_MANAGER") ? fetchAdminFixtures(seasonId) : fetchPublicFixtures(seasonId),
+      (session.role === "ADMIN" || session.role === "TEAM_MANAGER") ? fetchAdminTeams() : fetchTeams()
     ]);
     const managedIds = new Set(session.managedTeamIds);
-    const allowedFixtures = session.role === "ADMIN"
+    const allowedFixtures = (session.role === "ADMIN" || session.role === "TEAM_MANAGER")
       ? fixtures
       : fixtures.filter((fixture) => managedIds.has(fixture.homeTeamId) || managedIds.has(fixture.awayTeamId));
     const teamMap = new Map(teams.map((team) => [team.id, team.name]));
@@ -167,7 +173,7 @@ Page({
 
   async loadFixture(fixtureId: number, session: Session) {
     const fixture = await fetchFixtureDetail(fixtureId);
-    const [homePlayers, awayPlayers] = this.data.isAdmin
+    const [homePlayers, awayPlayers] = (session.role === "ADMIN" || session.role === "TEAM_MANAGER")
       ? await Promise.all([fetchManagedTeamPlayers(fixture.homeTeam.id), fetchManagedTeamPlayers(fixture.awayTeam.id)])
       : await Promise.all([fetchTeamPlayers(fixture.homeTeam.id), fetchTeamPlayers(fixture.awayTeam.id)]);
     const playerMap = new Map<number, PlayerSummary>();
@@ -182,13 +188,10 @@ Page({
     const teamOptions: Option[] = [
       { id: fixture.homeTeam.id, name: fixture.homeTeam.name },
       { id: fixture.awayTeam.id, name: fixture.awayTeam.name }
-    ].filter((team) => session.role === "ADMIN" || managedIds.has(team.id));
+    ].filter((team) => session.role === "ADMIN" || session.role === "TEAM_MANAGER" || managedIds.has(team.id));
 
-    const canWriteData = !fixture.dataLocked && (
-      session.role === "ADMIN"
-        ? ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status)
-        : ["LIVE", "FINISHED"].includes(fixture.status)
-    );
+    const canWriteData = !fixture.dataLocked
+      && ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status);
     const lineupEditors = teamOptions.map((team) => {
       const existing = fixture.appearances.filter((appearance) => appearance.teamId === team.id);
       const roster = [...homePlayers, ...awayPlayers]

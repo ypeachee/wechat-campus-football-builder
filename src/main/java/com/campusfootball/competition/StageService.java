@@ -40,7 +40,7 @@ public class StageService {
     @Transactional
     public long create(long actorUserId, long seasonId, String name, StageType type, Integer sortOrder,
                        StageStatus status) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         seasonMapper.findById(seasonId).orElseThrow(() -> notFound("赛季不存在"));
         Stage stage = new Stage();
         stage.setSeasonId(seasonId);
@@ -55,7 +55,7 @@ public class StageService {
 
     @Transactional
     public void update(long actorUserId, long id, String name, StageType type, Integer sortOrder, StageStatus status) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Stage existing = get(id);
         Stage updated = new Stage();
         updated.setId(id);

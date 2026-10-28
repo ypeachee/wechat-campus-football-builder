@@ -21,42 +21,31 @@ class AuditQueryIntegrationTest extends IntegrationTestBase {
     private MockMvc mockMvc;
 
     @Test
-    void adminSeesAllAuditLogsAndTeamManagerSeesOnlyOwnScope() throws Exception {
+    void onlyAdminCanReadAuditLogs() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long seasonId = TestApiSupport.createSeason(mockMvc, admin, "AuditScopeSeason", "ACTIVE");
         long team1 = TestApiSupport.createTeam(mockMvc, admin, "AuditScopeTeam1");
         long team2 = TestApiSupport.createTeam(mockMvc, admin, "AuditScopeTeam2");
-        long team3 = TestApiSupport.createTeam(mockMvc, admin, "AuditScopeTeam3");
         TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, team1);
-        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, team3);
-        long fixtureId = TestApiSupport.createFixture(mockMvc, admin, seasonId, team1, team3);
-        long player1 = TestApiSupport.createPlayer(mockMvc, admin, team1, "AuditScopePlayer1", 9);
-        TestApiSupport.createPlayer(mockMvc, admin, team2, "AuditScopePlayer2", 10);
-        TestApiSupport.changeStatus(mockMvc, admin, fixtureId, "SCHEDULED");
-        TestApiSupport.changeStatus(mockMvc, admin, fixtureId, "LIVE");
-        TestApiSupport.addEvent(mockMvc, admin, fixtureId, team1, player1, "GOAL", null, 10, 0);
+        TestApiSupport.addSeasonTeam(mockMvc, admin, seasonId, team2);
+        TestApiSupport.createFixture(mockMvc, admin, seasonId, team1, team2);
 
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
-        long managerId = managerLogin.get("userId").asLong();
-        String manager = managerLogin.get("token").asText();
         mockMvc.perform(post("/api/v1/admin/teams/" + team1 + "/managers")
                         .header("Authorization", "Bearer " + admin)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + managerId + "}"))
+                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + ",\"role\":\"TEAM_MANAGER\"}"))
                 .andExpect(status().isOk());
 
         JsonNode adminLogs = getLogs(admin);
-        JsonNode managerLogs = getLogs(manager);
+        assertThat(adminLogs.size()).isGreaterThan(0);
+        assertThat(hasLog(adminLogs, "FIXTURE", "CREATE")).isTrue();
+
+        mockMvc.perform(get("/api/v1/manage/audit-logs")
+                        .header("Authorization", "Bearer " + managerLogin.get("token").asText()))
+                .andExpect(status().isForbidden());
+
         String viewer = TestAuthSupport.loginToken(mockMvc, "viewer-code");
-
-        assertThat(adminLogs.size()).isGreaterThan(managerLogs.size());
-        assertThat(hasLog(adminLogs, "SEASON", null, null)).isTrue();
-        assertThat(hasLog(managerLogs, "SEASON", null, null)).isFalse();
-        assertThat(hasLog(managerLogs, "FIXTURE", null, "CREATE")).isTrue();
-        assertThat(hasLog(managerLogs, "PLAYER", team2, "CREATE")).isFalse();
-        assertThat(hasLog(managerLogs, "PLAYER", team1, "CREATE")).isTrue();
-        assertThat(hasLog(managerLogs, "EVENT", team1, "CREATE")).isTrue();
-
         mockMvc.perform(get("/api/v1/manage/audit-logs").header("Authorization", "Bearer " + viewer))
                 .andExpect(status().isForbidden());
     }
@@ -69,15 +58,10 @@ class AuditQueryIntegrationTest extends IntegrationTestBase {
         return OBJECT_MAPPER.readTree(result.getResponse().getContentAsString());
     }
 
-    private boolean hasLog(JsonNode logs, String entityType, Long teamId, String action) {
+    private boolean hasLog(JsonNode logs, String entityType, String action) {
         for (JsonNode log : logs) {
-            boolean typeMatches = entityType.equals(log.get("entityType").asText());
-            JsonNode teamNode = log.get("teamId");
-            boolean teamMatches = teamId == null
-                    ? teamNode == null || teamNode.isNull()
-                    : teamNode != null && teamNode.asLong() == teamId;
-            boolean actionMatches = action == null || action.equals(log.get("action").asText());
-            if (typeMatches && teamMatches && actionMatches) {
+            if (entityType.equals(log.get("entityType").asText())
+                    && action.equals(log.get("action").asText())) {
                 return true;
             }
         }

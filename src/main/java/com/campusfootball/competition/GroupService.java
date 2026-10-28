@@ -47,7 +47,7 @@ public class GroupService {
 
     @Transactional
     public long create(long actorUserId, long stageId, String name, Integer sortOrder) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Stage stage = getStage(stageId);
         if (stage.getType() != StageType.GROUP) {
             throw conflict("小组只能创建在小组赛阶段");
@@ -63,7 +63,7 @@ public class GroupService {
 
     @Transactional
     public void addTeam(long actorUserId, long groupId, long teamId, Integer seedNo) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         CompetitionGroup group = get(groupId);
         Stage stage = getStage(group.getStageId());
         seasonMapper.findById(stage.getSeasonId()).orElseThrow(() -> notFound("赛季不存在"));
@@ -84,7 +84,7 @@ public class GroupService {
 
     @Transactional
     public void removeTeam(long actorUserId, long groupId, long teamId) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         get(groupId);
         if (groupMapper.countGroupTeam(groupId, teamId) == 0) {
             throw notFound("小组球队不存在");

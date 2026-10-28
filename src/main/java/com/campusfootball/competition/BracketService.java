@@ -47,7 +47,7 @@ public class BracketService {
 
     @Transactional
     public long createRound(long actorUserId, long stageId, int roundNo, String name, int sortOrder) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Stage stage = requireStage(stageId, StageType.KNOCKOUT);
         if (roundNo < 1) throw conflict("轮次必须大于 0");
         KnockoutRound round = new KnockoutRound();
@@ -63,7 +63,7 @@ public class BracketService {
     public long createTie(long actorUserId, long stageId, long roundId, int bracketPosition,
                           Long homeTeamId, Long awayTeamId, Long nextTieId, BracketSlot nextSlot,
                           boolean thirdPlace) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         requireStage(stageId, StageType.KNOCKOUT);
         KnockoutRound round = knockoutMapper.findRoundById(roundId).orElseThrow(() -> notFound("轮次不存在"));
         if (round.getStageId() != stageId) throw conflict("轮次不属于该阶段");
@@ -84,7 +84,7 @@ public class BracketService {
     @Transactional
     public void saveSeed(long actorUserId, long stageId, long groupId, int sourceRank,
                          long targetTieId, BracketSlot slot) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         requireStage(stageId, StageType.KNOCKOUT);
         CompetitionGroup group = groupMapper.findById(groupId).orElseThrow(() -> notFound("小组不存在"));
         KnockoutTie tie = knockoutMapper.findTieById(targetTieId).orElseThrow(() -> notFound("对阵不存在"));
@@ -105,7 +105,7 @@ public class BracketService {
     @Transactional
     public long createTieFixture(long actorUserId, long tieId, LocalDateTime kickoffAt, String venue,
                                  String referee) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         KnockoutTie tie = knockoutMapper.findTieById(tieId).orElseThrow(() -> notFound("对阵不存在"));
         if (tie.getHomeTeamId() == null || tie.getAwayTeamId() == null) {
             throw conflict("对阵双方尚未确定");
@@ -135,7 +135,7 @@ public class BracketService {
     @Transactional
     public BracketView generateBracket(long actorUserId, long knockoutStageId, long groupStageId,
                                        int qualifiersPerGroup, boolean thirdPlace) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Stage knockoutStage = requireStage(knockoutStageId, StageType.KNOCKOUT);
         Stage groupStage = requireStage(groupStageId, StageType.GROUP);
         if (knockoutStage.getSeasonId().longValue() != groupStage.getSeasonId().longValue()) {

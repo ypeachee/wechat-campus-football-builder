@@ -102,7 +102,7 @@ class EventIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCannotCreateOrEditOtherTeamEvent() throws Exception {
+    void authorizedManagerCanCreateOrEditOtherTeamEvent() throws Exception {
         Setup s = setup("live");
         long awayEvent = TestApiSupport.addEvent(mockMvc, s.adminToken(), s.fixtureId(), s.awayTeamId(),
                 s.awayPlayerId(), "GOAL", null, 40, 0);
@@ -111,23 +111,22 @@ class EventIntegrationTest extends IntegrationTestBase {
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(eventBody(s.awayTeamId(), s.awayPlayerId(), "YELLOW_CARD", null, 41, 0)))
-                .andExpect(status().isForbidden());
-
+                .andExpect(status().isOk());
         mockMvc.perform(put("/api/v1/manage/events/" + awayEvent)
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(updateEventBody(s.awayPlayerId(), "GOAL", null, 42, 0)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
-    void managerCannotWriteScheduledButAdminCan() throws Exception {
+    void authorizedManagerCanWriteScheduledEvent() throws Exception {
         Setup s = setup("scheduled");
         mockMvc.perform(post("/api/v1/manage/fixtures/" + s.fixtureId() + "/events")
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(eventBody(s.homeTeamId(), s.homePlayerId(), "GOAL", null, 10, 0)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
 
         long id = TestApiSupport.addEvent(mockMvc, s.adminToken(), s.fixtureId(), s.homeTeamId(),
                 s.homePlayerId(), "GOAL", null, 10, 0);
@@ -238,7 +237,7 @@ class EventIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/v1/admin/teams/" + home + "/managers")
                         .header("Authorization", "Bearer " + admin)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + "}"))
+                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + ",\"role\":\"TEAM_MANAGER\"}"))
                 .andExpect(status().isOk());
         return new Setup(admin, managerLogin.get("token").asText(), seasonId, home, away,
                 fixtureId, homePlayer, secondHomePlayer, awayPlayer);

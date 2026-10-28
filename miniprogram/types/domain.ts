@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "TEAM_MANAGER" | "VIEWER";
+export type UserRole = "ADMIN" | "TEAM_MANAGER" | "TEAM_LEADER" | "VIEWER";
 export type UserStatus = "ACTIVE" | "DISABLED";
 export type TeamStatus = "ACTIVE" | "INACTIVE";
 export type PlayerStatus = "ACTIVE" | "INACTIVE";
@@ -31,6 +31,11 @@ export interface TeamSummary {
   coachName: string | null;
   homeVenue: string | null;
   status: TeamStatus;
+}
+
+export interface TeamManagerAssignment {
+  userId: number;
+  role: Exclude<UserRole, "ADMIN" | "VIEWER">;
 }
 
 export interface PlayerSummary {

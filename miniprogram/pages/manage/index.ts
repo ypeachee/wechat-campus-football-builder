@@ -16,6 +16,8 @@ type ManageData = {
   session: Session | null;
   roleText: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isTeamLeader: boolean;
   verified: boolean;
   loading: boolean;
   error: string;
@@ -40,6 +42,8 @@ Page({
     session: null as Session | null,
     roleText: "",
     isAdmin: false,
+    isSuperAdmin: false,
+    isTeamLeader: false,
     verified: false,
     loading: true,
     error: "",
@@ -80,18 +84,23 @@ Page({
     this.setData({ loading: true, error: "", session: local, roleText: roleLabel(local.role) });
     try {
       const session = await refreshSession();
-      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) {
+      const isSuperAdmin = session?.role === "ADMIN";
+      const isAuthorizedAdmin = isSuperAdmin || session?.role === "TEAM_MANAGER";
+      const isLeader = session?.role === "TEAM_LEADER";
+      if (!session || (!isAuthorizedAdmin && !isLeader)) {
         this.setData({ session: null, verified: false, loading: false });
         return;
       }
-      const teams = session.role === "ADMIN"
+      const teams = isAuthorizedAdmin
         ? await fetchAdminTeams()
         : (await Promise.all(session.managedTeamIds.map((teamId) => fetchTeam(teamId).catch(() => null))))
             .filter((team): team is TeamSummary => team !== null);
       this.setData({
         session,
         roleText: roleLabel(session.role),
-        isAdmin: session.role === "ADMIN",
+        isAdmin: isAuthorizedAdmin,
+        isSuperAdmin,
+        isTeamLeader: isLeader,
         verified: true,
         teams
       });

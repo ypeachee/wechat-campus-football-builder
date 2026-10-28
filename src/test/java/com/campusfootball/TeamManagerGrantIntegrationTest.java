@@ -31,7 +31,7 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
         long managerId = managerLogin.get("userId").asLong();
         String manager = managerLogin.get("token").asText();
 
-        grant(admin, teamId, managerId);
+        grant(admin, teamId, managerId, "TEAM_MANAGER");
 
         mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + manager))
                 .andExpect(status().isOk())
@@ -52,17 +52,69 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void adminCanListCurrentTeamManagers() throws Exception {
+    void leaderRoleUsesHighestRemainingAssignment() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long teamA = createTeam(admin, "LeaderTeamA");
+        long teamB = createTeam(admin, "LeaderTeamB");
+        JsonNode userLogin = TestAuthSupport.login(mockMvc, "leader-code");
+        long userId = userLogin.get("userId").asLong();
+        String token = userLogin.get("token").asText();
+
+        grant(admin, teamA, userId, "TEAM_LEADER");
+        mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEAM_LEADER"))
+                .andExpect(jsonPath("$.managedTeamIds[0]").value(teamA));
+
+        grant(admin, teamB, userId, "TEAM_MANAGER");
+        mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEAM_MANAGER"));
+
+        revoke(admin, teamB, userId);
+        mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEAM_LEADER"))
+                .andExpect(jsonPath("$.managedTeamIds[0]").value(teamA));
+
+        revoke(admin, teamA, userId);
+        mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("VIEWER"))
+                .andExpect(jsonPath("$.managedTeamIds").isEmpty());
+    }
+
+    @Test
+    void authorizedManagerCanGrantLeader() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+        long teamId = createTeam(admin, "ManagerGrantLeaderTeam");
+        JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
+        long managerId = managerLogin.get("userId").asLong();
+        String manager = managerLogin.get("token").asText();
+        grant(admin, teamId, managerId, "TEAM_MANAGER");
+
+        JsonNode targetLogin = TestAuthSupport.login(mockMvc, "leader-target");
+        grant(manager, teamId, targetLogin.get("userId").asLong(), "TEAM_LEADER");
+
+        mockMvc.perform(get("/api/v1/me")
+                        .header("Authorization", "Bearer " + targetLogin.get("token").asText()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEAM_LEADER"));
+    }
+
+    @Test
+    void adminCanListCurrentAssignments() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = createTeam(admin, "ManagerListTeam");
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         long managerId = managerLogin.get("userId").asLong();
-        grant(admin, teamId, managerId);
+        grant(admin, teamId, managerId, "TEAM_MANAGER");
 
         mockMvc.perform(get("/api/v1/admin/teams/" + teamId + "/managers")
                         .header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value(managerId));
+                .andExpect(jsonPath("$[0].userId").value(managerId))
+                .andExpect(jsonPath("$[0].role").value("TEAM_MANAGER"));
 
         revoke(admin, teamId, managerId);
         mockMvc.perform(get("/api/v1/admin/teams/" + teamId + "/managers")
@@ -78,7 +130,7 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         long managerId = managerLogin.get("userId").asLong();
         String manager = managerLogin.get("token").asText();
-        grant(admin, teamId, managerId);
+        grant(admin, teamId, managerId, "TEAM_LEADER");
 
         mockMvc.perform(put("/api/v1/manage/teams/" + teamId)
                         .header("Authorization", "Bearer " + manager)
@@ -102,7 +154,7 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
         long adminId = adminLogin.get("userId").asLong();
         long teamId = createTeam(admin, "AdminGrantTeam");
 
-        grant(admin, teamId, adminId);
+        grant(admin, teamId, adminId, "TEAM_MANAGER");
         revoke(admin, teamId, adminId);
 
         mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + admin))
@@ -120,11 +172,11 @@ class TeamManagerGrantIntegrationTest extends IntegrationTestBase {
         return OBJECT_MAPPER.readTree(result.getResponse().getContentAsString()).get("id").asLong();
     }
 
-    private void grant(String token, long teamId, long userId) throws Exception {
+    private void grant(String token, long teamId, long userId, String role) throws Exception {
         mockMvc.perform(post("/api/v1/admin/teams/" + teamId + "/managers")
                         .header("Authorization", "Bearer " + token)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + userId + "}"))
+                        .content("{\"userId\":" + userId + ",\"role\":\"" + role + "\"}"))
                 .andExpect(status().isOk());
     }
 

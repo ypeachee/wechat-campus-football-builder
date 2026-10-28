@@ -54,7 +54,7 @@
       </view>
 
       <view wx:if="{{eventViews.length === 0}}" class="surface-card">
-        <empty-state title="暂无事件" description="可在下方录入进球、助攻和红黄牌。" />
+        <empty-state title="暂无事件" description="{{canWriteEvents ? '可在下方录入进球、助攻和红黄牌。' : '领队只维护本队出场阵容。'}}" />
       </view>
       <view wx:else class="record-list">
         <view wx:for="{{eventViews}}" wx:key="id" class="record-row">
@@ -63,12 +63,12 @@
             <view class="record-row__title">{{item.label}} · {{item.playerName}}</view>
             <view class="record-row__meta">{{item.relatedName ? "助攻：" + item.relatedName : "无助攻"}}</view>
           </view>
-          <view data-id="{{item.id}}" class="record-action" bindtap="editEvent">编辑</view>
-          <view data-id="{{item.id}}" class="record-action record-action--danger" bindtap="deleteEventRecord">删除</view>
+          <view wx:if="{{canWriteEvents}}" data-id="{{item.id}}" class="record-action" bindtap="editEvent">编辑</view>
+          <view wx:if="{{canWriteEvents}}" data-id="{{item.id}}" class="record-action record-action--danger" bindtap="deleteEventRecord">删除</view>
         </view>
       </view>
 
-      <view wx:if="{{canWriteData}}" class="surface-card form-card">
+      <view wx:if="{{canWriteEvents && canWriteData}}" class="surface-card form-card">
         <view class="form-card__title">{{eventForm.id === null ? "新增事件" : "编辑事件"}}</view>
         <view class="form-grid">
           <view class="form-field">

@@ -49,8 +49,10 @@ public class SecurityConfig {
                                 "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**",
                                 "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**", "/api/v1/brackets").permitAll()
                         .requestMatchers("/api/v1/me").authenticated()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/manage/**").hasAnyRole("ADMIN", "TEAM_MANAGER")
+                        .requestMatchers("/api/v1/admin/ratings/**", "/api/v1/admin/sensitive-terms/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/manage/audit-logs").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "TEAM_MANAGER")
+                        .requestMatchers("/api/v1/manage/**").hasAnyRole("ADMIN", "TEAM_MANAGER", "TEAM_LEADER")
                         .anyRequest().denyAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

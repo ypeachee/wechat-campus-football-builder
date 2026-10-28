@@ -8,7 +8,7 @@
   <view wx:elif="{{!session}}" class="surface-card">
     <empty-state
       title="请先登录"
-      description="管理功能仅对联赛管理员和球队管理员开放。"
+      description="管理功能仅对超级管理员、授权管理员和领队开放。"
       action-text="前往登录"
       bind:action="goProfile"
     />
@@ -35,7 +35,7 @@
         <view class="admin-card__title">球队授权</view>
         <view class="admin-card__copy">授予或撤销管理权限</view>
       </view>
-      <view class="admin-card" bindtap="goAdminAudit">
+      <view wx:if="{{isSuperAdmin}}" class="admin-card" bindtap="goAdminAudit">
         <view class="admin-card__index">L</view>
         <view class="admin-card__title">审计日志</view>
         <view class="admin-card__copy">查看数据变更记录</view>
@@ -45,7 +45,7 @@
         <view class="admin-card__title">比赛数据</view>
         <view class="admin-card__copy">录入出场、进球与红黄牌</view>
       </view>
-      <view class="admin-card" bindtap="openRatingPanel">
+      <view wx:if="{{isSuperAdmin}}" class="admin-card" bindtap="openRatingPanel">
         <view class="admin-card__index">R</view>
         <view class="admin-card__title">评分审核</view>
         <view class="admin-card__copy">审核评价与敏感词</view>
@@ -62,16 +62,11 @@
       </view>
     </view>
 
-    <view wx:if="{{!isAdmin}}" class="manager-actions">
+    <view wx:if="{{isTeamLeader}}" class="manager-actions">
       <view class="admin-card" bindtap="goFixtureData">
         <view class="admin-card__index">D</view>
-        <view class="admin-card__title">比赛数据</view>
-        <view class="admin-card__copy">录入本队出场与事件</view>
-      </view>
-      <view class="admin-card" bindtap="goAdminAudit">
-        <view class="admin-card__index">L</view>
-        <view class="admin-card__title">审计日志</view>
-        <view class="admin-card__copy">查看本队数据变更</view>
+        <view class="admin-card__title">比赛阵容</view>
+        <view class="admin-card__copy">维护本队出场名单</view>
       </view>
     </view>
 
@@ -84,7 +79,7 @@
     </view>
 
     <view wx:if="{{teams.length === 0}}" class="surface-card">
-      <empty-state title="暂无球队" description="{{isAdmin ? '先创建一支球队。' : '请联系联赛管理员完成球队授权。'}}" />
+      <empty-state title="暂无球队" description="{{isAdmin ? '先创建一支球队。' : '请联系授权管理员完成球队授权。'}}" />
     </view>
 
     <view wx:else class="team-list">
@@ -97,7 +92,7 @@
     </view>
   </block>
 
-  <view wx:if="{{ratingPanelVisible}}" class="rating-admin-overlay" bindtap="closeRatingPanel">
+  <view wx:if="{{ratingPanelVisible && isSuperAdmin}}" class="rating-admin-overlay" bindtap="closeRatingPanel">
     <view class="rating-admin-panel" catchtap="noop">
       <view class="rating-admin-head">
         <view class="rating-admin-title">评分审核</view>

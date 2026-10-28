@@ -18,12 +18,25 @@ describe("session store", () => {
     expect(getSession()).toBeNull();
   });
 
-  it("enforces team scope", () => {
+  it("allows authorized managers to manage every team", () => {
     saveSession({
       token: "token",
       userId: 2,
       nickname: null,
       role: "TEAM_MANAGER",
+      managedTeamIds: [3]
+    });
+    expect(canManageTeam(3)).toBe(true);
+    expect(canManageTeam(4)).toBe(true);
+    expect(isAdmin()).toBe(false);
+  });
+
+  it("scopes team leaders to assigned teams", () => {
+    saveSession({
+      token: "leader",
+      userId: 4,
+      nickname: null,
+      role: "TEAM_LEADER",
       managedTeamIds: [3]
     });
     expect(canManageTeam(3)).toBe(true);

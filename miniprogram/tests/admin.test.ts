@@ -38,16 +38,16 @@ describe("admin services", () => {
   it("uses manager grant endpoints", async () => {
     requestMock.mockResolvedValue([]);
     await fetchTeamManagers(7);
-    await grantTeamManager(7, 21);
+    await grantTeamManager(7, 21, "TEAM_LEADER");
     await revokeTeamManager(7, 21);
     expect(requestMock).toHaveBeenNthCalledWith(1, "/api/v1/admin/teams/7/managers");
-    expect(requestMock).toHaveBeenNthCalledWith(2, "/api/v1/admin/teams/7/managers", { method: "POST", data: { userId: 21 } });
+    expect(requestMock).toHaveBeenNthCalledWith(2, "/api/v1/admin/teams/7/managers", { method: "POST", data: { userId: 21, role: "TEAM_LEADER" } });
     expect(requestMock).toHaveBeenNthCalledWith(3, "/api/v1/admin/teams/7/managers/21", { method: "DELETE" });
   });
 
   it("preserves conflicts", async () => {
     const conflict = new Error("conflict");
     requestMock.mockRejectedValueOnce(conflict);
-    await expect(grantTeamManager(7, 21)).rejects.toBe(conflict);
+    await expect(grantTeamManager(7, 21, "TEAM_MANAGER")).rejects.toBe(conflict);
   });
 });

@@ -16,8 +16,9 @@ const EVENT_LABELS: Record<EventType, string> = {
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  ADMIN: "联赛管理员",
-  TEAM_MANAGER: "球队管理员",
+  ADMIN: "超级管理员",
+  TEAM_MANAGER: "授权管理员",
+  TEAM_LEADER: "领队",
   VIEWER: "普通用户"
 };
 

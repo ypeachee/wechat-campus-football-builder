@@ -41,6 +41,33 @@ class SchemaMigrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void supportsTeamLeaderRoleAndDefaultsAssignmentsToManager() {
+        long admin = insertUser("leader-role-admin");
+        long leader = insertUser("leader-role-user");
+        long team = insertTeam("leader-role-team");
+
+        jdbc.update("UPDATE app_user SET role_code = 'TEAM_LEADER' WHERE id = ?", leader);
+        jdbc.update("INSERT INTO team_manager (user_id, team_id, granted_by) VALUES (?, ?, ?)",
+                leader, team, admin);
+
+        assertThat(jdbc.queryForObject(
+                "SELECT role_code FROM team_manager WHERE user_id = ? AND team_id = ?",
+                String.class, leader, team)).isEqualTo("TEAM_MANAGER");
+    }
+
+    @Test
+    void rejectsInvalidTeamManagerAssignmentRole() {
+        long admin = insertUser("invalid-role-admin");
+        long leader = insertUser("invalid-role-user");
+        long team = insertTeam("invalid-role-team");
+
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO team_manager (user_id, team_id, granted_by, role_code)
+                VALUES (?, ?, ?, 'VIEWER')
+                """, leader, team, admin))
+                .isInstanceOf(DataAccessException.class);
+    }
+    @Test
     void rejectsDuplicateTeamManagerGrant() {
         long admin = insertUser("admin");
         long manager = insertUser("manager");

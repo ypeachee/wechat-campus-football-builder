@@ -224,19 +224,19 @@ class SeasonFixtureIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCannotAccessAdminFixtureEndpoints() throws Exception {
+    void authorizedManagerCanAccessAdminFixtureEndpoints() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = TestApiSupport.createTeam(mockMvc, admin, "ManagerTeam");
         var managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         mockMvc.perform(post("/api/v1/admin/teams/" + teamId + "/managers")
                         .header("Authorization", "Bearer " + admin)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + "}"))
+                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + ",\"role\":\"TEAM_MANAGER\"}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/admin/fixtures?seasonId=1")
                         .header("Authorization", "Bearer " + managerLogin.get("token").asText()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test

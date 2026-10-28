@@ -47,8 +47,8 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || session.role !== "ADMIN") {
-        this.setData({ verified: false, error: "仅联赛管理员可以管理赛季" });
+      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) {
+        this.setData({ verified: false, error: "仅超级管理员或授权管理员可以管理赛季" });
         return;
       }
       const [seasons, teams] = await Promise.all([fetchAdminSeasons(), fetchAdminTeams()]);

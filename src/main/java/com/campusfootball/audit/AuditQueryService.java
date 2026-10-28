@@ -12,22 +12,15 @@ import java.util.List;
 @Service
 public class AuditQueryService {
     private final AuditMapper auditMapper;
-    private final com.campusfootball.team.AuthorizationService authorizationService;
 
-    public AuditQueryService(AuditMapper auditMapper,
-                             com.campusfootball.team.AuthorizationService authorizationService) {
+    public AuditQueryService(AuditMapper auditMapper) {
         this.auditMapper = auditMapper;
-        this.authorizationService = authorizationService;
     }
 
     public List<AuditLog> findVisible(UserPrincipal principal) {
-        if (principal.role() == UserRole.ADMIN) {
-            return auditMapper.findAll();
-        }
-        if (principal.role() != UserRole.TEAM_MANAGER) {
+        if (principal.role() != UserRole.ADMIN) {
             throw new AppException(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN, "没有权限查看审计日志");
         }
-        List<Long> teamIds = authorizationService.managedTeamIds(principal.userId());
-        return teamIds.isEmpty() ? List.of() : auditMapper.findForTeams(teamIds);
+        return auditMapper.findAll();
     }
 }

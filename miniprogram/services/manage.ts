@@ -1,6 +1,6 @@
 import { request } from "./http";
 import type { IdResponse } from "../types/api";
-import type { EventType, PlayerStatus, PlayerSummary, TeamStatus, TeamSummary } from "../types/domain";
+import type { EventType, PlayerStatus, PlayerSummary, TeamManagerAssignment, TeamStatus, TeamSummary, UserRole } from "../types/domain";
 
 export type CreateTeamPayload = {
   name: string;
@@ -54,14 +54,15 @@ export function fetchAdminTeamPlayers(teamId: number): Promise<PlayerSummary[]> 
   return request<PlayerSummary[]>(`/api/v1/admin/teams/${teamId}/players`);
 }
 
-export function fetchTeamManagers(teamId: number): Promise<number[]> {
-  return request<number[]>(`/api/v1/admin/teams/${teamId}/managers`);
+export function fetchTeamManagers(teamId: number): Promise<TeamManagerAssignment[]> {
+  return request<TeamManagerAssignment[]>(`/api/v1/admin/teams/${teamId}/managers`);
 }
 
-export function grantTeamManager(teamId: number, userId: number): Promise<void> {
+export function grantTeamManager(teamId: number, userId: number,
+                                role: Extract<UserRole, "TEAM_MANAGER" | "TEAM_LEADER">): Promise<void> {
   return request<void>(`/api/v1/admin/teams/${teamId}/managers`, {
     method: "POST",
-    data: { userId }
+    data: { userId, role }
   });
 }
 

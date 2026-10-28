@@ -22,25 +22,44 @@ public class AuthorizationService {
     }
 
     public void requireAdmin(long userId) {
-        AppUser user = requireActiveUser(userId);
-        if (user.getRoleCode() != UserRole.ADMIN) {
+        if (currentRole(userId) != UserRole.ADMIN) {
+            throw forbidden();
+        }
+    }
+
+    public void requireManagementAccess(long userId) {
+        UserRole role = currentRole(userId);
+        if (role != UserRole.ADMIN && role != UserRole.TEAM_MANAGER) {
             throw forbidden();
         }
     }
 
     public void requireCanManageTeam(long userId, long teamId) {
-        AppUser user = requireActiveUser(userId);
-        if (user.getRoleCode() == UserRole.ADMIN) {
+        UserRole role = currentRole(userId);
+        if (role == UserRole.ADMIN || role == UserRole.TEAM_MANAGER) {
             return;
         }
-        if (user.getRoleCode() != UserRole.TEAM_MANAGER
+        if (role != UserRole.TEAM_LEADER
                 || teamManagerMapper.countByUserAndTeam(userId, teamId) == 0) {
             throw forbidden();
         }
     }
 
     public boolean isAdmin(long userId) {
-        return requireActiveUser(userId).getRoleCode() == UserRole.ADMIN;
+        return currentRole(userId) == UserRole.ADMIN;
+    }
+
+    public boolean isManagementAdmin(long userId) {
+        UserRole role = currentRole(userId);
+        return role == UserRole.ADMIN || role == UserRole.TEAM_MANAGER;
+    }
+
+    public boolean isTeamLeader(long userId) {
+        return currentRole(userId) == UserRole.TEAM_LEADER;
+    }
+
+    public UserRole currentRole(long userId) {
+        return requireActiveUser(userId).getRoleCode();
     }
 
     public List<Long> managedTeamIds(long userId) {

@@ -18,7 +18,11 @@ public class TestWechatConfig {
     private static final Map<String, WechatIdentity> IDENTITIES = Map.of(
             "manager-code", new WechatIdentity("openid-manager", null),
             "viewer-code", new WechatIdentity("openid-viewer", null),
-            "admin-code", new WechatIdentity("openid-admin", null)
+            "admin-code", new WechatIdentity("openid-admin", null),
+            "authorized-manager", new WechatIdentity("openid-authorized-manager", null),
+            "manager-target", new WechatIdentity("openid-manager-target", null),
+            "leader-code", new WechatIdentity("openid-leader", null),
+            "leader-target", new WechatIdentity("openid-leader-target", null)
     );
 
     @Bean

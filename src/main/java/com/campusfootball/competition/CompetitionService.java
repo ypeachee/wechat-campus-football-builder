@@ -33,7 +33,7 @@ public class CompetitionService {
 
     @Transactional
     public long create(long actorUserId, String name, CompetitionType type, String description) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Competition competition = new Competition();
         competition.setName(name);
         competition.setType(type);
@@ -47,7 +47,7 @@ public class CompetitionService {
     @Transactional
     public void update(long actorUserId, long id, String name, CompetitionType type,
                        String description, CompetitionStatus status) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Competition existing = get(id);
         Competition updated = new Competition();
         updated.setId(id);

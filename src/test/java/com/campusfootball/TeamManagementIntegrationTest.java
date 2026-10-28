@@ -42,13 +42,13 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCanEditOwnTeamButCannotChangeStatus() throws Exception {
+    void teamLeaderCanEditOwnTeamButCannotChangeStatus() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long teamId = createTeam(admin, "OwnTeam");
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         long managerId = managerLogin.get("userId").asLong();
         String manager = managerLogin.get("token").asText();
-        grant(admin, teamId, managerId);
+        grant(admin, teamId, managerId, "TEAM_LEADER");
 
         mockMvc.perform(put("/api/v1/manage/teams/" + teamId)
                         .header("Authorization", "Bearer " + manager)
@@ -69,14 +69,14 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCannotEditOtherTeamOrPlayer() throws Exception {
+    void teamLeaderCannotEditOtherTeamOrPlayer() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long ownTeam = createTeam(admin, "Mine");
         long otherTeam = createTeam(admin, "Other");
         long otherPlayer = createPlayer(admin, otherTeam, "OtherPlayer", 7);
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         String manager = managerLogin.get("token").asText();
-        grant(admin, ownTeam, managerLogin.get("userId").asLong());
+        grant(admin, ownTeam, managerLogin.get("userId").asLong(), "TEAM_LEADER");
 
         mockMvc.perform(put("/api/v1/manage/teams/" + otherTeam)
                         .header("Authorization", "Bearer " + manager)
@@ -143,14 +143,14 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCanListOwnInactivePlayersButNotOtherTeams() throws Exception {
+    void teamLeaderCanListOwnInactivePlayersButNotOtherTeams() throws Exception {
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
         long ownTeam = createTeam(admin, "ManagedRoster");
         long otherTeam = createTeam(admin, "OtherRoster");
         long playerId = createPlayer(admin, ownTeam, "InactiveLater", 12);
         JsonNode managerLogin = TestAuthSupport.login(mockMvc, "manager-code");
         String manager = managerLogin.get("token").asText();
-        grant(admin, ownTeam, managerLogin.get("userId").asLong());
+        grant(admin, ownTeam, managerLogin.get("userId").asLong(), "TEAM_LEADER");
 
         mockMvc.perform(put("/api/v1/manage/players/" + playerId)
                         .header("Authorization", "Bearer " + manager)
@@ -201,11 +201,11 @@ class TeamManagementIntegrationTest extends IntegrationTestBase {
         return OBJECT_MAPPER.readTree(result.getResponse().getContentAsString()).get("id").asLong();
     }
 
-    private void grant(String token, long teamId, long userId) throws Exception {
+    private void grant(String token, long teamId, long userId, String role) throws Exception {
         mockMvc.perform(post("/api/v1/admin/teams/" + teamId + "/managers")
                         .header("Authorization", "Bearer " + token)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + userId + "}"))
+                        .content("{\"userId\":" + userId + ",\"role\":\"" + role + "\"}"))
                 .andExpect(status().isOk());
     }
 

@@ -39,7 +39,7 @@ class MvpAcceptanceIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/v1/admin/teams/" + homeTeam + "/managers")
                         .header("Authorization", "Bearer " + admin)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + managerId + "}"))
+                        .content("{\"userId\":" + managerId + ",\"role\":\"TEAM_MANAGER\"}"))
                 .andExpect(status().isOk());
 
         long scorer = TestApiSupport.createPlayer(mockMvc, manager, homeTeam, "AcceptanceScorer", 9);

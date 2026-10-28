@@ -43,7 +43,7 @@ public class TeamService {
     @Transactional
     public long createTeam(long actorUserId, String name, String shortName, String logoUrl,
                            String coachName, String homeVenue) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Team team = new Team();
         team.setName(name);
         team.setShortName(shortName);
@@ -61,14 +61,14 @@ public class TeamService {
                            String coachName, String homeVenue, TeamStatus requestedStatus) {
         Team existing = teamMapper.findById(teamId).orElseThrow(this::notFound);
         TeamStatus nextStatus = existing.getStatus();
-        if (authorizationService.isAdmin(actorUserId)) {
+        if (authorizationService.isManagementAdmin(actorUserId)) {
             if (requestedStatus != null) {
                 nextStatus = requestedStatus;
             }
         } else {
             authorizationService.requireCanManageTeam(actorUserId, teamId);
             if (requestedStatus != null && requestedStatus != existing.getStatus()) {
-                throw new AppException(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN, "球队管理员不能修改球队状态");
+                throw new AppException(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN, "领队不能修改球队状态");
             }
         }
 

@@ -2,6 +2,7 @@ package com.campusfootball.team;
 
 import com.campusfootball.common.api.IdResponse;
 import com.campusfootball.common.security.CurrentUser;
+import com.campusfootball.user.UserRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -65,14 +66,16 @@ public class AdminTeamController {
     }
 
     @GetMapping("/teams/{teamId}/managers")
-    public List<Long> managers(@PathVariable long teamId) {
+    public List<TeamAssignmentResponse> managers(@PathVariable long teamId) {
         teamService.getTeam(teamId);
-        return teamManagerService.findUserIds(teamId);
+        return teamManagerService.findAssignments(teamId).stream()
+                .map(item -> new TeamAssignmentResponse(item.getUserId(), item.getRoleCode()))
+                .toList();
     }
 
     @PostMapping("/teams/{teamId}/managers")
     public void grantManager(@PathVariable long teamId, @Valid @RequestBody GrantManagerRequest request) {
-        teamManagerService.grant(currentUser.require().userId(), teamId, request.userId());
+        teamManagerService.grant(currentUser.require().userId(), teamId, request.userId(), request.role());
     }
 
     @DeleteMapping("/teams/{teamId}/managers/{userId}")
@@ -95,6 +98,9 @@ public class AdminTeamController {
                                     TeamStatus status) {
     }
 
-    public record GrantManagerRequest(@NotNull @Min(1) Long userId) {
+    public record GrantManagerRequest(@NotNull @Min(1) Long userId, @NotNull UserRole role) {
+    }
+
+    public record TeamAssignmentResponse(long userId, UserRole role) {
     }
 }

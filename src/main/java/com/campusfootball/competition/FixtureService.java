@@ -74,7 +74,7 @@ public class FixtureService {
     public long createFixture(long actorUserId, long seasonId, Long stageId, Long groupId, Integer roundNo,
                               long homeTeamId, long awayTeamId, LocalDateTime kickoffAt, String venue,
                               String referee) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         validateParticipants(seasonId, homeTeamId, awayTeamId);
         Stage stage = resolveStage(seasonId, stageId);
         if (stage.getType() == StageType.KNOCKOUT) {
@@ -110,7 +110,7 @@ public class FixtureService {
     public void updateSchedule(long actorUserId, long fixtureId, long seasonId, Long stageId, Long groupId,
                                Integer roundNo, long homeTeamId, long awayTeamId,
                                LocalDateTime kickoffAt, String venue, String referee) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Fixture existing = get(fixtureId);
         boolean participantsChanged = existing.getSeasonId() != seasonId
                 || existing.getHomeTeamId() != homeTeamId
@@ -133,7 +133,7 @@ public class FixtureService {
 
     @Transactional
     public void changeStatus(long actorUserId, long fixtureId, FixtureStatus target) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Fixture existing = get(fixtureId);
         if (target == FixtureStatus.FINISHED) {
             throw conflict("完赛必须使用完赛接口");
@@ -153,7 +153,7 @@ public class FixtureService {
     @Transactional
     public void updateScore(long actorUserId, long fixtureId, int homeScore, int awayScore,
                             Integer homePenaltyScore, Integer awayPenaltyScore) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Fixture existing = writeGuard.requireWritable(fixtureId);
         validateScore(homeScore, awayScore);
         validatePenalties(existing, homePenaltyScore, awayPenaltyScore);
@@ -169,7 +169,7 @@ public class FixtureService {
     @Transactional
     public void finish(long actorUserId, long fixtureId, int homeScore, int awayScore,
                        Integer homePenaltyScore, Integer awayPenaltyScore) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Fixture existing = writeGuard.requireWritable(fixtureId);
         if (existing.getStatus() != FixtureStatus.LIVE) {
             throw conflict("只有进行中的比赛可以完赛");
@@ -190,7 +190,7 @@ public class FixtureService {
 
     @Transactional
     public void setLocked(long actorUserId, long fixtureId, boolean locked) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Fixture existing = get(fixtureId);
         fixtureMapper.updateLock(fixtureId, locked);
         auditService.record(actorUserId, null, locked ? AuditAction.LOCK : AuditAction.UNLOCK,

@@ -26,7 +26,7 @@ export function validateTeamForm(form: TeamForm, isAdmin: boolean): FieldErrors 
     errors.name = "请输入球队名称";
   }
   if (!isAdmin && form.status === "INACTIVE") {
-    errors.status = "球队管理员不能修改球队状态";
+    errors.status = "领队不能修改球队状态";
   }
   return errors;
 }

@@ -1,8 +1,12 @@
 import { refreshSession } from "../../services/auth";
 import { fetchAdminTeams, fetchTeamManagers, grantTeamManager, revokeTeamManager } from "../../services/manage";
 import { SubmitLock, withSubmitLock } from "../../state/submit-lock";
-import type { TeamSummary } from "../../types/domain";
+import type { TeamManagerAssignment, TeamSummary } from "../../types/domain";
 import { errorMessage } from "../../utils/error";
+import { roleLabel } from "../../utils/status";
+
+type AssignmentRole = Extract<TeamManagerAssignment["role"], "TEAM_MANAGER" | "TEAM_LEADER">;
+type AssignmentView = TeamManagerAssignment & { roleText: string };
 
 const submitLock = new SubmitLock();
 
@@ -15,8 +19,13 @@ Page({
     teams: [] as TeamSummary[],
     selectedTeamId: 0,
     selectedTeam: null as TeamSummary | null,
-    managers: [] as number[],
-    grantUserId: ""
+    managers: [] as AssignmentView[],
+    grantUserId: "",
+    grantRole: "TEAM_LEADER" as AssignmentRole,
+    grantRoleOptions: [
+      { value: "TEAM_MANAGER", label: "授权管理员" },
+      { value: "TEAM_LEADER", label: "领队" }
+    ] as Array<{ value: AssignmentRole; label: string }>
   },
 
   onLoad() {
@@ -31,8 +40,8 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || session.role !== "ADMIN") {
-        this.setData({ verified: false, error: "仅联赛管理员可以管理球队授权" });
+      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) {
+        this.setData({ verified: false, error: "仅超级管理员或授权管理员可以管理球队授权" });
         return;
       }
       const teams = await fetchAdminTeams();
@@ -60,7 +69,10 @@ Page({
   },
 
   async loadManagers(teamId: number) {
-    const managers = await fetchTeamManagers(teamId);
+    const managers = (await fetchTeamManagers(teamId)).map((item) => ({
+      ...item,
+      roleText: roleLabel(item.role)
+    }));
     this.setData({
       selectedTeam: this.data.teams.find((team) => team.id === teamId) ?? null,
       managers
@@ -69,6 +81,10 @@ Page({
 
   handleUserIdInput(event: WechatMiniprogram.Input) {
     this.setData({ grantUserId: event.detail.value });
+  },
+
+  selectGrantRole(event: WechatMiniprogram.BaseEvent) {
+    this.setData({ grantRole: String(event.currentTarget.dataset.value) as AssignmentRole });
   },
 
   async grantManager() {
@@ -80,7 +96,7 @@ Page({
     this.setData({ submitting: true });
     try {
       const saved = await withSubmitLock(submitLock, async () => {
-        await grantTeamManager(this.data.selectedTeamId, userId);
+        await grantTeamManager(this.data.selectedTeamId, userId, this.data.grantRole);
         return true;
       });
       if (!saved) {

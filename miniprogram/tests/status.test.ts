@@ -18,8 +18,9 @@ describe("status labels", () => {
   });
 
   it("labels roles and keeps unknown values", () => {
-    expect(roleLabel("ADMIN")).toBe("联赛管理员");
-    expect(roleLabel("TEAM_MANAGER")).toBe("球队管理员");
+    expect(roleLabel("ADMIN")).toBe("超级管理员");
+    expect(roleLabel("TEAM_MANAGER")).toBe("授权管理员");
+    expect(roleLabel("TEAM_LEADER")).toBe("领队");
     expect(roleLabel("VIEWER")).toBe("普通用户");
     expect(fixtureStatusLabel("UNKNOWN" as never)).toBe("UNKNOWN");
   });

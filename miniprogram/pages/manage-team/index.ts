@@ -67,9 +67,9 @@ Page({
         this.setData({ error: "登录状态已失效，请重新登录", verified: false });
         return;
       }
-      const isAdmin = session.role === "ADMIN";
+      const isAdmin = session.role === "ADMIN" || session.role === "TEAM_MANAGER";
       if (this.data.createMode && !isAdmin) {
-        this.setData({ error: "只有联赛管理员可以创建球队", verified: false });
+        this.setData({ error: "只有超级管理员或授权管理员可以创建球队", verified: false });
         return;
       }
       if (!this.data.createMode && !canManageTeamWithSession(session, this.data.teamId)) {
@@ -279,6 +279,7 @@ Page({
 
 function canManageTeamWithSession(session: Session, teamId: number): boolean {
   return session.role === "ADMIN"
-    || (session.role === "TEAM_MANAGER" && session.managedTeamIds.includes(teamId));
+    || session.role === "TEAM_MANAGER"
+    || (session.role === "TEAM_LEADER" && session.managedTeamIds.includes(teamId));
 }
 

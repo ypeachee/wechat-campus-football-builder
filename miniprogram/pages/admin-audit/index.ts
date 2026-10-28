@@ -26,7 +26,7 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) {
+      if (!session || session.role !== "ADMIN") {
         this.setData({ verified: false, error: "没有权限查看审计日志" });
         return;
       }

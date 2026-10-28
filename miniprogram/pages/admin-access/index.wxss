@@ -69,8 +69,19 @@
   border-bottom: 1rpx solid #EEECE5;
 }
 
+.manager-row__main {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
 .manager-row__id {
   font-size: 25rpx;
+}
+
+.manager-row__role {
+  color: #7C8983;
+  font-size: 20rpx;
 }
 
 .manager-row__revoke {
@@ -110,4 +121,28 @@
   color: #9AA49F;
   font-size: 19rpx;
   line-height: 1.6;
+}
+
+.grant-role-row {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+}
+
+.grant-role {
+  flex: 1;
+  padding: 16rpx 12rpx;
+  border: 1rpx solid #D9DDD9;
+  border-radius: 14rpx;
+  background: #FFFFFF;
+  color: #5E6B65;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.grant-role--active {
+  border-color: #0B6B4B;
+  background: #EAF5EF;
+  color: #0B6B4B;
+  font-weight: 700;
 }

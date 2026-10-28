@@ -62,7 +62,7 @@ public class SeasonService {
     @Transactional
     public long createSeason(long actorUserId, Long competitionId, String name, LocalDate startDate,
                              LocalDate endDate, SeasonStatus status) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         Competition competition = competitionId == null
                 ? competitionMapper.findFirstByType(CompetitionType.LEAGUE)
                     .orElseThrow(() -> notFound("默认联赛赛事不存在"))
@@ -91,7 +91,7 @@ public class SeasonService {
 
     @Transactional
     public void addTeam(long actorUserId, long seasonId, long teamId) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         get(seasonId);
         teamMapper.findById(teamId).orElseThrow(() -> notFound("球队不存在"));
         if (seasonMapper.countSeasonTeam(seasonId, teamId) > 0) {
@@ -104,7 +104,7 @@ public class SeasonService {
 
     @Transactional
     public void removeTeam(long actorUserId, long seasonId, long teamId) {
-        authorizationService.requireAdmin(actorUserId);
+        authorizationService.requireManagementAccess(actorUserId);
         get(seasonId);
         if (seasonMapper.countSeasonTeam(seasonId, teamId) == 0) {
             throw notFound("赛季参赛球队不存在");

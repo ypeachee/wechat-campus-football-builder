@@ -24,7 +24,7 @@ Page({
     loading: false,
     submitting: false,
     error: "",
-    manageRoles: ["ADMIN", "TEAM_MANAGER"] as UserRole[]
+    manageRoles: ["ADMIN", "TEAM_MANAGER", "TEAM_LEADER"] as UserRole[]
   } as ProfileData,
 
   onShow() {
@@ -109,7 +109,7 @@ function managedTeams(session: Session | null): string {
   if (!session) {
     return "";
   }
-  if (session.role === "ADMIN") {
+  if (session.role === "ADMIN" || session.role === "TEAM_MANAGER") {
     return "全部球队";
   }
   return session.managedTeamIds.length ? session.managedTeamIds.join(", ") : "暂无";

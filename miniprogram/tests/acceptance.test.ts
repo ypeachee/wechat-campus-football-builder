@@ -43,7 +43,11 @@ describe("mini program acceptance flows", () => {
 
     saveSession({ token: "m", userId: 2, nickname: null, role: "TEAM_MANAGER", managedTeamIds: [7] });
     expect(requireRole(["TEAM_MANAGER"], 7)).toBe(true);
-    expect(requireRole(["TEAM_MANAGER"], 8)).toBe(false);
+    expect(requireRole(["TEAM_MANAGER"], 8)).toBe(true);
+
+    saveSession({ token: "l", userId: 4, nickname: null, role: "TEAM_LEADER", managedTeamIds: [7] });
+    expect(requireRole(["TEAM_LEADER"], 7)).toBe(true);
+    expect(requireRole(["TEAM_LEADER"], 8)).toBe(false);
 
     saveSession({ token: "a", userId: 3, nickname: null, role: "ADMIN", managedTeamIds: [] });
     expect(requireRole(["ADMIN"], 99)).toBe(true);

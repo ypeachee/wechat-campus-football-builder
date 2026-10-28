@@ -17,7 +17,7 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || session.role !== "ADMIN") { this.setData({ verified: false, error: "仅管理员可配置赛事" }); return; }
+      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) { this.setData({ verified: false, error: "仅超级管理员或授权管理员可配置赛事" }); return; }
       const [competitions, teams] = await Promise.all([fetchAllCompetitions(), fetchAdminTeams()]);
       this.setData({ verified: true, competitions, teams, competitionIndex: 0, seasonIndex: 0, stageIndex: 0, groupIndex: 0, groupTeamIndex: 0, groupTeamName: teams[0]?.name ?? "" });
       await this.loadSeasons();

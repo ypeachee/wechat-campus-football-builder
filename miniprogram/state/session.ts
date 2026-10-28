@@ -29,15 +29,24 @@ export function isAdmin(): boolean {
   return getSession()?.role === "ADMIN";
 }
 
+export function isManagementAdmin(): boolean {
+  const role = getSession()?.role;
+  return role === "ADMIN" || role === "TEAM_MANAGER";
+}
+
+export function isTeamLeader(): boolean {
+  return getSession()?.role === "TEAM_LEADER";
+}
+
 export function canManageTeam(teamId: number): boolean {
   const session = getSession();
   if (!session) {
     return false;
   }
-  if (session.role === "ADMIN") {
+  if (session.role === "ADMIN" || session.role === "TEAM_MANAGER") {
     return true;
   }
-  return session.role === "TEAM_MANAGER" && session.managedTeamIds.includes(teamId);
+  return session.role === "TEAM_LEADER" && session.managedTeamIds.includes(teamId);
 }
 
 export function requireRole(roles: UserRole[], teamId?: number): boolean {

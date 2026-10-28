@@ -1,5 +1,5 @@
 <view class="page-shell admin-access-page">
-  <app-header title="球队授权" subtitle="按球队授予或撤销管理权限" season-name="ADMIN" />
+  <app-header title="球队授权" subtitle="按球队授予授权管理员或领队" season-name="ADMIN" />
 
   <view wx:if="{{loading}}" class="admin-loading">
     <t-loading theme="circular" size="44rpx" text="加载授权信息" />
@@ -24,22 +24,35 @@
 
     <view wx:if="{{selectedTeam}}" class="surface-card access-card">
       <view class="access-card__title">{{selectedTeam.name}}</view>
-      <view class="access-card__copy">当前管理员用户 ID</view>
-      <view wx:if="{{managers.length === 0}}" class="manager-empty">暂无球队管理员</view>
+      <view class="access-card__copy">当前授权用户</view>
+      <view wx:if="{{managers.length === 0}}" class="manager-empty">暂无授权用户</view>
       <view wx:else class="manager-list">
-        <view wx:for="{{managers}}" wx:key="*this" class="manager-row">
-          <view class="manager-row__id numeric">#{{item}}</view>
-          <view class="manager-row__revoke" data-id="{{item}}" bindtap="revokeManager">撤销</view>
+        <view wx:for="{{managers}}" wx:key="userId" class="manager-row">
+          <view class="manager-row__main">
+            <view class="manager-row__id numeric">#{{item.userId}}</view>
+            <view class="manager-row__role">{{item.roleText}}</view>
+          </view>
+          <view class="manager-row__revoke" data-id="{{item.userId}}" bindtap="revokeManager">撤销</view>
         </view>
       </view>
 
       <view class="grant-section">
-        <view class="form-label">授权新管理员</view>
+        <view class="form-label">授权类型</view>
+        <view class="grant-role-row">
+          <view
+            wx:for="{{grantRoleOptions}}"
+            wx:key="value"
+            class="grant-role {{grantRole === item.value ? 'grant-role--active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="selectGrantRole"
+          >{{item.label}}</view>
+        </view>
+        <view class="form-label">授权用户</view>
         <view class="grant-row">
           <input class="grant-input" type="number" value="{{grantUserId}}" bindinput="handleUserIdInput" placeholder="输入用户 ID" />
           <t-button theme="primary" size="small" loading="{{submitting}}" bind:tap="grantManager">授权</t-button>
         </view>
-        <view class="grant-hint">当前后端未提供用户搜索接口，需要输入用户 ID。用户首次登录后可在“我的”页查看自己的 ID。</view>
+        <view class="grant-hint">用户首次登录后可在“我的”页查看自己的 ID。授权管理员可管理全部数据；领队只能维护本队人员和本队阵容。</view>
       </view>
     </view>
   </block>

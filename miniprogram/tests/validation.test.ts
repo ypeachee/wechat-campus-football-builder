@@ -8,9 +8,9 @@ describe("management form validation", () => {
     expect(validateTeamForm({ name: "  Campus FC  " }, true).name).toBeUndefined();
   });
 
-  it("blocks team managers from setting inactive", () => {
+  it("blocks team leaders from setting inactive", () => {
     expect(validateTeamForm({ name: "Team", status: "INACTIVE" }, false).status)
-      .toBe("球队管理员不能修改球队状态");
+      .toBe("领队不能修改球队状态");
     expect(validateTeamForm({ name: "Team", status: "INACTIVE" }, true).status)
       .toBeUndefined();
   });

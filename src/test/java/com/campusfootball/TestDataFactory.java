@@ -152,7 +152,11 @@ public class TestDataFactory {
     }
 
     public void grantTeamManager(long userId, long teamId, long grantedBy) {
-        jdbc.update("INSERT INTO team_manager (user_id, team_id, granted_by) VALUES (?, ?, ?)",
-                userId, teamId, grantedBy);
+        grantTeamManager(userId, teamId, grantedBy, UserRole.TEAM_MANAGER);
+    }
+
+    public void grantTeamManager(long userId, long teamId, long grantedBy, UserRole role) {
+        jdbc.update("INSERT INTO team_manager (user_id, team_id, granted_by, role_code) VALUES (?, ?, ?, ?)",
+                userId, teamId, grantedBy, role.name());
     }
 }

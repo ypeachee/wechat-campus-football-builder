@@ -1,7 +1,7 @@
 <view class="page-shell manage-team-page">
   <app-header
     title="{{createMode ? '新建球队' : (team ? team.name : '球队资料')}}"
-    subtitle="球队管理员仅能维护授权球队"
+    subtitle="按权限维护球队资料和球员"
     season-name="TEAM EDITOR"
   />
 

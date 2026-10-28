@@ -10,7 +10,7 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const session = await refreshSession();
-      if (!session || session.role !== "ADMIN") { this.setData({ verified: false, error: "仅管理员可管理淘汰赛" }); return; }
+      if (!session || (session.role !== "ADMIN" && session.role !== "TEAM_MANAGER")) { this.setData({ verified: false, error: "仅超级管理员或授权管理员可管理淘汰赛" }); return; }
       this.setData({ verified: true });
     } catch (error) { this.setData({ error: errorMessage(error) }); }
     finally { this.setData({ loading: false }); }

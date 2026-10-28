@@ -155,18 +155,19 @@ public class AppearanceService {
         if (teamId != fixture.getHomeTeamId() && teamId != fixture.getAwayTeamId()) {
             throw conflict("球队不是本场比赛参赛球队");
         }
-        boolean admin = authorizationService.isAdmin(actorUserId);
-        if (!admin) {
-            authorizationService.requireCanManageTeam(actorUserId, teamId);
-            if (fixture.getStatus() != FixtureStatus.LIVE && fixture.getStatus() != FixtureStatus.FINISHED) {
-                throw forbidden("球队管理员只能维护进行中或已完赛比赛的数据");
+        if (authorizationService.isManagementAdmin(actorUserId)) {
+            if (fixture.getStatus() != FixtureStatus.SCHEDULED
+                    && fixture.getStatus() != FixtureStatus.LIVE
+                    && fixture.getStatus() != FixtureStatus.FINISHED) {
+                throw forbidden("当前比赛状态不允许维护出场记录");
             }
             return;
         }
+        authorizationService.requireCanManageTeam(actorUserId, teamId);
         if (fixture.getStatus() != FixtureStatus.SCHEDULED
                 && fixture.getStatus() != FixtureStatus.LIVE
                 && fixture.getStatus() != FixtureStatus.FINISHED) {
-            throw forbidden("当前比赛状态不允许维护出场记录");
+            throw forbidden("领队只能维护未开始、进行中或已完赛比赛的本队出场");
         }
     }
 

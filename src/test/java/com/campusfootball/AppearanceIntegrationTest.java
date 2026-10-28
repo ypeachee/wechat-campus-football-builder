@@ -129,14 +129,14 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void replaceLineupRejectsUnauthorizedTeamManager() throws Exception {
+    void replaceLineupAllowsAuthorizedManagerForEitherTeam() throws Exception {
         Setup s = setup("live");
 
         mockMvc.perform(put("/api/v1/manage/fixtures/" + s.fixtureId() + "/teams/" + s.awayTeamId() + "/appearances")
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(lineupBody(Long.toString(s.awayPlayerId()), "")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -153,13 +153,13 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCannotAddOtherTeamAppearance() throws Exception {
+    void authorizedManagerCanAddOtherTeamAppearance() throws Exception {
         Setup s = setup("live");
         mockMvc.perform(post("/api/v1/manage/fixtures/" + s.fixtureId() + "/appearances")
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(appearanceBody(s.awayTeamId(), s.awayPlayerId(), 90)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -188,13 +188,13 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void teamManagerCannotWriteScheduledFixture() throws Exception {
+    void authorizedManagerCanWriteScheduledFixture() throws Exception {
         Setup s = setup("scheduled");
         mockMvc.perform(post("/api/v1/manage/fixtures/" + s.fixtureId() + "/appearances")
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content(appearanceBody(s.homeTeamId(), s.homePlayerId(), 90)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -229,7 +229,7 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void managerCannotUpdateOrDeleteOtherTeamAppearance() throws Exception {
+    void authorizedManagerCanUpdateOrDeleteOtherTeamAppearance() throws Exception {
         Setup s = setup("live");
         long otherAppearance = TestApiSupport.addAppearance(mockMvc, s.adminToken(), s.fixtureId(),
                 s.awayTeamId(), s.awayPlayerId(), true, 90);
@@ -238,10 +238,10 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
                         .header("Authorization", "Bearer " + s.managerToken())
                         .contentType(APPLICATION_JSON)
                         .content("{\"isStarter\":false,\"minutesPlayed\":45}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
         mockMvc.perform(delete("/api/v1/manage/appearances/" + otherAppearance)
                         .header("Authorization", "Bearer " + s.managerToken()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -314,7 +314,7 @@ class AppearanceIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/v1/admin/teams/" + home + "/managers")
                         .header("Authorization", "Bearer " + admin)
                         .contentType(APPLICATION_JSON)
-                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + "}"))
+                        .content("{\"userId\":" + managerLogin.get("userId").asLong() + ",\"role\":\"TEAM_MANAGER\"}"))
                 .andExpect(status().isOk());
         return new Setup(admin, managerLogin.get("token").asText(), seasonId, home, away,
                 fixtureId, homePlayer, homePlayer2, homePlayer3, awayPlayer);
