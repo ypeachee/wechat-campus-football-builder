@@ -19,7 +19,7 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET:campus-football-local-development-secret-change-me-2026}
-    ttl: ${JWT_TTL:PT2H}
+    ttl: ${JWT_TTL:PT168H}
   wechat:
     app-id: ${WECHAT_APP_ID:}
     app-secret: ${WECHAT_APP_SECRET:}

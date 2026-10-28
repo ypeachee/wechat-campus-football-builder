@@ -22,7 +22,7 @@ MySQL 8
 
 - 阿里云 ECS 或轻量应用服务器。
 - Ubuntu 22.04/24.04。
-- 最低 2 核 2 GB 内存 + 2 GB Swap；预算允许时选 2 核 4 GB。
+- 最低 2 核 1 GB 内存 + 2 GB Swap；预算允许时选 2 核 2 GB 或 4 GB。1 GB 实例必须使用仓库内的低内存 Java/MySQL 参数。
 - 安全组开放 `22`、`80`、`443`。
 - 不要向公网开放 `3306` 和 `8080`。
 
@@ -77,6 +77,8 @@ chmod 600 /swapfile
 mkswap /swapfile
 swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
+printf 'vm.swappiness=20\nvm.vfs_cache_pressure=50\n' > /etc/sysctl.d/99-campus-football.conf
+sysctl -p /etc/sysctl.d/99-campus-football.conf
 free -h
 ```
 
@@ -280,4 +282,29 @@ docker compose --env-file .env.production -f compose.prod.yaml exec mysql \
 - 修改环境变量后是否重启 API。
 - 微信服务器是否可访问。
 - `WECHAT_APP_SECRET` 是否误填 AppID。
+### `/api/v1/me` 返回 401
 
+这是鉴权失败，不是 API 不可用。常见原因：
+
+- token 已过期；当前默认有效期为 7 天
+- 更换过 `JWT_SECRET`，旧 token 会全部失效
+- 用户在数据库中已被停用或删除
+- 小程序仍保存旧 token
+
+处理方式：在小程序“我的”页面重新微信登录。前端遇到 401 会自动清理旧会话并提示重新登录。
+
+### 1 GB ECS 出现 502 或容器反复重启
+
+先执行：
+
+```bash
+free -h
+docker stats --no-stream
+dmesg | tail -50
+```
+
+如果出现 `Out of memory: Killed process ... java`，不要继续增大 `-Xmx`。保持仓库内低内存参数，并确认 Swappiness 为 20：
+
+```bash
+sysctl vm.swappiness
+```

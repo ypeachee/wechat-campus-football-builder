@@ -13,5 +13,5 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar /app/app.jar
 USER app
 EXPOSE 8080
-ENV JAVA_OPTS="-Xms128m -Xmx512m -XX:+UseG1GC"
+ENV JAVA_OPTS="-Xms32m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:ActiveProcessorCount=2 -Xss256k -Djava.security.egd=file:/dev/urandom"
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

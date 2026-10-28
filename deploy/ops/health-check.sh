@@ -62,6 +62,20 @@ for container in "$API_CONTAINER" "$MYSQL_CONTAINER"; do
   fi
 done
 
+STATE_DIR=${STATE_DIR:-/var/lib/campus-football}
+mkdir -p "$STATE_DIR"
+for spec in "api:$API_CONTAINER" "mysql:$MYSQL_CONTAINER"; do
+  name=${spec%%:*}
+  container=${spec#*:}
+  [ -n "$container" ] || continue
+  current=$(docker inspect -f '{{.RestartCount}}' "$container" 2>/dev/null || echo 0)
+  state_file="$STATE_DIR/${name}-restart-count"
+  previous=$(cat "$state_file" 2>/dev/null || echo 0)
+  if [ "$current" -gt "$previous" ]; then
+    add_issue "${name} container restarted: ${previous} -> ${current}"
+  fi
+  printf '%s\n' "$current" > "$state_file"
+done
 if command -v openssl >/dev/null 2>&1; then
   CERT_END=$(timeout 12 openssl s_client -connect "${API_DOMAIN}:443" -servername "$API_DOMAIN" </dev/null 2>/dev/null \
     | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2- || true)
