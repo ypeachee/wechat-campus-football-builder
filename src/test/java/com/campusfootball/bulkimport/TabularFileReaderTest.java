@@ -36,6 +36,27 @@ class TabularFileReaderTest {
     }
 
     @Test
+    void readsXlsxWhenUploadLosesOriginalExtension() throws Exception {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("导入");
+            var header = sheet.createRow(0);
+            header.createCell(0).setCellValue("号码");
+            header.createCell(1).setCellValue("姓名");
+            var row = sheet.createRow(1);
+            row.createCell(0).setCellValue("A1");
+            row.createCell(1).setCellValue("王五");
+            workbook.write(out);
+            MockMultipartFile file = new MockMultipartFile("file", "wxfile-temp",
+                    "application/octet-stream", out.toByteArray());
+
+            TabularData data = reader.read(file);
+
+            assertThat(data.rows()).hasSize(1);
+            assertThat(data.rows().get(0).get("号码")).isEqualTo("A1");
+        }
+    }
+
+    @Test
     void readsXlsxFirstSheet() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             var sheet = workbook.createSheet("导入");

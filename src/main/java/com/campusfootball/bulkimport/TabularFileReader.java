@@ -44,16 +44,25 @@ public class TabularFileReader {
         String filename = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
         String normalized = filename.toLowerCase(Locale.ROOT);
         try {
+            byte[] bytes = file.getBytes();
             if (normalized.endsWith(".csv")) {
-                return readCsv(file.getBytes());
+                return readCsv(bytes);
             }
-            if (normalized.endsWith(".xlsx")) {
-                return readXlsx(file.getBytes());
+            if (normalized.endsWith(".xlsx") || isZipArchive(bytes)) {
+                return readXlsx(bytes);
             }
             throw badRequest("仅支持 CSV 或 XLSX 文件");
         } catch (IOException ex) {
             throw badRequest("文件读取失败：" + ex.getMessage());
         }
+    }
+
+    private boolean isZipArchive(byte[] bytes) {
+        return bytes.length >= 4
+                && bytes[0] == 0x50
+                && bytes[1] == 0x4b
+                && bytes[2] == 0x03
+                && bytes[3] == 0x04;
     }
 
     private TabularData readCsv(byte[] bytes) throws IOException {
