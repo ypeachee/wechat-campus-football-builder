@@ -4,7 +4,7 @@ services:
   mysql:
     image: mysql:8.0.36
     restart: unless-stopped
-    mem_limit: 280m
+    mem_limit: 1024m
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-campus_football}
       MYSQL_USER: ${MYSQL_USER:-campus}
@@ -13,10 +13,10 @@ services:
       TZ: Asia/Shanghai
     command:
       - --default-time-zone=+08:00
-      - --innodb-buffer-pool-size=64M
-      - --innodb-log-buffer-size=8M
+      - --innodb-buffer-pool-size=512M
+      - --innodb-log-buffer-size=32M
       - --performance-schema=OFF
-      - --max-connections=30
+      - --max-connections=60
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -33,7 +33,7 @@ services:
       context: .
       dockerfile: Dockerfile.runtime
     restart: unless-stopped
-    mem_limit: 420m
+    mem_limit: 1536m
     environment:
       DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-campus_football}?useUnicode=true&characterEncoding=utf8&connectionTimeZone=Asia/Shanghai&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false
       DB_USERNAME: ${MYSQL_USER:-campus}
@@ -46,7 +46,7 @@ services:
       ADMIN_WECHAT_OPENID: ${ADMIN_WECHAT_OPENID:-}
       SERVER_PORT: 8080
       TZ: Asia/Shanghai
-      JAVA_OPTS: ${JAVA_OPTS:--Xms32m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:ActiveProcessorCount=2 -Xss256k -Duser.timezone=Asia/Shanghai -Djava.security.egd=file:/dev/urandom}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms128m -Xmx1024m -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -XX:+UseG1GC -XX:ActiveProcessorCount=2 -Xss512k -Duser.timezone=Asia/Shanghai -Djava.security.egd=file:/dev/urandom}
     depends_on:
       mysql:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    mem_limit: 96m
+    mem_limit: 128m
     environment:
       API_DOMAIN: ${API_DOMAIN:-api.cugbsoccer.xyz}
     ports:
