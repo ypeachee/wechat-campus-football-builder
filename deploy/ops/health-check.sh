@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR=${ROOT_DIR:-/opt/campus-football}
 ENV_FILE="$ROOT_DIR/.env.production"
-API_DOMAIN=${API_DOMAIN:-api.cugbsoccer.xyz}
+API_DOMAIN=${API_DOMAIN:-api2.cugbsoccer.xyz}
 HEALTH_URL=${HEALTH_URL:-https://${API_DOMAIN}/api/v1/seasons}
 DISK_LIMIT=${DISK_LIMIT:-85}
 MEMORY_MIN_KB=${MEMORY_MIN_KB:-65536}

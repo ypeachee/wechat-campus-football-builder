@@ -1,5 +1,5 @@
 const LOCAL_API_BASE_URL = "http://127.0.0.1:8080";
-const PRODUCTION_API_BASE_URL = "https://api.cugbsoccer.xyz";
+const PRODUCTION_API_BASE_URL = "https://api2.cugbsoccer.xyz";
 
 // Set to true only when you explicitly want the developer tool to call the local backend.
 const USE_LOCAL_API_IN_DEVELOPER_TOOLS = false;
