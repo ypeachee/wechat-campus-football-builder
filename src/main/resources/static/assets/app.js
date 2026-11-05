@@ -30,32 +30,42 @@ class ApiError extends Error {
 }
 
 function readStoredSession() {
+  let session = null;
   try {
-    const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
-    if (session) return session;
+    session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+  } catch {
+    session = null;
+  }
+  // Always clean up legacy localStorage key (migration + hygiene).
+  try {
+    if (session) {
+      localStorage.removeItem(SESSION_KEY);
+      return session;
+    }
   } catch { /* ignore */ }
-  // Migrate from old localStorage and clean up
+  if (session) return session;
   try {
     const legacy = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
     if (legacy) {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(legacy));
-      localStorage.removeItem(SESSION_KEY);
+      try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
       return legacy;
     }
   } catch { /* ignore */ }
-  localStorage.removeItem(SESSION_KEY);
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
   return null;
 }
 
 function saveSession(session) {
   state.session = session;
-  if (session) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  } else {
-    sessionStorage.removeItem(SESSION_KEY);
-  }
-  // Always clean up legacy localStorage key
-  localStorage.removeItem(SESSION_KEY);
+  try {
+    if (session) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    } else {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+  } catch { /* ignore */ }
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
   updateAuthHeader();
 }
 
@@ -881,7 +891,7 @@ async function renderAccountPage() {
       <input id="user-search-input" type="search" autocomplete="off" placeholder="输入昵称、用户 ID 或网站账号" aria-describedby="user-search-help">
       <small id="user-search-help" class="form-help">输入至少 1 个字符后自动搜索</small>
     </div>
-    <div id="user-search-results" class="user-search-results" role="listbox" aria-label="搜索结果"></div>
+    <div id="user-search-results" class="user-search-results" aria-label="搜索结果"></div>
     <div id="credential-form-area" style="display:none">
       <div class="selected-user-banner" id="selected-user-banner"></div>
       <form id="credential-form">
@@ -922,17 +932,28 @@ async function renderAccountPage() {
     const button = document.getElementById("credential-submit");
     const errorBox = document.getElementById("credential-error");
     const successBox = document.getElementById("credential-success");
+    const userId = form.userId.value.trim();
+    if (!userId) {
+      errorBox.textContent = "请先从搜索结果中选择一个用户";
+      errorBox.classList.add("visible");
+      return;
+    }
     errorBox.classList.remove("visible");
     successBox.classList.remove("visible");
     button.disabled = true;
     button.textContent = "正在保存…";
     try {
-      const result = await api(`/admin/users/${encodeURIComponent(form.userId.value.trim())}/web-credentials`, {
+      const result = await api(`/admin/users/${encodeURIComponent(userId)}/web-credentials`, {
         method: "PUT",
         body: JSON.stringify({ username: form.username.value.trim(), password: form.password.value }),
       });
       successBox.textContent = `已为用户 ${result.userId} 配置账号 ${result.username}`;
       successBox.classList.add("visible");
+      document.getElementById("credential-form-area").style.display = "none";
+      document.getElementById("selected-user-banner").innerHTML = "";
+      document.getElementById("credential-user-id").value = "";
+      document.getElementById("user-search-input").value = "";
+      document.getElementById("user-search-results").innerHTML = "";
       form.reset();
       notify("网站账号已保存");
     } catch (error) {
@@ -953,43 +974,70 @@ function setupUserSearch() {
   const userIdField = document.getElementById("credential-user-id");
   const cancelBtn = document.getElementById("credential-cancel");
   let searchTimer = null;
+  let requestId = 0;
 
   if (!searchInput || !resultsContainer) return;
+
+  function resetFormArea() {
+    if (userIdField) userIdField.value = "";
+    if (formArea) formArea.style.display = "none";
+    if (banner) banner.innerHTML = "";
+    const form = document.getElementById("credential-form");
+    if (form) form.reset();
+    const username = document.getElementById("credential-username");
+    const password = document.getElementById("credential-password");
+    if (username) username.value = "";
+    if (password) password.value = "";
+    const errorBox = document.getElementById("credential-error");
+    const successBox = document.getElementById("credential-success");
+    if (errorBox) { errorBox.textContent = ""; errorBox.classList.remove("visible"); }
+    if (successBox) { successBox.textContent = ""; successBox.classList.remove("visible"); }
+  }
 
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
     const query = searchInput.value.trim();
     if (query.length < 1) {
       resultsContainer.innerHTML = "";
+      requestId += 1;
       return;
     }
     searchTimer = setTimeout(() => searchUsers(query), 300);
   });
 
   async function searchUsers(query) {
+    const currentRequestId = ++requestId;
     resultsContainer.innerHTML = `<div class="user-search-loading">搜索中…</div>`;
     try {
       const users = await api(`/admin/users?query=${encodeURIComponent(query)}`);
+      if (currentRequestId !== requestId) return;
       if (!users || !users.length) {
         resultsContainer.innerHTML = `<div class="user-search-empty">未找到匹配用户</div>`;
         return;
       }
       resultsContainer.innerHTML = users.map((user) => {
         const isViewer = user.role === "VIEWER";
-        const disabledAttr = isViewer ? `aria-disabled="true"` : "";
-        const className = isViewer ? "user-search-item disabled" : "user-search-item";
-        return `<div class="${className}" role="option" data-user-id="${user.id}" ${disabledAttr}>
+        if (isViewer) {
+          return `<div class="user-search-item disabled" aria-disabled="true" data-user-id="${user.id}">
+            <span class="user-search-id">#${user.id}</span>
+            <span class="user-search-name">${esc(user.nickname || "未命名")}</span>
+            <span class="user-search-role">${esc(roleLabel(user.role))}</span>
+            ${user.webUsername ? `<span class="user-search-web">${esc(user.webUsername)}</span>` : ""}
+            <span class="user-search-hint">只读用户不可配置</span>
+          </div>`;
+        }
+        return `<button type="button" class="user-search-item" data-user-id="${user.id}">
           <span class="user-search-id">#${user.id}</span>
           <span class="user-search-name">${esc(user.nickname || "未命名")}</span>
-          <span class="user-search-role">${esc(roleLabel(user.role))}</span>
-          ${user.webUsername ? `<span class="user-search-web">${esc(user.webUsername)}</span>` : ""}
-          ${isViewer ? `<span class="user-search-hint">只读用户不可配置</span>` : ""}
-        </div>`;
+          <span class="user-search-role">${esc(roleLabel(user.role))}</span
+          >${user.webUsername ? `<span class="user-search-web">${esc(user.webUsername)}</span>` : ""}
+        </button>`;
       }).join("");
-      resultsContainer.querySelectorAll(".user-search-item:not(.disabled)").forEach((item) => {
-        item.addEventListener("click", () => selectUser(item));
+      resultsContainer.querySelectorAll("button.user-search-item").forEach((btn) => {
+        btn.addEventListener("click", () => selectUser(btn));
       });
     } catch (error) {
+      if (currentRequestId !== requestId) return;
       resultsContainer.innerHTML = `<div class="user-search-empty">搜索失败：${esc(error.message)}</div>`;
     }
   }
@@ -1004,15 +1052,17 @@ function setupUserSearch() {
     formArea.style.display = "block";
     resultsContainer.innerHTML = "";
     searchInput.value = "";
-    document.getElementById("credential-username").value = webUsername || "";
-    document.getElementById("credential-username")?.focus();
+    const usernameField = document.getElementById("credential-username");
+    if (usernameField) usernameField.value = webUsername || "";
+    usernameField?.focus();
   }
 
   cancelBtn?.addEventListener("click", () => {
-    userIdField.value = "";
-    formArea.style.display = "none";
-    banner.innerHTML = "";
-    document.getElementById("credential-form")?.reset();
+    resetFormArea();
+    searchInput.value = "";
+    resultsContainer.innerHTML = "";
+    requestId += 1;
+    searchInput.focus();
   });
 }
 

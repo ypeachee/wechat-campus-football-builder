@@ -452,14 +452,30 @@ h1, h2, h3, h4 { line-height: 1.16; letter-spacing: -.035em; }
   cursor: pointer;
   border-bottom: 1px solid var(--line);
   transition: background .15s ease;
+  width: 100%;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.user-search-item:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+  background: var(--lime-soft);
 }
 .user-search-item:last-child { border-bottom: none; }
 .user-search-item:hover { background: var(--lime-soft); }
-.user-search-item.disabled {
+.user-search-item.disabled,
+.user-search-item[aria-disabled="true"] {
   opacity: .5;
   cursor: not-allowed;
 }
-.user-search-item.disabled:hover { background: transparent; }
+.user-search-item.disabled:hover,
+.user-search-item[aria-disabled="true"]:hover { background: transparent; }
+.user-search-item[aria-disabled="true"]:focus-visible { outline: none; background: transparent; }
 .user-search-id {
   font-size: 11px;
   font-weight: 700;

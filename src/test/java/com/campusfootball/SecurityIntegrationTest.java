@@ -8,8 +8,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.hamcrest.Matchers;
 
 class SecurityIntegrationTest extends IntegrationTestBase {
 
@@ -67,13 +70,14 @@ class SecurityIntegrationTest extends IntegrationTestBase {
     void securityHeadersArePresentOnResponses() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
-                        .string("Content-Security-Policy", org.hamcrest.Matchers.containsString("default-src 'self'")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
-                        .string("X-Content-Type-Options", "nosniff"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
-                        .string("X-Frame-Options", "DENY"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
-                        .string("Referrer-Policy", "strict-origin-when-cross-origin"));
+                .andExpect(header().string("Content-Security-Policy",
+                        Matchers.allOf(
+                                Matchers.containsString("default-src 'self'"),
+                                Matchers.containsString("frame-ancestors 'none'"))))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(header().string("Permissions-Policy",
+                        Matchers.containsString("camera=()")));
     }
 }
