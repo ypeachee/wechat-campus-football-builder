@@ -6,6 +6,7 @@ const app = document.getElementById("app");
 const seasonSelect = document.getElementById("season-select");
 const authEntry = document.getElementById("auth-entry");
 const authEntryLabel = document.getElementById("auth-entry-label");
+const adminNavLink = document.getElementById("admin-nav-link");
 const menuToggle = document.getElementById("menu-toggle");
 const primaryNav = document.getElementById("primary-nav");
 const toast = document.getElementById("toast");
@@ -71,10 +72,12 @@ function saveSession(session) {
 
 function updateAuthHeader() {
   const role = state.session?.role;
+  const canManage = Boolean(role && role !== "VIEWER");
+  if (adminNavLink) adminNavLink.hidden = !canManage;
   if (role) {
     authEntry.classList.add("is-logged-in");
-    authEntry.href = "#/admin";
-    authEntryLabel.textContent = "管理台";
+    authEntry.href = canManage ? "#/admin" : "#/account";
+    authEntryLabel.textContent = canManage ? "管理台" : "账号";
   } else {
     authEntry.classList.remove("is-logged-in");
     authEntry.href = "#/login";
@@ -368,6 +371,11 @@ async function renderRoute() {
     if (path === "/admin") {
       setActiveNav("admin");
       await renderAdminHub();
+      return;
+    }
+    if (path === "/admin/fixtures") {
+      setActiveNav("admin");
+      await renderAdminFixturesPage();
       return;
     }
     if (path === "/admin/teams") {
@@ -1100,20 +1108,22 @@ async function renderAdminHub() {
     app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "管理台", "当前账号没有编辑权限。")}${emptyState("只读账号", "请使用管理员、球队管理员或领队账号登录。", "▦")}</div>`;
     return;
   }
-  const teamScope = me.role === "ADMIN" || me.role === "TEAM_MANAGER" ? "全部球队" : `${me.managedTeamIds.length} 支授权球队`;
+  const canManageAll = me.role === "ADMIN" || me.role === "TEAM_MANAGER";
+  const teamScope = canManageAll ? "全部球队" : `${me.managedTeamIds.length} 支授权球队`;
   app.innerHTML = `<div class="page admin-page">
     ${pageHeader("MANAGEMENT", "管理台", `当前身份：${roleLabel(me.role)} · 可管理范围：${teamScope}`, `<a class="button button-ghost button-small" href="#/account">账号中心</a>`)}
     <div class="admin-welcome card">
-      <div><span class="eyebrow">WORKSPACE</span><h2>今天要维护哪一部分？</h2><p>球队名单、球员资料和战术板可以在 Web 端直接编辑。正式比赛比分与事件继续使用现有小程序管理端。</p></div>
+      <div><span class="eyebrow">WORKSPACE</span><h2>今天要维护哪一部分？</h2><p>新增比赛、录比分、记事件、排出场阵容、维护球队名单和战术板，都已放到 Web 管理台。</p></div>
       <span class="admin-role-pill">${roleBadge(me.role)}</span>
     </div>
     <div class="admin-hub-grid">
+      ${canManageAll ? `<a class="card admin-module-card admin-module-primary" href="#/admin/fixtures?new=1"><span class="admin-module-icon">＋</span><span><strong>新增比赛</strong><small>直接创建新赛程，不用再进小程序找入口</small></span><b>立即新增 →</b></a>` : ""}
+      <a class="card admin-module-card" href="#/admin/fixtures"><span class="admin-module-icon">◫</span><span><strong>比赛管理</strong><small>编辑赛程、状态、比分、事件和出场阵容</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/admin/teams"><span class="admin-module-icon">◉</span><span><strong>球队与球员</strong><small>编辑球队资料、球员号码和状态</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/tactics"><span class="admin-module-icon">▦</span><span><strong>战术板</strong><small>自由拖拽球员，保存多个阵型方案</small></span><b>进入 →</b></a>
-      <a class="card admin-module-card" href="#/fixtures"><span class="admin-module-icon">◫</span><span><strong>浏览赛程</strong><small>查看赛程、比赛详情和出场阵容</small></span><b>查看 →</b></a>
       <a class="card admin-module-card" href="#/account"><span class="admin-module-icon">⌁</span><span><strong>账号与权限</strong><small>查看授权范围和管理工作人员网站账号</small></span><b>查看 →</b></a>
     </div>
-    <section class="card admin-note"><strong>权限说明</strong><p>管理员可管理全部数据；球队管理员可管理全部球队；领队只能编辑被授权球队。所有写操作都由后端再次校验，Web 端不会绕过小程序权限。</p></section>
+    <section class="card admin-note"><strong>权限说明</strong><p>管理员和球队管理员可新增比赛并维护全部比赛数据；领队可在比赛管理中维护被授权球队的出场阵容。所有写操作都由后端再次校验。</p></section>
   </div>`;
 }
 
@@ -1323,6 +1333,362 @@ async function renderAdminTeamsPage() {
 
   fillTeamForm(selectedTeam);
   fillPlayerForm(null);
+}
+
+
+async function renderAdminFixtureComposer() {
+  const sortedTeams = [...state.teams]
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-CN"));
+  const teamOptions = sortedTeams
+    .map((team) => `<option value="${team.id}">${esc(team.name)}</option>`)
+    .join("");
+  const awayTeamOptions = sortedTeams
+    .map((team, index) => `<option value="${team.id}" ${index === 1 ? "selected" : ""}>${esc(team.name)}</option>`)
+    .join("");
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("NEW FIXTURE", "新增比赛", `${seasonName()} · 新比赛会先保存为草稿，随后可在比赛管理中补时间和阵容。`, `<a class="button button-ghost button-small" href="#/admin/fixtures">返回比赛管理</a>`)}
+    <section class="card admin-form-card admin-create-card">
+      <div class="panel-head"><h2 class="panel-title">创建一场新比赛</h2><span class="badge no-dot badge-admin">管理员 / 球队管理员</span></div>
+      <form id="admin-create-fixture-form">
+        <div class="admin-create-intro"><strong>先填最必要的 4 项</strong><span>主队、客队、轮次和开球时间；场地与裁判可稍后补。</span></div>
+        <div class="admin-form-grid">
+          <div class="form-field"><label for="admin-create-home">主队</label><select id="admin-create-home" name="homeTeamId" required>${teamOptions}</select></div>
+          <div class="form-field"><label for="admin-create-away">客队</label><select id="admin-create-away" name="awayTeamId" required>${awayTeamOptions}</select></div>
+          <div class="form-field"><label for="admin-create-round">轮次</label><input id="admin-create-round" name="roundNo" type="number" min="1" placeholder="例如 1"></div>
+          <div class="form-field"><label for="admin-create-kickoff">开球时间</label><input id="admin-create-kickoff" name="kickoffAt" type="datetime-local"></div>
+          <div class="form-field"><label for="admin-create-venue">场地</label><input id="admin-create-venue" name="venue" maxlength="128" placeholder="例如 东操场"></div>
+          <div class="form-field"><label for="admin-create-referee">裁判</label><input id="admin-create-referee" name="referee" maxlength="64" placeholder="可稍后指定"></div>
+        </div>
+        <p class="admin-create-hint">创建后会自动打开这场比赛。若比赛暂不公开，可保持草稿；准备发布时把状态改为“未开始”。</p>
+        <div class="page-actions"><button class="button button-primary" type="submit">创建比赛</button><a class="button button-ghost" href="#/admin/fixtures">取消</a></div>
+      </form>
+    </section>
+  </div>`;
+  const form = document.getElementById("admin-create-fixture-form");
+  const homeSelect = form?.homeTeamId;
+  const awaySelect = form?.awayTeamId;
+  function avoidSameTeams(changed) {
+    if (!homeSelect || !awaySelect || homeSelect.value !== awaySelect.value) return;
+    const other = [...awaySelect.options].find((option) => option.value !== changed.value);
+    if (other) changed.value = other.value;
+  }
+  homeSelect?.addEventListener("change", () => avoidSameTeams(awaySelect));
+  awaySelect?.addEventListener("change", () => avoidSameTeams(homeSelect));
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const homeTeamId = Number(form.homeTeamId.value);
+    const awayTeamId = Number(form.awayTeamId.value);
+    if (homeTeamId === awayTeamId) {
+      notify("主队和客队不能相同");
+      return;
+    }
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    try {
+      const created = await api("/admin/fixtures", { method: "POST", body: JSON.stringify({
+        seasonId: state.seasonId,
+        stageId: null,
+        groupId: null,
+        roundNo: form.roundNo.value ? Number(form.roundNo.value) : null,
+        homeTeamId,
+        awayTeamId,
+        kickoffAt: form.kickoffAt.value || null,
+        venue: form.venue.value.trim() || null,
+        referee: form.referee.value.trim() || null,
+      })});
+      notify("比赛已创建");
+      if (created?.id) {
+        location.hash = `#/admin/fixtures?fixtureId=${created.id}`;
+        await renderAdminFixturesPage();
+      }
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+async function renderAdminFixturesPage() {
+  setTitle("比赛管理");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "请先登录管理台。")}${emptyState("请先登录", "登录后即可管理赛程、比分和阵容。", "◫")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "读取权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role === "VIEWER") {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "当前账号没有编辑权限。")}${emptyState("只读账号", "请使用管理员、球队管理员或领队账号。", "◫")}</div>`;
+    return;
+  }
+  if (!state.seasonId) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "没有可管理赛季。")}${emptyState("暂无赛季", "请先创建赛季。", "◫")}</div>`;
+    return;
+  }
+  const canManageAll = me.role === "ADMIN" || me.role === "TEAM_MANAGER";
+  if (canManageAll && param("new") === "1") {
+    await renderAdminFixtureComposer();
+    return;
+  }
+  let fixtures;
+  try {
+    const all = canManageAll
+      ? await api(`/admin/fixtures?seasonId=${encodeURIComponent(state.seasonId)}`)
+      : await api(`/fixtures?seasonId=${encodeURIComponent(state.seasonId)}`);
+    fixtures = canManageAll ? all : all.filter((fixture) => me.managedTeamIds.includes(fixture.homeTeamId) || me.managedTeamIds.includes(fixture.awayTeamId));
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "读取赛程失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (!fixtures.length) {
+    const actions = canManageAll
+      ? `<a class="button button-primary" href="#/admin/fixtures?new=1">＋ 新增第一场比赛</a><a class="button button-ghost" href="#/admin">返回管理台</a>`
+      : `<a class="button button-ghost" href="#/admin">返回管理台</a>`;
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "比赛管理", "当前没有可管理的比赛。", actions)}${emptyState("暂无比赛", canManageAll ? "直接在这里新增比赛，不用再进小程序。" : "等待管理员排定赛程。", "◫")}</div>`;
+    return;
+  }
+  let fixtureId = Number(param("fixtureId"));
+  if (!fixtures.some((item) => item.id === fixtureId)) fixtureId = fixtures[0].id;
+  let fixture = canManageAll ? await api(`/admin/fixtures/${fixtureId}`) : fixtures.find((item) => item.id === fixtureId);
+  let detail = null;
+  try { detail = await api(`/fixtures/${fixtureId}`); } catch { detail = null; }
+  const [homePlayers, awayPlayers] = await Promise.all([
+    api(`/teams/${fixture.homeTeamId}/players`).catch(() => []),
+    api(`/teams/${fixture.awayTeamId}/players`).catch(() => []),
+  ]);
+  const home = teamById(fixture.homeTeamId);
+  const away = teamById(fixture.awayTeamId);
+  const allPlayers = [...homePlayers, ...awayPlayers];
+  const playerMap = new Map(allPlayers.map((player) => [Number(player.id), player]));
+  const events = detail?.events || [];
+  const appearances = detail?.appearances || [];
+  const editableTeams = [
+    { team: home, players: homePlayers, canEdit: canManageAll || me.managedTeamIds.includes(home.id) },
+    { team: away, players: awayPlayers, canEdit: canManageAll || me.managedTeamIds.includes(away.id) },
+  ].filter((item) => item.canEdit);
+  const scoreText = fixture.homeScore != null && fixture.awayScore != null ? `${fixture.homeScore} : ${fixture.awayScore}` : "VS";
+  const kickoffValue = fixture.kickoffAt ? String(fixture.kickoffAt).slice(0, 16) : "";
+  const statusOptions = ["DRAFT", "SCHEDULED", "LIVE", "CANCELLED"];
+  const lineupEditable = !fixture.dataLocked && ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status);
+  const eventEditable = !fixture.dataLocked && ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status);
+
+  function fixtureName(team) { return team.shortName || team.name; }
+  function playerOptions(team) {
+    return (team.id === home.id ? homePlayers : awayPlayers).map((player) => `<option value="${player.id}">${esc(player.jerseyNo ? `${player.jerseyNo} ` : "")}${esc(player.name)}</option>`).join("");
+  }
+  function relatedOptions() {
+    return allPlayers.map((player) => `<option value="${player.id}">${esc(player.name)} · ${esc(teamById(player.teamId).name)}</option>`).join("");
+  }
+  function eventLabel(type) {
+    return ({ GOAL: "进球", OWN_GOAL: "乌龙球", YELLOW_CARD: "黄牌", RED_CARD: "红牌" })[type] || type;
+  }
+  function eventIcon(type) {
+    return ({ GOAL: "⚽", OWN_GOAL: "OG", YELLOW_CARD: "▰", RED_CARD: "■" })[type] || "•";
+  }
+
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("MATCHROOM", "比赛管理", `${seasonName()} · 编辑赛程、比分、事件和球队阵容。`, `${canManageAll ? `<a class="button button-primary button-small" href="#/admin/fixtures?new=1">＋ 新增比赛</a>` : ""}<a class="button button-ghost button-small" href="#/admin">返回管理台</a>`)}
+    ${canManageAll ? `<section class="card admin-quick-create"><div><span class="eyebrow">QUICK ACTION</span><h2>要新增一场比赛？</h2><p>入口就在比赛管理顶部；创建后直接进入新比赛继续补信息。</p></div><a class="button button-lime" href="#/admin/fixtures?new=1">＋ 立即新增比赛</a></section>` : ""}
+    <div class="admin-fixture-layout">
+      <aside class="card admin-team-panel">
+        <div class="panel-head"><h2 class="panel-title">比赛列表</h2><span class="badge no-dot badge-scheduled">${fixtures.length} 场</span></div>
+        <div class="admin-fixture-list">${fixtures.map((item) => `<button type="button" class="admin-fixture-button ${item.id === fixtureId ? "active" : ""}" data-fixture-id="${item.id}"><span><strong>${esc(fixtureName(teamById(item.homeTeamId)))}</strong><small>${esc(dateParts(item.kickoffAt).date)}</small></span><span class="admin-fixture-mini-score">${item.homeScore != null ? `${item.homeScore}:${item.awayScore}` : "VS"}</span><span><strong>${esc(fixtureName(teamById(item.awayTeamId)))}</strong><small>${esc(statusLabel(item.status))}</small></span></button>`).join("")}</div>
+      </aside>
+      <div class="stack">
+        <section class="card admin-match-summary">
+          <div class="admin-match-meta">${statusBadge(fixture.status)}<span>${fixture.roundNo ? `第 ${fixture.roundNo} 轮` : "比赛详情"}</span><span>${esc(dateParts(fixture.kickoffAt).full)}</span></div>
+          <div class="admin-match-scoreline"><a href="#/teams/${home.id}">${teamCrest(home, "small")}<strong>${esc(home.name)}</strong></a><b>${scoreText}</b><a href="#/teams/${away.id}"><strong>${esc(away.name)}</strong>${teamCrest(away, "small")}</a></div>
+          <div class="admin-match-meta-bottom"><span>场地 <strong>${esc(fixture.venue || "待定")}</strong></span><span>主裁 <strong>${esc(fixture.referee || "待定")}</strong></span><span>数据 <strong>${fixture.dataLocked ? "已锁定" : "可编辑"}</strong></span></div>
+        </section>
+
+        ${canManageAll ? `<section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title">赛程信息</h2><span class="badge no-dot badge-admin">管理员编辑</span></div>
+          <form id="admin-fixture-schedule-form">
+            <div class="admin-form-grid">
+              <div class="form-field"><label for="admin-fixture-home">主队</label><select id="admin-fixture-home" name="homeTeamId">${state.teams.map((team) => `<option value="${team.id}" ${team.id === fixture.homeTeamId ? "selected" : ""}>${esc(team.name)}</option>`).join("")}</select></div>
+              <div class="form-field"><label for="admin-fixture-away">客队</label><select id="admin-fixture-away" name="awayTeamId">${state.teams.map((team) => `<option value="${team.id}" ${team.id === fixture.awayTeamId ? "selected" : ""}>${esc(team.name)}</option>`).join("")}</select></div>
+              <div class="form-field"><label for="admin-fixture-round">轮次</label><input id="admin-fixture-round" name="roundNo" type="number" min="1" value="${fixture.roundNo || ""}"></div>
+              <div class="form-field"><label for="admin-fixture-kickoff">开球时间</label><input id="admin-fixture-kickoff" name="kickoffAt" type="datetime-local" value="${esc(kickoffValue)}"></div>
+              <div class="form-field"><label for="admin-fixture-venue">场地</label><input id="admin-fixture-venue" name="venue" maxlength="128" value="${esc(fixture.venue || "")}"></div>
+              <div class="form-field"><label for="admin-fixture-referee">裁判</label><input id="admin-fixture-referee" name="referee" maxlength="64" value="${esc(fixture.referee || "")}"></div>
+            </div>
+            <div class="page-actions"><button class="button button-primary button-small" type="submit">保存赛程</button></div>
+          </form>
+        </section>
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title">比分与状态</h2><span class="badge no-dot ${fixture.dataLocked ? "badge-cancelled" : "badge-live"}">${fixture.dataLocked ? "数据已锁定" : "可编辑"}</span></div>
+          <form id="admin-fixture-score-form">
+            <div class="admin-form-grid admin-score-grid">
+              <div class="form-field"><label for="admin-score-home">主队比分</label><input id="admin-score-home" type="number" min="0" value="${fixture.homeScore ?? ""}" ${!lineupEditable ? "disabled" : ""}></div>
+              <div class="form-field"><label for="admin-score-away">客队比分</label><input id="admin-score-away" type="number" min="0" value="${fixture.awayScore ?? ""}" ${!lineupEditable ? "disabled" : ""}></div>
+              <div class="form-field"><label for="admin-penalty-home">主队点球</label><input id="admin-penalty-home" type="number" min="0" value="${fixture.homePenaltyScore ?? ""}" ${!lineupEditable ? "disabled" : ""}></div>
+              <div class="form-field"><label for="admin-penalty-away">客队点球</label><input id="admin-penalty-away" type="number" min="0" value="${fixture.awayPenaltyScore ?? ""}" ${!lineupEditable ? "disabled" : ""}></div>
+            </div>
+            <div class="page-actions"><button class="button button-primary button-small" type="submit" ${!lineupEditable ? "disabled" : ""}>保存比分</button><button class="button button-ghost button-small" type="button" id="admin-finish-fixture" ${fixture.status !== "LIVE" || fixture.dataLocked ? "disabled" : ""}>完赛并锁定</button>${fixture.dataLocked ? `<button class="button button-danger button-small" type="button" id="admin-unlock-fixture">解锁数据</button>` : ""}</div>
+          </form>
+          ${fixture.status !== "FINISHED" ? `<form id="admin-status-form" style="margin-top:18px"><div class="admin-inline-form"><label for="admin-fixture-status">比赛状态</label><select id="admin-fixture-status">${statusOptions.map((status) => `<option value="${status}" ${fixture.status === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}</select><button class="button button-ghost button-small" type="submit">更新状态</button></div></form>` : ""}
+        </section>` : `<section class="card panel"><div class="admin-locked-note"><strong>领队模式</strong><p>你可以查看比赛并编辑自己球队的出场阵容。比分、状态和比赛事件仍由管理员或球队管理员维护。</p></div></section>`}
+
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title">比赛事件</h2><span class="badge no-dot badge-scheduled">${events.length} 条</span></div>
+          ${events.length ? `<div class="admin-event-list">${events.slice().sort((a, b) => a.minute - b.minute).map((event) => `<div class="admin-event-row"><span class="event-minute">${event.minute}${event.stoppageMinute ? `+${event.stoppageMinute}` : ""}'</span><span class="event-icon">${eventIcon(event.eventType)}</span><span class="admin-event-copy"><strong>${esc(eventLabel(event.eventType))} · ${esc(playerMap.get(Number(event.playerId))?.name || `球员 #${event.playerId}`)}</strong><small>${esc(teamById(event.teamId).name)}${event.relatedPlayerId ? ` · 助攻 ${esc(playerMap.get(Number(event.relatedPlayerId))?.name || `球员 #${event.relatedPlayerId}`)}` : ""}${event.note ? ` · ${esc(event.note)}` : ""}</small></span>${canManageAll && eventEditable ? `<button class="button button-danger button-small" type="button" data-delete-event="${event.id}">删除</button>` : ""}</div>`).join("")}</div>` : emptyState("暂无比赛事件", "比赛开始后可以录入进球、助攻和红黄牌。", "○")}
+          ${canManageAll && !eventEditable ? `<p class="admin-locked-note">${fixture.dataLocked ? "比赛数据已锁定，解锁后才能维护事件。" : "比赛仍是草稿，先把状态改为“未开始”后才能录入事件。"}</p>` : ""}
+          ${canManageAll && eventEditable ? `<form id="admin-event-form" class="admin-event-form"><div class="admin-form-grid"><div class="form-field"><label for="admin-event-team">事件球队</label><select id="admin-event-team"><option value="${home.id}">${esc(home.name)}</option><option value="${away.id}">${esc(away.name)}</option></select></div><div class="form-field"><label for="admin-event-player">球员</label><select id="admin-event-player">${playerOptions(home)}</select></div><div class="form-field"><label for="admin-event-type">事件类型</label><select id="admin-event-type"><option value="GOAL">进球</option><option value="OWN_GOAL">乌龙球</option><option value="YELLOW_CARD">黄牌</option><option value="RED_CARD">红牌</option></select></div><div class="form-field"><label for="admin-event-related">助攻球员</label><select id="admin-event-related"><option value="">无</option>${relatedOptions()}</select></div><div class="form-field"><label for="admin-event-minute">分钟</label><input id="admin-event-minute" type="number" min="1" max="130" required></div><div class="form-field"><label for="admin-event-stoppage">补时</label><input id="admin-event-stoppage" type="number" min="0" max="30" value="0"></div><div class="form-field admin-form-wide"><label for="admin-event-note">备注</label><input id="admin-event-note" maxlength="255" placeholder="可选"></div></div><div class="page-actions"><button class="button button-primary button-small" type="submit">添加事件</button></div></form>` : ""}
+        </section>
+
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title">出场阵容</h2><span class="badge no-dot badge-scheduled">${appearances.length} 人</span></div>
+          ${!lineupEditable ? `<p class="admin-locked-note">${fixture.dataLocked ? "比赛数据已锁定，解锁后才能修改阵容。" : "比赛仍是草稿，先把状态改为“未开始”后才能维护阵容。"}</p>` : ""}
+          <div class="admin-lineup-grid">${editableTeams.map((entry) => `<div class="admin-lineup-team" data-lineup-team="${entry.team.id}"><div class="admin-lineup-team-head"><strong>${esc(entry.team.name)}</strong><button class="button button-primary button-small" type="button" data-save-lineup="${entry.team.id}" ${!lineupEditable ? "disabled" : ""}>保存${esc(entry.team.shortName || entry.team.name)}阵容</button></div><div class="admin-lineup-list">${entry.players.length ? entry.players.map((player) => { const appearance = appearances.find((item) => Number(item.teamId) === entry.team.id && Number(item.playerId) === Number(player.id)); const status = appearance?.starter ? "starter" : appearance ? "substitute" : "none"; return `<div class="admin-lineup-row"><span class="jersey">${esc(player.jerseyNo || "-")}</span><span class="admin-lineup-player"><strong>${esc(player.name)}</strong><small>${esc(player.position || "位置待补")}</small></span><select data-lineup-status data-player-id="${player.id}" ${!lineupEditable ? "disabled" : ""}><option value="none" ${status === "none" ? "selected" : ""}>未选</option><option value="starter" ${status === "starter" ? "selected" : ""}>首发</option><option value="substitute" ${status === "substitute" ? "selected" : ""}>替补</option></select><input data-lineup-minutes data-player-id="${player.id}" type="number" min="0" max="130" value="${appearance?.minutesPlayed ?? ""}" placeholder="分钟" ${!lineupEditable ? "disabled" : ""}></div>`; }).join("") : `<div class="tactic-plan-empty">暂无球员，请先在球队与球员中维护名单</div>`}</div></div>`).join("")}</div>
+          ${editableTeams.length === 0 ? emptyState("没有可编辑阵容", "你当前没有该比赛双方球队的带队权限。", "○") : ""}
+        </section>
+      </div>
+    </div>
+  </div>`;
+
+  const scheduleForm = document.getElementById("admin-fixture-schedule-form");
+  const scoreForm = document.getElementById("admin-fixture-score-form");
+  const statusForm = document.getElementById("admin-status-form");
+  const eventForm = document.getElementById("admin-event-form");
+  const eventTeam = document.getElementById("admin-event-team");
+  const eventPlayer = document.getElementById("admin-event-player");
+
+  document.querySelector(".admin-fixture-list")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-fixture-id]");
+    if (!button) return;
+    location.hash = `#/admin/fixtures?fixtureId=${button.dataset.fixtureId}`;
+    renderAdminFixturesPage();
+  });
+
+  scheduleForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    try {
+      await api(`/admin/fixtures/${fixtureId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          seasonId: fixture.seasonId,
+          stageId: fixture.stageId,
+          groupId: fixture.groupId,
+          roundNo: form.roundNo.value ? Number(form.roundNo.value) : null,
+          homeTeamId: Number(form.homeTeamId.value),
+          awayTeamId: Number(form.awayTeamId.value),
+          kickoffAt: form.kickoffAt.value || null,
+          venue: form.venue.value.trim() || null,
+          referee: form.referee.value.trim() || null,
+        }),
+      });
+      notify("赛程已保存");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  scoreForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const homeScore = Number(document.getElementById("admin-score-home").value);
+    const awayScore = Number(document.getElementById("admin-score-away").value);
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) { notify("请填写完整比分"); return; }
+    try {
+      await api(`/admin/fixtures/${fixtureId}/score`, { method: "PUT", body: JSON.stringify({
+        homeScore, awayScore,
+        homePenaltyScore: document.getElementById("admin-penalty-home").value ? Number(document.getElementById("admin-penalty-home").value) : null,
+        awayPenaltyScore: document.getElementById("admin-penalty-away").value ? Number(document.getElementById("admin-penalty-away").value) : null,
+      })});
+      notify("比分已保存");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  document.getElementById("admin-finish-fixture")?.addEventListener("click", async () => {
+    const homeScore = Number(document.getElementById("admin-score-home").value);
+    const awayScore = Number(document.getElementById("admin-score-away").value);
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || !window.confirm("确认完赛并锁定数据？完成后需要解锁才能修改。")) return;
+    try {
+      await api(`/admin/fixtures/${fixtureId}/finish`, { method: "POST", body: JSON.stringify({
+        homeScore, awayScore,
+        homePenaltyScore: document.getElementById("admin-penalty-home").value ? Number(document.getElementById("admin-penalty-home").value) : null,
+        awayPenaltyScore: document.getElementById("admin-penalty-away").value ? Number(document.getElementById("admin-penalty-away").value) : null,
+      })});
+      notify("比赛已完赛并锁定");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  document.getElementById("admin-unlock-fixture")?.addEventListener("click", async () => {
+    if (!window.confirm("确认解锁这场比赛的数据？")) return;
+    try {
+      await api(`/admin/fixtures/${fixtureId}/lock`, { method: "PUT", body: JSON.stringify({ locked: false }) });
+      notify("比赛数据已解锁");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  statusForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await api(`/admin/fixtures/${fixtureId}/status`, { method: "PUT", body: JSON.stringify({ status: document.getElementById("admin-fixture-status").value }) });
+      notify("比赛状态已更新");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  eventTeam?.addEventListener("change", () => {
+    eventPlayer.innerHTML = playerOptions(eventTeam.value === String(home.id) ? home : away);
+  });
+
+  eventForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      const teamId = Number(eventTeam.value);
+      await api(`/manage/fixtures/${fixtureId}/events`, { method: "POST", body: JSON.stringify({
+        teamId,
+        playerId: Number(eventPlayer.value),
+        eventType: document.getElementById("admin-event-type").value,
+        relatedPlayerId: document.getElementById("admin-event-related").value ? Number(document.getElementById("admin-event-related").value) : null,
+        minute: Number(document.getElementById("admin-event-minute").value),
+        stoppageMinute: Number(document.getElementById("admin-event-stoppage").value || 0),
+        note: document.getElementById("admin-event-note").value.trim() || null,
+      })});
+      notify("比赛事件已添加");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  });
+
+  document.querySelectorAll("[data-delete-event]").forEach((button) => button.addEventListener("click", async () => {
+    if (!window.confirm("确认删除这条比赛事件？")) return;
+    try {
+      await api(`/manage/events/${button.dataset.deleteEvent}`, { method: "DELETE" });
+      notify("比赛事件已删除");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  }));
+
+  document.querySelectorAll("[data-save-lineup]").forEach((button) => button.addEventListener("click", async () => {
+    const teamId = Number(button.dataset.saveLineup);
+    const container = document.querySelector(`[data-lineup-team="${teamId}"]`);
+    const starters = [];
+    const substitutes = [];
+    container.querySelectorAll("[data-lineup-status]").forEach((select) => {
+      const playerId = Number(select.dataset.playerId);
+      if (select.value === "starter") starters.push(playerId);
+      if (select.value === "substitute") {
+        const minutes = container.querySelector(`[data-lineup-minutes][data-player-id="${playerId}"]`)?.value;
+        substitutes.push({ playerId, minutesPlayed: minutes ? Number(minutes) : null });
+      }
+    });
+    try {
+      await api(`/manage/fixtures/${fixtureId}/teams/${teamId}/appearances`, { method: "PUT", body: JSON.stringify({ starters, substitutes }) });
+      notify("阵容已保存");
+      await renderAdminFixturesPage();
+    } catch (error) { notify(error.message); }
+  }));
 }
 
 
