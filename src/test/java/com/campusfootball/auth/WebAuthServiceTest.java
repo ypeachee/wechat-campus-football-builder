@@ -65,11 +65,41 @@ class WebAuthServiceTest {
                         error -> assertThat(error.getStatus().value()).isEqualTo(403));
     }
 
+    @Test
+    void disabledUserIsRejected() {
+        AppUser user = user(UserRole.ADMIN, passwordEncoder.encode("strong-pass"));
+        user.setStatus(UserStatus.DISABLED);
+        when(appUserMapper.findByWebUsername("admin")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.login("admin", "strong-pass"))
+                .isInstanceOfSatisfying(AppException.class,
+                        error -> assertThat(error.getStatus().value()).isEqualTo(401));
+    }
+
+    @Test
+    void userWithNullPasswordHashIsRejected() {
+        AppUser user = user(UserRole.ADMIN, null);
+        when(appUserMapper.findByWebUsername("admin")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.login("admin", "any-password"))
+                .isInstanceOfSatisfying(AppException.class,
+                        error -> assertThat(error.getStatus().value()).isEqualTo(401));
+    }
+
+    @Test
+    void unknownUsernameReturnsUnauthorized() {
+        when(appUserMapper.findByWebUsername("unknown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.login("unknown", "any-password"))
+                .isInstanceOfSatisfying(AppException.class,
+                        error -> assertThat(error.getStatus().value()).isEqualTo(401));
+    }
+
     private AppUser user(UserRole role, String passwordHash) {
         AppUser user = new AppUser();
         user.setId(11L);
         user.setNickname("测试工作人员");
-        user.setWebUsername("team-leader");
+        user.setWebUsername("test-user");
         user.setWebPasswordHash(passwordHash);
         user.setRoleCode(role);
         user.setStatus(UserStatus.ACTIVE);

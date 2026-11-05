@@ -142,7 +142,10 @@ openssl rand -base64 48
 
 - `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 必须是同一个微信小程序。
 - `AppSecret` 只能放在服务器，不要写进小程序。
-- 首次不知道 `ADMIN_WECHAT_OPENID` 时可以先留空，登录一次后再从数据库查出并回填。`WEB_ADMIN_PASSWORD` 必须是强密码，网站账号会在 API 启动时自动创建或更新。
+- 首次不知道 `ADMIN_WECHAT_OPENID` 时可以先留空，登录一次后从数据库查出并回填。`WEB_ADMIN_PASSWORD` 必须是强密码（8-72 UTF-8 字节），网站账号会在 API 启动时自动创建。
+- `WEB_ADMIN_USERNAME` 必须为 3-64 个字符，超长用户名会被拒绝。
+- `TRUST_FORWARDED_HEADERS` 在生产 Compose 中默认为 `true`，因为 API 只通过 Caddy 暴露。如果直接暴露 API 端口 8080，必须设为 `false` 以防止 XFF 伪造。
+- `WEB_ADMIN_RESET_PASSWORD` 仅在需要重置管理员密码时临时设为 `true`，重置后必须恢复为 `false`，否则每次启动都会覆盖密码。
 
 ## 6. 启动服务
 

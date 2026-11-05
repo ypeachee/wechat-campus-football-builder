@@ -32,10 +32,12 @@ app:
     admin-openid: ${ADMIN_WECHAT_OPENID:}
     web-admin-username: ${WEB_ADMIN_USERNAME:}
     web-admin-password: ${WEB_ADMIN_PASSWORD:}
+    web-admin-reset-password: ${WEB_ADMIN_RESET_PASSWORD:false}
   notifications:
     scheduled-enabled: ${NOTIFICATION_SCHEDULER_ENABLED:true}
   rate-limit:
     enabled: ${RATE_LIMIT_ENABLED:true}
+    trust-forwarded-headers: ${TRUST_FORWARDED_HEADERS:false}
     login-per-minute: ${RATE_LIMIT_LOGIN_PER_MINUTE:8}
     rating-per-minute: ${RATE_LIMIT_RATING_PER_MINUTE:20}
     report-per-ten-minutes: ${RATE_LIMIT_REPORT_PER_TEN_MINUTES:5}

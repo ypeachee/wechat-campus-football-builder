@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.rate-limit")
 public class RateLimitProperties {
     private boolean enabled = true;
+    private boolean trustForwardedHeaders = false;
     private int loginPerMinute = 8;
     private int ratingPerMinute = 20;
     private int reportPerTenMinutes = 5;
@@ -13,6 +14,8 @@ public class RateLimitProperties {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public boolean isTrustForwardedHeaders() { return trustForwardedHeaders; }
+    public void setTrustForwardedHeaders(boolean trustForwardedHeaders) { this.trustForwardedHeaders = trustForwardedHeaders; }
     public int getLoginPerMinute() { return loginPerMinute; }
     public void setLoginPerMinute(int loginPerMinute) { this.loginPerMinute = loginPerMinute; }
     public int getRatingPerMinute() { return ratingPerMinute; }

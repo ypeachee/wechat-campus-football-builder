@@ -12,7 +12,9 @@ app:
     admin-openid: openid-admin
     web-admin-username: web-admin
     web-admin-password: test-web-password
+    web-admin-reset-password: false
   rate-limit:
     enabled: false
+    trust-forwarded-headers: false
   notifications:
     scheduled-enabled: false

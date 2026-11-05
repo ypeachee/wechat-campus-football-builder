@@ -66,9 +66,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private Rule ruleFor(String method, String path) {
-        if ("POST".equals(method) && ("/api/v1/auth/wechat-login".equals(path)
-                || "/api/v1/auth/web-login".equals(path))) {
+        if ("POST".equals(method) && "/api/v1/auth/wechat-login".equals(path)) {
             return new Rule("wechat-login", properties.getLoginPerMinute(), Duration.ofMinutes(1));
+        }
+        if ("POST".equals(method) && "/api/v1/auth/web-login".equals(path)) {
+            return new Rule("web-login", properties.getLoginPerMinute(), Duration.ofMinutes(1));
         }
         if ("PUT".equals(method)
                 && (matches(path, "/api/v1/fixtures/\\d+/players/\\d+/rating")
@@ -104,9 +106,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (authorization != null && !authorization.isBlank()) {
             return "token-" + sha256(authorization);
         }
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return "ip-" + forwarded.split(",", 2)[0].trim();
+        if (properties.isTrustForwardedHeaders()) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return "ip-" + forwarded.split(",", 2)[0].trim();
+            }
         }
         return "ip-" + request.getRemoteAddr();
     }
