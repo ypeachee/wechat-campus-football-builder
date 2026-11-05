@@ -30,6 +30,8 @@ app:
     code-env-version: ${WECHAT_CODE_ENV_VERSION:release}
   bootstrap:
     admin-openid: ${ADMIN_WECHAT_OPENID:}
+    web-admin-username: ${WEB_ADMIN_USERNAME:}
+    web-admin-password: ${WEB_ADMIN_PASSWORD:}
   notifications:
     scheduled-enabled: ${NOTIFICATION_SCHEDULER_ENABLED:true}
   rate-limit:

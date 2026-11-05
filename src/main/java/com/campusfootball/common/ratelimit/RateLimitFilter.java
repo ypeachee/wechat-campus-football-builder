@@ -66,7 +66,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private Rule ruleFor(String method, String path) {
-        if ("POST".equals(method) && "/api/v1/auth/wechat-login".equals(path)) {
+        if ("POST".equals(method) && ("/api/v1/auth/wechat-login".equals(path)
+                || "/api/v1/auth/web-login".equals(path))) {
             return new Rule("wechat-login", properties.getLoginPerMinute(), Duration.ofMinutes(1));
         }
         if ("PUT".equals(method)
@@ -122,3 +123,4 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private record Rule(String scope, int limit, Duration window) {
     }
 }
+

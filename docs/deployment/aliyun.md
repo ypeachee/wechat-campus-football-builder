@@ -128,6 +128,8 @@ JWT_SECRET
 WECHAT_APP_ID
 WECHAT_APP_SECRET
 ADMIN_WECHAT_OPENID
+WEB_ADMIN_USERNAME
+WEB_ADMIN_PASSWORD
 ```
 
 生成随机密钥：
@@ -140,7 +142,7 @@ openssl rand -base64 48
 
 - `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 必须是同一个微信小程序。
 - `AppSecret` 只能放在服务器，不要写进小程序。
-- 首次不知道 `ADMIN_WECHAT_OPENID` 时可以先留空，登录一次后再从数据库查出并回填。
+- 首次不知道 `ADMIN_WECHAT_OPENID` 时可以先留空，登录一次后再从数据库查出并回填。`WEB_ADMIN_PASSWORD` 必须是强密码，网站账号会在 API 启动时自动创建或更新。
 
 ## 6. 启动服务
 

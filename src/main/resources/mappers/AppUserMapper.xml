@@ -7,6 +7,8 @@
         <result property="unionid" column="unionid"/>
         <result property="nickname" column="nickname"/>
         <result property="avatarUrl" column="avatar_url"/>
+        <result property="webUsername" column="web_username"/>
+        <result property="webPasswordHash" column="web_password_hash"/>
         <result property="roleCode" column="role_code"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
@@ -21,12 +23,19 @@
         SELECT * FROM app_user WHERE id = #{id}
     </select>
 
+    <select id="findByWebUsername" resultMap="AppUserMap">
+        SELECT * FROM app_user WHERE web_username = #{username} LIMIT 1
+    </select>
+
     <select id="searchForManagement" resultMap="AppUserMap">
-        SELECT id, wechat_openid, unionid, nickname, avatar_url, role_code, status, created_at, updated_at
+        SELECT id, wechat_openid, unionid, nickname, avatar_url, web_username,
+               role_code, status, created_at, updated_at
         FROM app_user
         WHERE status = 'ACTIVE'
         <if test="query != null and query != ''">
-            AND (CAST(id AS CHAR) = #{query} OR nickname LIKE CONCAT('%', #{query}, '%'))
+            AND (CAST(id AS CHAR) = #{query}
+                 OR nickname LIKE CONCAT('%', #{query}, '%')
+                 OR web_username LIKE CONCAT('%', #{query}, '%'))
         </if>
         ORDER BY
         <if test="query != null and query != ''">
@@ -45,6 +54,7 @@
         WHERE status = 'ACTIVE' AND role_code = #{role}
         ORDER BY id
     </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO app_user (wechat_openid, unionid, nickname, avatar_url, role_code, status)
         VALUES (#{wechatOpenid}, #{unionid}, #{nickname}, #{avatarUrl}, #{roleCode}, #{status})
@@ -62,6 +72,14 @@
             <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
             updated_at = CURRENT_TIMESTAMP
         </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateWebCredentials">
+        UPDATE app_user
+        SET web_username = #{username},
+            web_password_hash = #{passwordHash},
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 </mapper>

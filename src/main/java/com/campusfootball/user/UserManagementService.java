@@ -23,10 +23,11 @@ public class UserManagementService {
         }
         return appUserMapper.searchForManagement(normalized, 20).stream()
                 .map(user -> new UserSearchResponse(user.getId(), user.getNickname(),
-                        user.getRoleCode(), user.getStatus()))
+                        user.getWebUsername(), user.getRoleCode(), user.getStatus()))
                 .toList();
     }
 
-    public record UserSearchResponse(long id, String nickname, UserRole role, UserStatus status) {
+    public record UserSearchResponse(long id, String nickname, String webUsername,
+                                     UserRole role, UserStatus status) {
     }
 }

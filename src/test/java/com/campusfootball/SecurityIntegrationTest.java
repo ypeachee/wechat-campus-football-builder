@@ -52,4 +52,14 @@ class SecurityIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.role").value("VIEWER"))
                 .andExpect(jsonPath("$.userId").isNumber());
     }
+
+    @Test
+    void publicWebAppAndAssetsAreAccessibleWithoutToken() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/assets/app.js"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/assets/styles.css"))
+                .andExpect(status().isOk());
+    }
 }

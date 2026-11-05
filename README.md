@@ -61,9 +61,11 @@ $env:JWT_SECRET='replace-with-a-secret-at-least-32-bytes-long'
 $env:WECHAT_APP_ID=''
 $env:WECHAT_APP_SECRET=''
 $env:ADMIN_WECHAT_OPENID=''
+$env:WEB_ADMIN_USERNAME='admin'
+$env:WEB_ADMIN_PASSWORD='replace-with-a-strong-password'
 ```
 
-`ADMIN_WECHAT_OPENID` 用于首次启动时初始化联赛管理员。生产环境必须替换 JWT 密钥并通过受控部署流程配置管理员 openid。
+`ADMIN_WECHAT_OPENID` 用于首次启动时初始化小程序超级管理员；`WEB_ADMIN_USERNAME` / `WEB_ADMIN_PASSWORD` 用于创建网站超级管理员账号。生产环境必须替换 JWT 密钥并使用强密码。
 
 ## 运行
 
@@ -172,6 +174,43 @@ $env:TEST_DB_PASSWORD='campus'
 
 小程序内消息中心支持比赛开始、阵容确认、球员停赛和评分审核提醒，按用户隔离并支持未读状态。比赛提醒在用户打开消息中心时按未来 24 小时赛程生成，并通过唯一键避免重复。
 
+## Web 网站 MVP
+
+网站版与小程序共用一个 Spring Boot 服务，前端静态资源位于 `src/main/resources/static/`，默认访问：
+
+```text
+http://127.0.0.1:8080/
+```
+
+已实现页面：
+
+- 首页与赛季概览
+- 赛程列表、比赛详情、事件与出场阵容
+- 积分榜
+- 射手榜、助攻榜
+- 球队列表、球队详情与球员名单
+- 球员详情与赛季数据
+- 管理员/球队管理员/领队网站登录入口
+- 超级管理员为球队工作人员配置网站账号
+
+网站公开页面直接复用现有公开 API，不需要额外后端聚合接口。Web 登录使用账号密码 + BCrypt + 现有 JWT：
+
+```text
+POST /api/v1/auth/web-login
+PUT  /api/v1/admin/users/{userId}/web-credentials
+```
+
+首次启动时，如果配置了以下环境变量，会自动创建或重置超级管理员网站账号：
+
+```text
+WEB_ADMIN_USERNAME
+WEB_ADMIN_PASSWORD
+```
+
+生产环境必须使用强密码，并妥善保管 `JWT_SECRET`。领队和球队管理员账号由超级管理员在小程序确认用户 ID 后，通过 Web 账号中心的配置表单或上述管理 API 开通。
+
+网站使用 Hash 路由，无需额外配置 Nginx/Caddy 的 SPA 回退规则；静态页面与 API 由同一个域名提供。
+
 ## 微信小程序
 
 前端子工程位于 `miniprogram/`，包含公开浏览、微信登录、角色门禁和管理端页面。
@@ -239,3 +278,4 @@ npm run verify
 - `WECHAT_CODE_ENV_VERSION` 控制小程序码版本，可设为 `develop`、`trial` 或 `release`
 
 当前体验阶段使用 `trial`；正式发布后改为 `release`。
+

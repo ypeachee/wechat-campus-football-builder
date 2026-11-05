@@ -10,6 +10,8 @@ app:
     app-secret: test-app-secret
   bootstrap:
     admin-openid: openid-admin
+    web-admin-username: web-admin
+    web-admin-password: test-web-password
   rate-limit:
     enabled: false
   notifications:

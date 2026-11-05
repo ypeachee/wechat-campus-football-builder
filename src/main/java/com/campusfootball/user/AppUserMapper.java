@@ -12,6 +12,8 @@ public interface AppUserMapper {
 
     Optional<AppUser> findById(@Param("id") long id);
 
+    Optional<AppUser> findByWebUsername(@Param("username") String username);
+
     List<AppUser> searchForManagement(@Param("query") String query, @Param("limit") int limit);
 
     List<Long> findActiveIds();
@@ -26,4 +28,8 @@ public interface AppUserMapper {
                       @Param("unionid") String unionid,
                       @Param("nickname") String nickname,
                       @Param("avatarUrl") String avatarUrl);
+
+    int updateWebCredentials(@Param("id") long id,
+                             @Param("username") String username,
+                             @Param("passwordHash") String passwordHash);
 }

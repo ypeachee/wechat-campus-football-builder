@@ -8,6 +8,8 @@ public class AppUser {
     private String unionid;
     private String nickname;
     private String avatarUrl;
+    private String webUsername;
+    private String webPasswordHash;
     private UserRole roleCode;
     private UserStatus status;
     private LocalDateTime createdAt;
@@ -23,6 +25,10 @@ public class AppUser {
     public void setNickname(String nickname) { this.nickname = nickname; }
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getWebUsername() { return webUsername; }
+    public void setWebUsername(String webUsername) { this.webUsername = webUsername; }
+    public String getWebPasswordHash() { return webPasswordHash; }
+    public void setWebPasswordHash(String webPasswordHash) { this.webPasswordHash = webPasswordHash; }
     public UserRole getRoleCode() { return roleCode; }
     public void setRoleCode(UserRole roleCode) { this.roleCode = roleCode; }
     public UserStatus getStatus() { return status; }

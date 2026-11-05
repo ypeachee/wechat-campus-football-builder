@@ -9,6 +9,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -27,6 +29,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -36,7 +43,10 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/wechat-login").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/auth/wechat-login", "/api/v1/auth/web-login").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/", "/index.html", "/assets/**", "/favicon.svg").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/fixtures/*/players/*/rating/me",
                                 "/api/v1/fixtures/*/referee-rating/me").authenticated()
@@ -47,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/seasons", "/api/v1/teams/**", "/api/v1/players/**",
                                 "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**",
-                                "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**", "/api/v1/brackets").permitAll()
+                                "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**",
+                                "/api/v1/brackets").permitAll()
                         .requestMatchers("/api/v1/me", "/api/v1/notifications/**").authenticated()
                         .requestMatchers("/api/v1/admin/ratings/**", "/api/v1/admin/sensitive-terms/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/manage/audit-logs").hasRole("ADMIN")
