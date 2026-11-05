@@ -73,8 +73,8 @@ function updateAuthHeader() {
   const role = state.session?.role;
   if (role) {
     authEntry.classList.add("is-logged-in");
-    authEntry.href = "#/account";
-    authEntryLabel.textContent = state.session.nickname || roleLabel(role);
+    authEntry.href = "#/admin";
+    authEntryLabel.textContent = "管理台";
   } else {
     authEntry.classList.remove("is-logged-in");
     authEntry.href = "#/login";
@@ -363,6 +363,16 @@ async function renderRoute() {
     if (path.startsWith("/players/") && parts.length === 2) {
       setActiveNav("teams");
       await renderPlayerDetail(parts[1]);
+      return;
+    }
+    if (path === "/admin") {
+      setActiveNav("admin");
+      await renderAdminHub();
+      return;
+    }
+    if (path === "/admin/teams") {
+      setActiveNav("admin");
+      await renderAdminTeamsPage();
       return;
     }
     if (path === "/tactics") {
@@ -1070,6 +1080,251 @@ function setupUserSearch() {
     searchInput.focus();
   });
 }
+
+async function renderAdminHub() {
+  setTitle("管理台");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "管理台", "登录后进入球队、球员和战术板管理。")}${emptyState("请先登录", "管理台仅对管理员、球队管理员和领队开放。", "▦")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "管理台", "读取权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role === "VIEWER") {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "管理台", "当前账号没有编辑权限。")}${emptyState("只读账号", "请使用管理员、球队管理员或领队账号登录。", "▦")}</div>`;
+    return;
+  }
+  const teamScope = me.role === "ADMIN" || me.role === "TEAM_MANAGER" ? "全部球队" : `${me.managedTeamIds.length} 支授权球队`;
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("MANAGEMENT", "管理台", `当前身份：${roleLabel(me.role)} · 可管理范围：${teamScope}`, `<a class="button button-ghost button-small" href="#/account">账号中心</a>`)}
+    <div class="admin-welcome card">
+      <div><span class="eyebrow">WORKSPACE</span><h2>今天要维护哪一部分？</h2><p>球队名单、球员资料和战术板可以在 Web 端直接编辑。正式比赛比分与事件继续使用现有小程序管理端。</p></div>
+      <span class="admin-role-pill">${roleBadge(me.role)}</span>
+    </div>
+    <div class="admin-hub-grid">
+      <a class="card admin-module-card" href="#/admin/teams"><span class="admin-module-icon">◉</span><span><strong>球队与球员</strong><small>编辑球队资料、球员号码和状态</small></span><b>进入 →</b></a>
+      <a class="card admin-module-card" href="#/tactics"><span class="admin-module-icon">▦</span><span><strong>战术板</strong><small>自由拖拽球员，保存多个阵型方案</small></span><b>进入 →</b></a>
+      <a class="card admin-module-card" href="#/fixtures"><span class="admin-module-icon">◫</span><span><strong>浏览赛程</strong><small>查看赛程、比赛详情和出场阵容</small></span><b>查看 →</b></a>
+      <a class="card admin-module-card" href="#/account"><span class="admin-module-icon">⌁</span><span><strong>账号与权限</strong><small>查看授权范围和管理工作人员网站账号</small></span><b>查看 →</b></a>
+    </div>
+    <section class="card admin-note"><strong>权限说明</strong><p>管理员可管理全部数据；球队管理员可管理全部球队；领队只能编辑被授权球队。所有写操作都由后端再次校验，Web 端不会绕过小程序权限。</p></section>
+  </div>`;
+}
+
+async function renderAdminTeamsPage() {
+  setTitle("球队与球员管理");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "请先登录管理台。")}${emptyState("请先登录", "登录后即可编辑球队和球员资料。", "◉")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "读取权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role === "VIEWER") {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "当前账号没有编辑权限。")}${emptyState("只读账号", "请使用管理员、球队管理员或领队账号。", "◉")}</div>`;
+    return;
+  }
+  const canManageAll = me.role === "ADMIN" || me.role === "TEAM_MANAGER";
+  let teams;
+  try {
+    teams = canManageAll ? await api("/admin/teams") : state.teams.filter((team) => me.managedTeamIds.includes(team.id));
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "读取球队失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (!teams.length) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "当前账号没有可管理球队。")}${emptyState("暂无可编辑球队", "请联系超级管理员配置球队授权。", "◉")}<div class="page-actions" style="margin-top:18px"><a class="button button-ghost" href="#/admin">返回管理台</a></div></div>`;
+    return;
+  }
+  let selectedTeamId = Number(param("teamId"));
+  if (!teams.some((team) => team.id === selectedTeamId)) selectedTeamId = teams[0].id;
+  let selectedTeam = teams.find((team) => team.id === selectedTeamId);
+  let creatingTeam = false;
+  let players = [];
+  let selectedPlayer = null;
+  try {
+    players = await api(canManageAll ? `/admin/teams/${selectedTeamId}/players` : `/manage/teams/${selectedTeamId}/players`);
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "球队与球员", "读取球员名单失败。")}${errorState(error)}<div class="page-actions" style="margin-top:18px"><a class="button button-ghost" href="#/admin">返回管理台</a></div></div>`;
+    return;
+  }
+
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("MANAGEMENT", "球队与球员", "编辑球队资料和球员名单；所有修改会写入现有赛事数据库并记录审计。", `<a class="button button-ghost button-small" href="#/admin">返回管理台</a>`)}
+    <div class="admin-teams-layout">
+      <aside class="card admin-team-panel">
+        <div class="panel-head"><h2 class="panel-title">球队</h2>${canManageAll ? `<button class="button button-ghost button-small" type="button" id="admin-new-team">新建</button>` : ""}</div>
+        <div class="admin-team-list" id="admin-team-list">${teams.map((team) => `<button type="button" class="admin-team-button ${team.id === selectedTeamId ? "active" : ""}" data-team-id="${team.id}"><span>${esc(team.name)}</span><small>${esc(team.shortName || "未设置简称")}</small></button>`).join("")}</div>
+        <div class="admin-team-meta"><span>${teams.length} 支球队</span><span>${canManageAll ? "全部球队" : "仅授权球队"}</span></div>
+      </aside>
+      <div class="stack admin-editor-stack">
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title" id="admin-team-form-title">球队资料</h2><span class="badge no-dot ${canManageAll ? "badge-admin" : "badge-leader"}">${canManageAll ? "可编辑" : "领队权限"}</span></div>
+          <form id="admin-team-form">
+            <div class="admin-form-grid">
+              <div class="form-field"><label for="admin-team-name">球队名称</label><input id="admin-team-name" name="name" maxlength="100" required></div>
+              <div class="form-field"><label for="admin-team-short">简称</label><input id="admin-team-short" name="shortName" maxlength="32"></div>
+              <div class="form-field"><label for="admin-team-coach">主教练</label><input id="admin-team-coach" name="coachName" maxlength="64"></div>
+              <div class="form-field"><label for="admin-team-venue">主场</label><input id="admin-team-venue" name="homeVenue" maxlength="128"></div>
+              <div class="form-field admin-form-wide"><label for="admin-team-logo">队徽 URL</label><input id="admin-team-logo" name="logoUrl" maxlength="512" placeholder="可留空"></div>
+              <div class="form-field" ${canManageAll ? "" : "hidden"}><label for="admin-team-status">球队状态</label><select id="admin-team-status" name="status"><option value="ACTIVE">有效</option><option value="INACTIVE">停用</option></select></div>
+            </div>
+            <div class="page-actions"><button class="button button-primary button-small" type="submit" id="admin-team-save">保存球队资料</button></div>
+          </form>
+        </section>
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title" id="admin-player-form-title">新增球员</h2><button class="button button-ghost button-small" type="button" id="admin-new-player">新增球员</button></div>
+          <form id="admin-player-form">
+            <div class="admin-form-grid">
+              <div class="form-field"><label for="admin-player-name">姓名</label><input id="admin-player-name" name="name" maxlength="64" required></div>
+              <div class="form-field"><label for="admin-player-jersey">球衣号码</label><input id="admin-player-jersey" name="jerseyNo" maxlength="20"></div>
+              <div class="form-field"><label for="admin-player-position">位置</label><input id="admin-player-position" name="position" maxlength="20" placeholder="如 前锋、中场"></div>
+              <div class="form-field"><label for="admin-player-birth">出生日期</label><input id="admin-player-birth" name="birthDate" type="date"></div>
+              <div class="form-field"><label for="admin-player-photo">照片 URL</label><input id="admin-player-photo" name="photoUrl" maxlength="512" placeholder="可留空"></div>
+              <div class="form-field"><label for="admin-player-status">球员状态</label><select id="admin-player-status" name="status"><option value="ACTIVE">有效</option><option value="INACTIVE">停用</option></select></div>
+            </div>
+            <div class="page-actions"><button class="button button-primary button-small" type="submit" id="admin-player-save">保存球员</button></div>
+          </form>
+        </section>
+        <section class="card panel admin-form-card">
+          <div class="panel-head"><h2 class="panel-title">球员名单</h2><span class="badge no-dot badge-scheduled">${players.length} 人</span></div>
+          <div class="admin-player-list" id="admin-player-list">${players.length ? players.map((player) => `<button type="button" class="admin-player-row" data-player-id="${player.id}"><span class="jersey">${esc(player.jerseyNo || "-")}</span><span><strong>${esc(player.name)}</strong><small>${esc(player.position || "位置待补")} · ${esc(player.status === "ACTIVE" ? "有效" : "停用")}</small></span><span>编辑 →</span></button>`).join("") : `<div class="tactic-plan-empty">暂无球员，先新增一名球员。</div>`}</div>
+        </section>
+      </div>
+    </div>
+  </div>`;
+
+  const teamForm = document.getElementById("admin-team-form");
+  const playerForm = document.getElementById("admin-player-form");
+  const teamTitle = document.getElementById("admin-team-form-title");
+  const playerTitle = document.getElementById("admin-player-form-title");
+  const teamList = document.getElementById("admin-team-list");
+  const playerList = document.getElementById("admin-player-list");
+
+  function fillTeamForm(team) {
+    creatingTeam = !team;
+    selectedTeam = team || selectedTeam;
+    teamTitle.textContent = team ? "球队资料" : "新建球队";
+    document.getElementById("admin-team-name").value = team?.name || "";
+    document.getElementById("admin-team-short").value = team?.shortName || "";
+    document.getElementById("admin-team-coach").value = team?.coachName || "";
+    document.getElementById("admin-team-venue").value = team?.homeVenue || "";
+    document.getElementById("admin-team-logo").value = team?.logoUrl || "";
+    document.getElementById("admin-team-status").value = team?.status || "ACTIVE";
+    document.getElementById("admin-team-save").textContent = team ? "保存球队资料" : "创建球队";
+  }
+
+  function fillPlayerForm(player) {
+    selectedPlayer = player || null;
+    playerTitle.textContent = player ? `编辑球员 · ${player.name}` : "新增球员";
+    document.getElementById("admin-player-name").value = player?.name || "";
+    document.getElementById("admin-player-jersey").value = player?.jerseyNo || "";
+    document.getElementById("admin-player-position").value = player?.position || "";
+    document.getElementById("admin-player-birth").value = player?.birthDate || "";
+    document.getElementById("admin-player-photo").value = player?.photoUrl || "";
+    document.getElementById("admin-player-status").value = player?.status || "ACTIVE";
+    document.getElementById("admin-player-save").textContent = player ? "保存球员" : "新增球员";
+  }
+
+  function selectTeam(team) {
+    location.hash = `#/admin/teams?teamId=${team.id}`;
+    renderAdminTeamsPage();
+  }
+
+  teamList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-team-id]");
+    if (!button) return;
+    const team = teams.find((item) => item.id === Number(button.dataset.teamId));
+    if (team) selectTeam(team);
+  });
+
+  document.getElementById("admin-new-team")?.addEventListener("click", () => fillTeamForm(null));
+
+  playerList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-player-id]");
+    if (!button) return;
+    const player = players.find((item) => item.id === Number(button.dataset.playerId));
+    if (player) fillPlayerForm(player);
+  });
+
+  document.getElementById("admin-new-player").addEventListener("click", () => fillPlayerForm(null));
+
+  teamForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = document.getElementById("admin-team-save");
+    button.disabled = true;
+    try {
+      const payload = {
+        name: form.name.value.trim(),
+        shortName: form.shortName.value.trim() || null,
+        coachName: form.coachName.value.trim() || null,
+        homeVenue: form.homeVenue.value.trim() || null,
+        logoUrl: form.logoUrl.value.trim() || null,
+        status: form.status.value || selectedTeam.status,
+      };
+      if (creatingTeam) {
+        const created = await api("/admin/teams", { method: "POST", body: JSON.stringify(payload) });
+        notify("球队已创建");
+        location.hash = `#/admin/teams?teamId=${created.id}`;
+        await renderAdminTeamsPage();
+      } else {
+        await api(`/manage/teams/${selectedTeam.id}`, { method: "PUT", body: JSON.stringify(payload) });
+        notify("球队资料已保存");
+        await renderAdminTeamsPage();
+      }
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  playerForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = document.getElementById("admin-player-save");
+    button.disabled = true;
+    try {
+      const payload = {
+        name: form.name.value.trim(),
+        jerseyNo: form.jerseyNo.value.trim() || null,
+        position: form.position.value.trim() || null,
+        birthDate: form.birthDate.value || null,
+        photoUrl: form.photoUrl.value.trim() || null,
+        status: form.status.value || "ACTIVE",
+      };
+      if (selectedPlayer) {
+        await api(`/manage/players/${selectedPlayer.id}`, { method: "PUT", body: JSON.stringify(payload) });
+        notify("球员资料已保存");
+      } else {
+        await api(`/manage/teams/${selectedTeamId}/players`, { method: "POST", body: JSON.stringify(payload) });
+        notify("球员已新增");
+      }
+      await renderAdminTeamsPage();
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  fillTeamForm(selectedTeam);
+  fillPlayerForm(null);
+}
+
 
 let tacticDrag = null;
 let tacticPageContext = null;
