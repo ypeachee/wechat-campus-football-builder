@@ -31,16 +31,31 @@ class ApiError extends Error {
 
 function readStoredSession() {
   try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  } catch {
-    return null;
-  }
+    const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+    if (session) return session;
+  } catch { /* ignore */ }
+  // Migrate from old localStorage and clean up
+  try {
+    const legacy = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    if (legacy) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(legacy));
+      localStorage.removeItem(SESSION_KEY);
+      return legacy;
+    }
+  } catch { /* ignore */ }
+  localStorage.removeItem(SESSION_KEY);
+  return null;
 }
 
 function saveSession(session) {
   state.session = session;
-  if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  else localStorage.removeItem(SESSION_KEY);
+  if (session) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } else {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+  // Always clean up legacy localStorage key
+  localStorage.removeItem(SESSION_KEY);
   updateAuthHeader();
 }
 
@@ -858,15 +873,27 @@ async function renderAccountPage() {
   const teamHtml = teams.length ? teams.map((team) => `<a class="info-row" href="#/teams/${team.id}"><span>${esc(team.name)}</span><strong>查看 →</strong></a>`).join("") : `<div class="info-row"><span>授权球队</span><strong>${me.role === "ADMIN" || me.role === "TEAM_MANAGER" ? "全部球队" : "暂未关联"}</strong></div>`;
   const credentialPanel = me.role === "ADMIN" ? `<section class="card account-card">
     <div class="panel-head"><h2 class="panel-title">配置工作人员网站账号</h2><span class="badge no-dot badge-admin">仅超级管理员</span></div>
-    <p class="form-message" style="margin-top:-8px">先在小程序用户搜索中确认用户 ID，再为其配置网站账号。角色必须已是球队管理员或领队。</p>
+    <p class="form-message" style="margin-top:-8px">搜索用户昵称、ID 或网站账号，选择后为其配置网站登录凭据。角色必须已是球队管理员或领队。</p>
     <div class="form-error" id="credential-error" role="alert"></div>
     <div class="form-error" id="credential-success" role="status" style="background:#e9f7ef;color:#0b5b41"></div>
-    <form id="credential-form">
-      <div class="form-field"><label for="credential-user-id">用户 ID</label><input id="credential-user-id" name="userId" inputmode="numeric" required placeholder="例如 12"></div>
-      <div class="form-field"><label for="credential-username">网站账号</label><input id="credential-username" name="username" required minlength="3" maxlength="64" autocomplete="off" placeholder="3-64 个字符"></div>
-      <div class="form-field"><label for="credential-password">初始密码</label><input id="credential-password" name="password" type="password" required minlength="8" maxlength="72" autocomplete="new-password" placeholder="至少 8 个字符"></div>
-      <button class="button button-primary" type="submit" id="credential-submit">保存网站账号</button>
-    </form>
+    <div class="form-field">
+      <label for="user-search-input">搜索用户</label>
+      <input id="user-search-input" type="search" autocomplete="off" placeholder="输入昵称、用户 ID 或网站账号" aria-describedby="user-search-help">
+      <small id="user-search-help" class="form-help">输入至少 1 个字符后自动搜索</small>
+    </div>
+    <div id="user-search-results" class="user-search-results" role="listbox" aria-label="搜索结果"></div>
+    <div id="credential-form-area" style="display:none">
+      <div class="selected-user-banner" id="selected-user-banner"></div>
+      <form id="credential-form">
+        <input type="hidden" id="credential-user-id" name="userId">
+        <div class="form-field"><label for="credential-username">网站账号</label><input id="credential-username" name="username" required minlength="3" maxlength="64" autocomplete="off" placeholder="3-64 个字符"></div>
+        <div class="form-field"><label for="credential-password">初始密码</label><input id="credential-password" name="password" type="password" required minlength="8" maxlength="72" autocomplete="new-password" placeholder="至少 8 个字符"></div>
+        <div class="account-actions" style="margin-top:8px">
+          <button class="button button-primary" type="submit" id="credential-submit">保存网站账号</button>
+          <button class="button button-ghost" type="button" id="credential-cancel">取消选择</button>
+        </div>
+      </form>
+    </div>
   </section>` : "";
   app.innerHTML = `<div class="page">
     ${pageHeader("ACCOUNT", "账号中心", "查看当前网站登录状态与授权范围。", `<button class="button button-danger button-small" type="button" id="logout-button">退出登录</button>`)}
@@ -886,6 +913,9 @@ async function renderAccountPage() {
     </div>
   </div>`;
   document.getElementById("logout-button")?.addEventListener("click", logout);
+  if (me.role === "ADMIN") {
+    setupUserSearch();
+  }
   document.getElementById("credential-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -912,6 +942,77 @@ async function renderAccountPage() {
       button.disabled = false;
       button.textContent = "保存网站账号";
     }
+  });
+}
+
+function setupUserSearch() {
+  const searchInput = document.getElementById("user-search-input");
+  const resultsContainer = document.getElementById("user-search-results");
+  const formArea = document.getElementById("credential-form-area");
+  const banner = document.getElementById("selected-user-banner");
+  const userIdField = document.getElementById("credential-user-id");
+  const cancelBtn = document.getElementById("credential-cancel");
+  let searchTimer = null;
+
+  if (!searchInput || !resultsContainer) return;
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    const query = searchInput.value.trim();
+    if (query.length < 1) {
+      resultsContainer.innerHTML = "";
+      return;
+    }
+    searchTimer = setTimeout(() => searchUsers(query), 300);
+  });
+
+  async function searchUsers(query) {
+    resultsContainer.innerHTML = `<div class="user-search-loading">搜索中…</div>`;
+    try {
+      const users = await api(`/admin/users?query=${encodeURIComponent(query)}`);
+      if (!users || !users.length) {
+        resultsContainer.innerHTML = `<div class="user-search-empty">未找到匹配用户</div>`;
+        return;
+      }
+      resultsContainer.innerHTML = users.map((user) => {
+        const isViewer = user.role === "VIEWER";
+        const disabledAttr = isViewer ? `aria-disabled="true"` : "";
+        const className = isViewer ? "user-search-item disabled" : "user-search-item";
+        return `<div class="${className}" role="option" data-user-id="${user.id}" ${disabledAttr}>
+          <span class="user-search-id">#${user.id}</span>
+          <span class="user-search-name">${esc(user.nickname || "未命名")}</span>
+          <span class="user-search-role">${esc(roleLabel(user.role))}</span>
+          ${user.webUsername ? `<span class="user-search-web">${esc(user.webUsername)}</span>` : ""}
+          ${isViewer ? `<span class="user-search-hint">只读用户不可配置</span>` : ""}
+        </div>`;
+      }).join("");
+      resultsContainer.querySelectorAll(".user-search-item:not(.disabled)").forEach((item) => {
+        item.addEventListener("click", () => selectUser(item));
+      });
+    } catch (error) {
+      resultsContainer.innerHTML = `<div class="user-search-empty">搜索失败：${esc(error.message)}</div>`;
+    }
+  }
+
+  function selectUser(item) {
+    const userId = item.dataset.userId;
+    const name = item.querySelector(".user-search-name")?.textContent || "";
+    const role = item.querySelector(".user-search-role")?.textContent || "";
+    const webUsername = item.querySelector(".user-search-web")?.textContent || "";
+    userIdField.value = userId;
+    banner.innerHTML = `已选择：<strong>${esc(name)}</strong>（#${esc(userId)} · ${esc(role)}${webUsername ? ` · 当前账号 ${esc(webUsername)}` : ""}）`;
+    formArea.style.display = "block";
+    resultsContainer.innerHTML = "";
+    searchInput.value = "";
+    document.getElementById("credential-username").value = webUsername || "";
+    document.getElementById("credential-username")?.focus();
+  }
+
+  cancelBtn?.addEventListener("click", () => {
+    userIdField.value = "";
+    formArea.style.display = "none";
+    banner.innerHTML = "";
+    document.getElementById("credential-form")?.reset();
   });
 }
 

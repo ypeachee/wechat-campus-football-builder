@@ -62,4 +62,18 @@ class SecurityIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get("/assets/styles.css"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void securityHeadersArePresentOnResponses() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Security-Policy", org.hamcrest.Matchers.containsString("default-src 'self'")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("X-Content-Type-Options", "nosniff"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("X-Frame-Options", "DENY"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Referrer-Policy", "strict-origin-when-cross-origin"));
+    }
 }
