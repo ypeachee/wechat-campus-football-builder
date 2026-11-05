@@ -17,7 +17,7 @@ public class TestDataFactory {
             "app_notification", "announcement", "audit_log", "rating_report", "player_match_rating", "fixture_referee_rating", "sensitive_term",
             "knockout_seed", "player_suspension_serving", "player_suspension", "fixture_event", "fixture_appearance", "fixture",
             "knockout_tie", "knockout_round", "group_team", "competition_group", "stage",
-            "season_team", "season", "competition", "team_manager", "player", "team", "app_user"
+            "season_team", "season", "competition", "team_tactic", "team_manager", "player", "team", "app_user"
     };
 
     private final JdbcTemplate jdbc;

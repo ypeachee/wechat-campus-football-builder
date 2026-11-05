@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.tactic.TeamTacticMapper">
+    <resultMap id="TeamTacticMap" type="com.campusfootball.tactic.TeamTactic">
+        <id property="id" column="id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="name" column="name"/>
+        <result property="positionsJson" column="positions_json"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="updatedBy" column="updated_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByTeamId" resultMap="TeamTacticMap">
+        SELECT * FROM team_tactic WHERE team_id = #{teamId} ORDER BY updated_at DESC, id DESC
+    </select>
+
+    <select id="findById" resultMap="TeamTacticMap">
+        SELECT * FROM team_tactic WHERE id = #{id}
+    </select>
+
+    <select id="findByTeamIdAndName" resultMap="TeamTacticMap">
+        SELECT * FROM team_tactic WHERE team_id = #{teamId} AND name = #{name} LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO team_tactic (team_id, name, positions_json, created_by, updated_by)
+        VALUES (#{teamId}, #{name}, #{positionsJson}, #{createdBy}, #{updatedBy})
+    </insert>
+
+    <update id="update">
+        UPDATE team_tactic
+        SET name = #{name}, positions_json = #{positionsJson}, updated_by = #{updatedBy}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM team_tactic WHERE id = #{id}
+    </delete>
+</mapper>

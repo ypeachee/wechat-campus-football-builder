@@ -25,7 +25,7 @@ class SchemaMigrationTest extends IntegrationTestBase {
         assertThat(tables).contains(
                 "app_user", "team_manager", "team", "player", "season",
                 "season_team", "fixture", "fixture_appearance", "fixture_event", "player_suspension", "player_suspension_serving", "audit_log",
-                "competition", "stage", "competition_group", "group_team", "knockout_round",
+                "competition", "stage", "competition_group", "group_team", "team_tactic", "knockout_round",
                 "knockout_tie", "knockout_seed");
         assertThat(tables).doesNotContain("league_standing");
     }
@@ -161,4 +161,3 @@ class SchemaMigrationTest extends IntegrationTestBase {
         return jdbc.queryForObject("SELECT id FROM player WHERE name = ?", Long.class, uniqueName);
     }
 }
-

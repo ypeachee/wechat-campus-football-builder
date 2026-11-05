@@ -190,6 +190,7 @@ http://127.0.0.1:8080/
 - 射手榜、助攻榜
 - 球队列表、球队详情与球员名单
 - 球员详情与赛季数据
+- 战术板：自由拖拽球员、保存多个排兵布阵方案
 - 管理员/球队管理员/领队网站登录入口
 - 超级管理员为球队工作人员配置网站账号
 
@@ -198,6 +199,10 @@ http://127.0.0.1:8080/
 ```text
 POST /api/v1/auth/web-login
 PUT  /api/v1/admin/users/{userId}/web-credentials
+GET  /api/v1/manage/teams/{teamId}/tactics
+POST /api/v1/manage/teams/{teamId}/tactics
+PUT  /api/v1/manage/tactics/{tacticId}
+DELETE /api/v1/manage/tactics/{tacticId}
 ```
 
 首次启动时，如果配置了以下环境变量，会自动创建或重置超级管理员网站账号：

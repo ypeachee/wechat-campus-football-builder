@@ -365,6 +365,11 @@ async function renderRoute() {
       await renderPlayerDetail(parts[1]);
       return;
     }
+    if (path === "/tactics") {
+      setActiveNav("tactics");
+      await renderTacticsPage();
+      return;
+    }
     if (path === "/login") {
       setActiveNav("login");
       await renderLoginPage();
@@ -1065,6 +1070,336 @@ function setupUserSearch() {
     searchInput.focus();
   });
 }
+
+let tacticDrag = null;
+let tacticPageContext = null;
+
+document.addEventListener("pointermove", (event) => {
+  if (tacticPageContext) tacticPageContext.move(event);
+});
+document.addEventListener("pointerup", (event) => {
+  if (tacticPageContext) tacticPageContext.up(event);
+});
+document.addEventListener("pointercancel", (event) => {
+  if (tacticPageContext) tacticPageContext.up(event);
+});
+
+async function renderTacticsPage() {
+  setTitle("战术板");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("TACTICS", "战术板", "登录球队管理账号后，保存并共享排兵布阵方案。")}${emptyState("请先登录", "战术板包含球队名单和位置数据，需要管理员、球队管理员或领队权限。", "▦")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("TACTICS", "战术板", "读取账号权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role === "VIEWER") {
+    app.innerHTML = `<div class="page">${pageHeader("TACTICS", "战术板", "当前账号没有编辑战术板的权限。")}${emptyState("当前角色为只读用户", "请使用管理员、球队管理员或领队账号。", "▦")}</div>`;
+    return;
+  }
+  const teams = state.teams.filter((team) =>
+    me.role === "ADMIN" || me.role === "TEAM_MANAGER" || me.managedTeamIds.includes(team.id)
+  );
+  if (!teams.length) {
+    app.innerHTML = `<div class="page">${pageHeader("TACTICS", "战术板", "当前账号还没有关联球队。")}${emptyState("暂无可管理球队", "请联系超级管理员配置球队授权。", "▦")}</div>`;
+    return;
+  }
+  let teamId = Number(localStorage.getItem("campusFootball.tacticTeamId"));
+  if (!teams.some((team) => team.id === teamId)) teamId = teams[0].id;
+  const team = teams.find((item) => item.id === teamId);
+  let players;
+  let tactics;
+  try {
+    [players, tactics] = await Promise.all([
+      api(`/teams/${teamId}/players`),
+      api(`/manage/teams/${teamId}/tactics`),
+    ]);
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("TACTICS", "战术板", "读取球队战术数据失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  const playerMap = new Map(players.map((player) => [Number(player.id), player]));
+  const editor = {
+    tacticId: null,
+    name: "新战术",
+    positions: [],
+    tactics: tactics || [],
+  };
+  let rosterQuery = "";
+  tacticPageContext = null;
+
+  app.innerHTML = `<div class="page tactics-page">
+    ${pageHeader("TACTICS", "战术板", `${team.name} · 自由拖拽球员，保存多个排兵布阵方案。`)}
+    <div class="tactics-layout">
+      <aside class="card tactics-sidebar">
+        <div class="form-field">
+          <label for="tactic-team-select">球队</label>
+          <select id="tactic-team-select">${teams.map((item) => `<option value="${item.id}" ${item.id === teamId ? "selected" : ""}>${esc(item.name)}</option>`).join("")}</select>
+        </div>
+        <div class="panel-head tactics-panel-head">
+          <h2 class="panel-title">战术方案</h2>
+          <button class="button button-ghost button-small" type="button" id="tactic-new">新建</button>
+        </div>
+        <div class="tactic-plan-list" id="tactic-plan-list"></div>
+        <div class="tactic-roster-head">
+          <label for="tactic-player-search">球员池</label>
+          <input id="tactic-player-search" type="search" placeholder="搜索姓名或号码" autocomplete="off">
+        </div>
+        <div class="tactic-roster" id="tactic-player-list"></div>
+      </aside>
+      <section class="card tactics-canvas-card">
+        <div class="tactics-toolbar">
+          <div class="form-field tactics-name-field"><label for="tactic-name">方案名称</label><input id="tactic-name" maxlength="80" autocomplete="off"></div>
+          <div class="page-actions">
+            <button class="button button-primary button-small" type="button" id="tactic-save">保存方案</button>
+            <button class="button button-danger button-small" type="button" id="tactic-delete">删除方案</button>
+          </div>
+        </div>
+        <div class="tactics-status"><span>已上场 <strong id="tactic-count">0</strong> 人</span><span>可自由拖动位置，不限制固定阵型</span><span id="tactic-save-state">未保存</span></div>
+        <div class="tactics-pitch" id="tactics-pitch" aria-label="足球战术场">
+          <div class="tactics-pitch-markings" aria-hidden="true">
+            <span class="pitch-circle"></span><span class="pitch-halfway"></span><span class="pitch-box pitch-box-top"></span><span class="pitch-box pitch-box-bottom"></span><span class="pitch-goal pitch-goal-top"></span><span class="pitch-goal pitch-goal-bottom"></span>
+          </div>
+          <div class="tactics-token-layer" id="tactics-token-layer"></div>
+        </div>
+        <p class="form-help">从左侧拖入球员；球场上球员可拖动到任意位置。手机端点击球员可快速加入，再拖动微调。</p>
+      </section>
+    </div>
+  </div>`;
+
+  const pitch = document.getElementById("tactics-pitch");
+  const tokenLayer = document.getElementById("tactics-token-layer");
+  const planList = document.getElementById("tactic-plan-list");
+  const roster = document.getElementById("tactic-player-list");
+  const nameInput = document.getElementById("tactic-name");
+  const count = document.getElementById("tactic-count");
+  const saveState = document.getElementById("tactic-save-state");
+  const deleteButton = document.getElementById("tactic-delete");
+  const searchInput = document.getElementById("tactic-player-search");
+
+  function formatSavedAt(value) {
+    if (!value) return "刚刚";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "刚刚" : new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+
+  function renderPlans() {
+    planList.innerHTML = editor.tactics.length ? editor.tactics.map((plan) => `<button type="button" class="tactic-plan ${plan.id === editor.tacticId ? "active" : ""}" data-tactic-id="${plan.id}"><span>${esc(plan.name)}</span><small>${formatSavedAt(plan.updatedAt)}</small></button>`).join("") : `<div class="tactic-plan-empty">还没有保存的方案</div>`;
+  }
+
+  function renderRoster() {
+    const placed = new Set(editor.positions.map((position) => position.playerId));
+    const query = rosterQuery.trim().toLowerCase();
+    const available = players.filter((player) => !placed.has(player.id) && (!query || `${player.name} ${player.jerseyNo || ""}`.toLowerCase().includes(query)));
+    roster.innerHTML = available.length ? available.map((player) => `<button type="button" class="tactic-player" data-player-id="${player.id}"><span class="tactic-player-no">${esc(player.jerseyNo || "-")}</span><span class="tactic-player-copy"><strong>${esc(player.name)}</strong><small>${esc(player.position || "位置待补")}</small></span><span class="tactic-player-add">+</span></button>`).join("") : `<div class="tactic-plan-empty">${placed.size === players.length ? "所有球员都已上场" : "没有匹配球员"}</div>`;
+    roster.querySelectorAll(".tactic-player").forEach((item) => item.addEventListener("pointerdown", (event) => beginRosterDrag(event, Number(item.dataset.playerId))));
+  }
+
+  function renderTokens() {
+    tokenLayer.innerHTML = editor.positions.map((position) => {
+      const player = playerMap.get(Number(position.playerId));
+      if (!player) return "";
+      return `<div class="tactic-token" data-player-id="${player.id}" style="left:${position.x}%;top:${position.y}%">
+        <span class="tactic-token-number">${esc(player.jerseyNo || "-")}</span>
+        <span class="tactic-token-name">${esc(player.name)}</span>
+        <button type="button" class="tactic-token-remove" data-remove-player="${player.id}" aria-label="移出 ${esc(player.name)}">×</button>
+      </div>`;
+    }).join("");
+    tokenLayer.querySelectorAll(".tactic-token").forEach((token) => {
+      token.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("[data-remove-player]")) return;
+        beginTokenDrag(event, Number(token.dataset.playerId), token);
+      });
+    });
+    tokenLayer.querySelectorAll("[data-remove-player]").forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      editor.positions = editor.positions.filter((position) => position.playerId !== Number(button.dataset.removePlayer));
+      saveState.textContent = "有未保存修改";
+      renderBoard();
+    }));
+    count.textContent = String(editor.positions.length);
+  }
+
+  function renderBoard() {
+    renderPlans();
+    renderRoster();
+    renderTokens();
+    deleteButton.disabled = !editor.tacticId;
+  }
+
+  function setEditor(plan) {
+    editor.tacticId = plan ? plan.id : null;
+    editor.name = plan ? plan.name : "新战术";
+    editor.positions = plan ? plan.positions.map((position) => ({ playerId: Number(position.playerId), x: Number(position.x), y: Number(position.y) })) : [];
+    nameInput.value = editor.name;
+    saveState.textContent = plan ? "已加载已保存方案" : "新方案";
+    renderBoard();
+  }
+
+  function pointInPitch(event) {
+    const rect = pitch.getBoundingClientRect();
+    return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+  }
+
+  function pointOnPitch(event) {
+    const rect = pitch.getBoundingClientRect();
+    return {
+      x: Math.max(3, Math.min(97, ((event.clientX - rect.left) / rect.width) * 100)),
+      y: Math.max(3, Math.min(97, ((event.clientY - rect.top) / rect.height) * 100)),
+    };
+  }
+
+  function defaultPosition() {
+    const slots = [[50, 85], [22, 72], [50, 68], [78, 72], [15, 52], [38, 50], [62, 50], [85, 52], [30, 28], [50, 22], [70, 28]];
+    const slot = slots[editor.positions.length % slots.length];
+    return { x: slot[0], y: slot[1] };
+  }
+
+  function addPlayer(playerId, point) {
+    if (editor.positions.some((position) => position.playerId === playerId)) return;
+    if (editor.positions.length >= 30) {
+      notify("单个战术板最多放置 30 名球员");
+      return;
+    }
+    editor.positions.push({ playerId, x: point.x, y: point.y });
+    saveState.textContent = "有未保存修改";
+    renderBoard();
+  }
+
+  function makeGhost(player, event) {
+    const ghost = document.createElement("div");
+    ghost.className = "tactic-drag-ghost";
+    ghost.textContent = `${player.jerseyNo || ""} ${player.name}`;
+    ghost.style.left = `${event.clientX}px`;
+    ghost.style.top = `${event.clientY}px`;
+    document.body.appendChild(ghost);
+    return ghost;
+  }
+
+  function beginRosterDrag(event, playerId) {
+    if (event.button !== undefined && event.button !== 0) return;
+    const player = playerMap.get(playerId);
+    if (!player) return;
+    event.preventDefault();
+    tacticDrag = { source: "roster", playerId, startX: event.clientX, startY: event.clientY, ghost: makeGhost(player, event) };
+  }
+
+  function beginTokenDrag(event, playerId, token) {
+    if (event.button !== undefined && event.button !== 0) return;
+    event.preventDefault();
+    tacticDrag = { source: "token", playerId, token, startX: event.clientX, startY: event.clientY };
+    token.classList.add("dragging");
+  }
+
+  tacticPageContext = {
+    move(event) {
+      if (!tacticDrag) return;
+      if (tacticDrag.ghost) {
+        tacticDrag.ghost.style.left = `${event.clientX}px`;
+        tacticDrag.ghost.style.top = `${event.clientY}px`;
+      }
+      if (tacticDrag.source === "token" && pointInPitch(event)) {
+        const point = pointOnPitch(event);
+        tacticDrag.token.style.left = `${point.x}%`;
+        tacticDrag.token.style.top = `${point.y}%`;
+      }
+    },
+    up(event) {
+      if (!tacticDrag) return;
+      const drag = tacticDrag;
+      tacticDrag = null;
+      if (drag.ghost) drag.ghost.remove();
+      if (drag.source === "roster") {
+        if (pointInPitch(event)) addPlayer(drag.playerId, pointOnPitch(event));
+        else if (Math.abs(event.clientX - drag.startX) < 8 && Math.abs(event.clientY - drag.startY) < 8) addPlayer(drag.playerId, defaultPosition());
+        return;
+      }
+      const position = editor.positions.find((item) => item.playerId === drag.playerId);
+      if (position && pointInPitch(event)) {
+        const point = pointOnPitch(event);
+        position.x = point.x;
+        position.y = point.y;
+        saveState.textContent = "有未保存修改";
+      }
+      renderBoard();
+      tacticDrag = null;
+    },
+  };
+
+  planList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-tactic-id]");
+    if (!button) return;
+    const plan = editor.tactics.find((item) => item.id === Number(button.dataset.tacticId));
+    if (plan) setEditor(plan);
+  });
+
+  document.getElementById("tactic-new").addEventListener("click", () => {
+    setEditor(null);
+    nameInput.focus();
+  });
+
+  document.getElementById("tactic-team-select").addEventListener("change", (event) => {
+    localStorage.setItem("campusFootball.tacticTeamId", event.target.value);
+    renderTacticsPage();
+  });
+
+  searchInput.addEventListener("input", () => {
+    rosterQuery = searchInput.value;
+    renderRoster();
+  });
+
+  document.getElementById("tactic-save").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const name = nameInput.value.trim();
+    if (!name) {
+      notify("请填写战术方案名称");
+      nameInput.focus();
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "保存中…";
+    try {
+      const payload = { name, positions: editor.positions };
+      const saved = editor.tacticId
+        ? await api(`/manage/tactics/${editor.tacticId}`, { method: "PUT", body: JSON.stringify(payload) })
+        : await api(`/manage/teams/${teamId}/tactics`, { method: "POST", body: JSON.stringify(payload) });
+      editor.tacticId = saved.id;
+      editor.name = saved.name;
+      editor.tactics = await api(`/manage/teams/${teamId}/tactics`);
+      nameInput.value = saved.name;
+      saveState.textContent = "已保存";
+      renderBoard();
+      notify("战术方案已保存");
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存方案";
+    }
+  });
+
+  deleteButton.addEventListener("click", async () => {
+    if (!editor.tacticId) return;
+    if (!window.confirm(`确定删除“${nameInput.value.trim() || editor.name}”吗？`)) return;
+    try {
+      await api(`/manage/tactics/${editor.tacticId}`, { method: "DELETE" });
+      editor.tactics = await api(`/manage/teams/${teamId}/tactics`);
+      setEditor(editor.tactics[0] || null);
+      notify("战术方案已删除");
+    } catch (error) {
+      notify(error.message);
+    }
+  });
+
+  setEditor(editor.tactics[0] || null);
+}
+
 
 function permissionDescription(role) {
   return ({
