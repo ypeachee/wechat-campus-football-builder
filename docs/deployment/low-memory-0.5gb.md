@@ -78,7 +78,7 @@ Swap 只能避免瞬间 OOM，速度会比内存慢很多。
 JDBC URL 示例：
 
 ```text
-jdbc:mysql://HOST:PORT/DB_NAME?sslMode=REQUIRED&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8
+jdbc:mysql://HOST:PORT/DB_NAME?sslMode=REQUIRED&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=utf8
 ```
 
 不要把外部数据库密码提交到 Git。
