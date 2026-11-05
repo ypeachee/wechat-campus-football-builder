@@ -1,4 +1,4 @@
-# Campus Football API
+# 泥地soccer | Campus Football API
 
 校园足球联赛后端 MVP，提供球队/球员浏览、比赛事件、射手榜、助攻榜、出场榜、积分榜和按球队授权的数据编辑能力。
 
@@ -278,4 +278,3 @@ npm run verify
 - `WECHAT_CODE_ENV_VERSION` 控制小程序码版本，可设为 `develop`、`trial` 或 `release`
 
 当前体验阶段使用 `trial`；正式发布后改为 `release`。
-

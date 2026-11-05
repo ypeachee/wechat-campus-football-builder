@@ -255,7 +255,7 @@ function sectionHead(title, subtitle, link = "") {
 }
 
 function setTitle(title) {
-  document.title = `${title} | 校园绿茵`;
+  document.title = `${title} | 泥地soccer`;
 }
 
 window.addEventListener("scroll", () => {
@@ -1093,6 +1093,3 @@ async function init() {
 }
 
 init();
-
-
-
