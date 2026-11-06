@@ -9,25 +9,33 @@
         <result property="position" column="position"/>
         <result property="birthDate" column="birth_date"/>
         <result property="photoUrl" column="photo_url"/>
+        <result property="photoContentType" column="photo_content_type"/>
+        <result property="photoFilename" column="photo_filename"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <sql id="PlayerColumns">
+        id, team_id, name, jersey_no, position, birth_date, photo_url,
+        photo_content_type, photo_filename, status, created_at, updated_at
+    </sql>
+
     <select id="findActiveByTeamId" resultMap="PlayerMap">
-        SELECT * FROM player WHERE team_id = #{teamId} AND status = 'ACTIVE' ORDER BY jersey_no, name
+        SELECT <include refid="PlayerColumns"/> FROM player
+        WHERE team_id = #{teamId} AND status = 'ACTIVE' ORDER BY jersey_no, name
     </select>
 
     <select id="findByTeamId" resultMap="PlayerMap">
-        SELECT * FROM player WHERE team_id = #{teamId} ORDER BY jersey_no, name
+        SELECT <include refid="PlayerColumns"/> FROM player WHERE team_id = #{teamId} ORDER BY jersey_no, name
     </select>
 
     <select id="findById" resultMap="PlayerMap">
-        SELECT * FROM player WHERE id = #{id}
+        SELECT <include refid="PlayerColumns"/> FROM player WHERE id = #{id}
     </select>
 
     <select id="findActiveByTeamAndJersey" resultMap="PlayerMap">
-        SELECT * FROM player
+        SELECT <include refid="PlayerColumns"/> FROM player
         WHERE team_id = #{teamId} AND jersey_no = #{jerseyNo} AND status = 'ACTIVE'
         ORDER BY id LIMIT 1
     </select>
@@ -47,6 +55,27 @@
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
+
+    <update id="updatePhoto">
+        UPDATE player
+        SET photo_data = #{imageData}, photo_content_type = #{imageContentType},
+            photo_filename = #{imageFilename}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="clearPhoto">
+        UPDATE player
+        SET photo_data = NULL, photo_content_type = NULL, photo_filename = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <select id="findPhotoById" resultType="com.campusfootball.team.PlayerPhoto">
+        SELECT photo_data AS image_data, photo_content_type AS image_content_type,
+               photo_filename AS image_filename
+        FROM player
+        WHERE id = #{id} AND photo_data IS NOT NULL
+    </select>
 
     <select id="countActiveJersey" resultType="int">
         SELECT COUNT(*)

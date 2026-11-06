@@ -1,5 +1,8 @@
 package com.campusfootball.team;
 
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +38,15 @@ public class TeamController {
         return playerService.findActiveByTeam(teamId).stream().map(PlayerResponse::from).toList();
     }
 
+    @GetMapping("/players/{playerId}/photo")
+    public ResponseEntity<byte[]> playerPhoto(@PathVariable long playerId) {
+        PlayerPhoto photo = playerService.getActivePhoto(playerId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(photo.imageContentType()))
+                .cacheControl(CacheControl.noStore())
+                .body(photo.imageData());
+    }
+
     @GetMapping("/players/{playerId}")
     public PlayerResponse player(@PathVariable long playerId) {
         return PlayerResponse.from(playerService.getActivePlayer(playerId));
@@ -51,8 +63,11 @@ public class TeamController {
     public record PlayerResponse(long id, long teamId, String name, String jerseyNo, String position,
                                  LocalDate birthDate, String photoUrl, PlayerStatus status) {
         static PlayerResponse from(Player player) {
+            String photoUrl = player.hasUploadedPhoto()
+                    ? "/api/v1/players/" + player.getId() + "/photo"
+                    : player.getPhotoUrl();
             return new PlayerResponse(player.getId(), player.getTeamId(), player.getName(), player.getJerseyNo(),
-                    player.getPosition(), player.getBirthDate(), player.getPhotoUrl(), player.getStatus());
+                    player.getPosition(), player.getBirthDate(), photoUrl, player.getStatus());
         }
     }
 }

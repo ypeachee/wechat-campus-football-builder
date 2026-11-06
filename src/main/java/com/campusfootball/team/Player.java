@@ -11,6 +11,8 @@ public class Player {
     private String position;
     private LocalDate birthDate;
     private String photoUrl;
+    private String photoContentType;
+    private String photoFilename;
     private PlayerStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -30,6 +32,11 @@ public class Player {
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
     public String getPhotoUrl() { return photoUrl; }
     public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+    public String getPhotoContentType() { return photoContentType; }
+    public void setPhotoContentType(String photoContentType) { this.photoContentType = photoContentType; }
+    public String getPhotoFilename() { return photoFilename; }
+    public void setPhotoFilename(String photoFilename) { this.photoFilename = photoFilename; }
+    public boolean hasUploadedPhoto() { return photoContentType != null && !photoContentType.isBlank(); }
     public PlayerStatus getStatus() { return status; }
     public void setStatus(PlayerStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

@@ -5,13 +5,17 @@ import com.campusfootball.common.security.CurrentUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,6 +57,16 @@ public class TeamManagementController {
     public void updatePlayer(@PathVariable long playerId, @Valid @RequestBody UpdatePlayerRequest request) {
         playerService.updatePlayer(currentUser.require().userId(), playerId, request.name(), request.jerseyNo(),
                 request.position(), request.birthDate(), request.photoUrl(), request.status());
+    }
+
+    @PostMapping(path = "/players/{playerId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void uploadPlayerPhoto(@PathVariable long playerId, @RequestPart("image") MultipartFile image) {
+        playerService.uploadPhoto(currentUser.require().userId(), playerId, image);
+    }
+
+    @DeleteMapping("/players/{playerId}/photo")
+    public void clearPlayerPhoto(@PathVariable long playerId) {
+        playerService.clearPhoto(currentUser.require().userId(), playerId);
     }
 
     public record UpdateTeamRequest(@NotBlank @Size(max = 100) String name,

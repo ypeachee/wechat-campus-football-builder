@@ -27,6 +27,7 @@
 | 球队 | `GET /api/v1/teams`、`GET /api/v1/teams/{teamId}` |
 | 球员 | `GET /api/v1/teams/{teamId}/players`、`GET /api/v1/players/{playerId}` |
 | 球员赛季统计 | `GET /api/v1/players/{playerId}/stats?seasonId=` |
+| 球员照片 | `GET /api/v1/players/{playerId}/photo` |
 | 公开公告 | `GET /api/v1/announcements?limit=` |
 | 首页新闻 | `GET /api/v1/news?limit=`、`GET /api/v1/news/{newsId}/image` |
 
@@ -107,6 +108,7 @@ WEB_ADMIN_PASSWORD=<strong-password>
 - 超级管理员可发布全员公告；首页公告板展示最新公告，访客首次看到新公告时会弹出提示。
 - 超级管理员可上传、编辑、隐藏、排序和删除首页“赛场实况”新闻图片。
 - 球队资料、球员资料和战术板也在同一管理台内。
+- 管理员、球队管理员和被授权领队可直接上传本队球员照片；图片保存到 MySQL，旧照片 URL 继续兼容。
 
 ## 战术板
 

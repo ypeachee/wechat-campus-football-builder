@@ -1474,8 +1474,9 @@ async function renderAdminTeamsPage() {
               <div class="form-field"><label for="admin-player-jersey">球衣号码</label><input id="admin-player-jersey" name="jerseyNo" maxlength="20"></div>
               <div class="form-field"><label for="admin-player-position">位置</label><input id="admin-player-position" name="position" maxlength="20" placeholder="如 前锋、中场"></div>
               <div class="form-field"><label for="admin-player-birth">出生日期</label><input id="admin-player-birth" name="birthDate" type="date"></div>
-              <div class="form-field"><label for="admin-player-photo">照片 URL</label><input id="admin-player-photo" name="photoUrl" maxlength="512" placeholder="可留空"></div>
+              <div class="form-field"><label for="admin-player-photo">照片 URL（可选）</label><input id="admin-player-photo" name="photoUrl" maxlength="512" placeholder="外链图片，上传图片优先"></div>
               <div class="form-field"><label for="admin-player-status">球员状态</label><select id="admin-player-status" name="status"><option value="ACTIVE">有效</option><option value="INACTIVE">停用</option></select></div>
+              <div class="form-field admin-form-wide"><label for="admin-player-photo-file">直接上传照片</label><div class="admin-player-photo-editor"><div class="admin-player-photo-preview" id="admin-player-photo-preview"></div><div class="admin-player-photo-controls"><input id="admin-player-photo-file" type="file" accept="image/jpeg,image/png,image/webp"><small class="form-help">支持 JPG、PNG、WebP，最大 5MB。上传图片会优先于照片 URL。</small><button class="button button-danger button-small" type="button" id="admin-player-photo-remove" hidden>移除已上传照片</button></div></div></div>
             </div>
             <div class="page-actions"><button class="button button-primary button-small" type="submit" id="admin-player-save">保存球员</button></div>
           </form>
@@ -1508,6 +1509,23 @@ async function renderAdminTeamsPage() {
     document.getElementById("admin-team-save").textContent = team ? "保存球队资料" : "创建球队";
   }
 
+  function hasManagedPhoto(player) {
+    return Boolean(player?.photoUrl && player.photoUrl.includes(`/api/v1/players/${player.id}/photo`));
+  }
+
+  function renderPlayerPhotoPreview(player) {
+    const preview = document.getElementById("admin-player-photo-preview");
+    const removeButton = document.getElementById("admin-player-photo-remove");
+    const fileInput = document.getElementById("admin-player-photo-file");
+    fileInput.value = "";
+    if (player?.photoUrl) {
+      preview.innerHTML = `<img src="${esc(player.photoUrl)}" alt="${esc(player.name)}照片">`;
+    } else {
+      preview.textContent = initials(player?.name || "球员");
+    }
+    removeButton.hidden = !hasManagedPhoto(player);
+  }
+
   function fillPlayerForm(player) {
     selectedPlayer = player || null;
     playerTitle.textContent = player ? `编辑球员 · ${player.name}` : "新增球员";
@@ -1515,9 +1533,10 @@ async function renderAdminTeamsPage() {
     document.getElementById("admin-player-jersey").value = player?.jerseyNo || "";
     document.getElementById("admin-player-position").value = player?.position || "";
     document.getElementById("admin-player-birth").value = player?.birthDate || "";
-    document.getElementById("admin-player-photo").value = player?.photoUrl || "";
+    document.getElementById("admin-player-photo").value = hasManagedPhoto(player) ? "" : (player?.photoUrl || "");
     document.getElementById("admin-player-status").value = player?.status || "ACTIVE";
     document.getElementById("admin-player-save").textContent = player ? "保存球员" : "新增球员";
+    renderPlayerPhotoPreview(player);
   }
 
   function selectTeam(team) {
@@ -1542,6 +1561,26 @@ async function renderAdminTeamsPage() {
   });
 
   document.getElementById("admin-new-player").addEventListener("click", () => fillPlayerForm(null));
+  document.getElementById("admin-player-photo-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) { renderPlayerPhotoPreview(selectedPlayer); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      notify("照片仅支持 JPG、PNG、WebP，且不能超过 5MB");
+      event.target.value = "";
+      renderPlayerPhotoPreview(selectedPlayer);
+      return;
+    }
+    document.getElementById("admin-player-photo-preview").innerHTML = `<img src="${URL.createObjectURL(file)}" alt="待上传球员照片预览">`;
+  });
+
+  document.getElementById("admin-player-photo-remove").addEventListener("click", async () => {
+    if (!selectedPlayer || !hasManagedPhoto(selectedPlayer) || !window.confirm("确认移除已上传的球员照片？")) return;
+    try {
+      await api(`/manage/players/${selectedPlayer.id}/photo`, { method: "DELETE" });
+      notify("球员照片已移除");
+      await renderAdminTeamsPage();
+    } catch (error) { notify(error.message); }
+  });
 
   teamForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1588,13 +1627,20 @@ async function renderAdminTeamsPage() {
         photoUrl: form.photoUrl.value.trim() || null,
         status: form.status.value || "ACTIVE",
       };
+      let playerId = selectedPlayer?.id || null;
       if (selectedPlayer) {
         await api(`/manage/players/${selectedPlayer.id}`, { method: "PUT", body: JSON.stringify(payload) });
-        notify("球员资料已保存");
       } else {
-        await api(`/manage/teams/${selectedTeamId}/players`, { method: "POST", body: JSON.stringify(payload) });
-        notify("球员已新增");
+        const created = await api(`/manage/teams/${selectedTeamId}/players`, { method: "POST", body: JSON.stringify(payload) });
+        playerId = created.id;
       }
+      const photoFile = document.getElementById("admin-player-photo-file").files[0];
+      if (photoFile && playerId) {
+        const imageForm = new FormData();
+        imageForm.append("image", photoFile);
+        await api(`/manage/players/${playerId}/photo`, { method: "POST", body: imageForm });
+      }
+      notify(selectedPlayer ? "球员资料已保存" : "球员已新增");
       await renderAdminTeamsPage();
     } catch (error) {
       notify(error.message);

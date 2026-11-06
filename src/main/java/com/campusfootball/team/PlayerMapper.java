@@ -24,4 +24,12 @@ public interface PlayerMapper {
     int countActiveJersey(@Param("teamId") long teamId,
                           @Param("jerseyNo") String jerseyNo,
                           @Param("excludeId") Long excludeId);
+
+    int updatePhoto(@Param("id") long id, @Param("imageData") byte[] imageData,
+                    @Param("imageContentType") String imageContentType,
+                    @Param("imageFilename") String imageFilename);
+
+    int clearPhoto(@Param("id") long id);
+
+    Optional<PlayerPhoto> findPhotoById(@Param("id") long id);
 }

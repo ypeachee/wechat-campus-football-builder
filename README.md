@@ -110,6 +110,8 @@ $env:TEST_DB_PASSWORD='campus'
 - `GET /api/v1/teams/{teamId}/players`
 - `GET /api/v1/players/{playerId}`
 - `GET /api/v1/players/{playerId}/stats?seasonId=`
+- `GET /api/v1/players/{playerId}/photo`
+- `POST/DELETE /api/v1/manage/players/{playerId}/photo`
 - `GET /api/v1/announcements?limit=`
 - `GET /api/v1/news?limit=`
 - `GET /api/v1/news/{newsId}/image`
@@ -194,6 +196,7 @@ http://127.0.0.1:8080/
 - 射手榜、助攻榜
 - 球队列表、球队详情与球员名单
 - 球员详情与可切换赛季的出场、分钟、进球、助攻、红黄牌和逐场数据
+- 球队/球员管理支持直接上传、移除球员照片，数据库持久保存
 - 战术板：自由拖拽球员、保存多个排兵布阵方案
 - 角色感知管理台：新增比赛、赛程比分事件与阵容编辑、球队与球员资料、战术板入口
 - 管理员/球队管理员/领队网站登录入口

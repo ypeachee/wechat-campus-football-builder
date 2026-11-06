@@ -7,12 +7,17 @@ import com.campusfootball.common.api.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PlayerService {
+    private static final long MAX_PHOTO_BYTES = 5L * 1024 * 1024;
+    private static final Set<String> ALLOWED_PHOTO_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
     private final PlayerMapper playerMapper;
     private final TeamMapper teamMapper;
     private final AuthorizationService authorizationService;
@@ -53,6 +58,33 @@ public class PlayerService {
 
     public Player getPlayer(long playerId) {
         return playerMapper.findById(playerId).orElseThrow(this::notFound);
+    }
+
+    public PlayerPhoto getActivePhoto(long playerId) {
+        getActivePlayer(playerId);
+        return playerMapper.findPhotoById(playerId).orElseThrow(this::notFound);
+    }
+
+    @Transactional
+    public void uploadPhoto(long actorUserId, long playerId, MultipartFile image) {
+        Player player = getPlayer(playerId);
+        authorizationService.requireCanManageTeam(actorUserId, player.getTeamId());
+        validatePhoto(image);
+        try {
+            playerMapper.updatePhoto(playerId, image.getBytes(), image.getContentType(), image.getOriginalFilename());
+            auditService.record(actorUserId, player.getTeamId(), AuditAction.UPDATE, "PLAYER_PHOTO",
+                    playerId, null, "uploaded:" + image.getOriginalFilename());
+        } catch (IOException error) {
+            throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "无法读取球员照片");
+        }
+    }
+
+    @Transactional
+    public void clearPhoto(long actorUserId, long playerId) {
+        Player player = getPlayer(playerId);
+        authorizationService.requireCanManageTeam(actorUserId, player.getTeamId());
+        playerMapper.clearPhoto(playerId);
+        auditService.record(actorUserId, player.getTeamId(), AuditAction.DELETE, "PLAYER_PHOTO", playerId, null, null);
     }
 
     @Transactional
@@ -113,6 +145,19 @@ public class PlayerService {
         }
         return jerseyNo.trim();
     }
+    private void validatePhoto(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "请选择球员照片");
+        }
+        if (image.getSize() > MAX_PHOTO_BYTES) {
+            throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "球员照片不能超过 5MB");
+        }
+        if (image.getContentType() == null || !ALLOWED_PHOTO_TYPES.contains(image.getContentType())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED,
+                    "球员照片仅支持 JPG、PNG 或 WebP");
+        }
+    }
+
     private Player copy(Player source) {
         Player copy = new Player();
         copy.setId(source.getId());
@@ -122,6 +167,8 @@ public class PlayerService {
         copy.setPosition(source.getPosition());
         copy.setBirthDate(source.getBirthDate());
         copy.setPhotoUrl(source.getPhotoUrl());
+        copy.setPhotoContentType(source.getPhotoContentType());
+        copy.setPhotoFilename(source.getPhotoFilename());
         copy.setStatus(source.getStatus());
         copy.setCreatedAt(source.getCreatedAt());
         copy.setUpdatedAt(source.getUpdatedAt());
