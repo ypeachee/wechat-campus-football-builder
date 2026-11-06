@@ -473,6 +473,19 @@ async function renderHome() {
         </aside>
       </div>
     </section>
+    <section class="home-ground card">
+      <figure class="home-ground-media">
+        <img src="/assets/cugb-football-field.jpg" alt="中国地质大学（北京）田径运动场与足球场实景" width="560" height="420" loading="lazy">
+        <figcaption>图源：<a href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">中国地质大学（北京）官网 · 校园风光</a></figcaption>
+      </figure>
+      <div class="home-ground-copy">
+        <span class="eyebrow">HOME GROUND · CUGB</span>
+        <h2>中国地质大学（北京）足球场</h2>
+        <p>中国地质大学（北京）运动场拥有标准跑道和足球场。这里见证训练、联赛与每一场属于北地人的足球记忆。</p>
+        <div class="home-ground-facts"><span>北京 · 学院路29号</span><span>标准跑道</span><span>2 个足球场</span></div>
+        <a class="text-link" href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">查看学校官网实景</a>
+      </div>
+    </section>
     <section class="section">
       ${sectionHead("最近赛果", "回看刚刚结束的比赛", `<a class="text-link" href="#/fixtures">全部赛程</a>`)}
       <div class="content-grid">
