@@ -28,6 +28,7 @@
 | 球员 | `GET /api/v1/teams/{teamId}/players`、`GET /api/v1/players/{playerId}` |
 | 球员赛季统计 | `GET /api/v1/players/{playerId}/stats?seasonId=` |
 | 公开公告 | `GET /api/v1/announcements?limit=` |
+| 首页新闻 | `GET /api/v1/news?limit=`、`GET /api/v1/news/{newsId}/image` |
 
 ## 新增接口
 
@@ -93,6 +94,7 @@ WEB_ADMIN_PASSWORD=<strong-password>
 /#/admin/fixtures   比赛管理（新增比赛、赛程、比分、事件、阵容）
 /#/admin/fixtures?new=1  新增比赛
 /#/admin/announcements  公告发布
+/#/admin/news          新闻栏图片与内容管理
 /#/admin/teams      球队与球员编辑
 ```
 
@@ -103,6 +105,7 @@ WEB_ADMIN_PASSWORD=<strong-password>
 - 管理员和球队管理员可编辑赛程、状态、比分、点球比分、比赛事件和双方出场阵容。
 - 领队只显示涉及授权球队的比赛，并且只能维护本队出场阵容。
 - 超级管理员可发布全员公告；首页公告板展示最新公告，访客首次看到新公告时会弹出提示。
+- 超级管理员可上传、编辑、隐藏、排序和删除首页“赛场实况”新闻图片。
 - 球队资料、球员资料和战术板也在同一管理台内。
 
 ## 战术板

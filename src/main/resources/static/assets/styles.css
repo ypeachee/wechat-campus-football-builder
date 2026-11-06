@@ -881,6 +881,24 @@ input:disabled { opacity: .55; cursor: not-allowed; }
   .admin-announcement-stats { flex-direction: row; }
 }
 
+
+.news-empty { flex: 0 0 100%; padding: 30px; color: var(--muted); font-size: 12px; text-align: center; }
+.admin-news-layout { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 20px; align-items: start; }
+.admin-news-layout textarea { min-height: 110px; resize: vertical; }
+.admin-check { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.admin-check input { width: auto; }
+.admin-news-seed { margin-bottom: 12px; padding: 13px; border-radius: 12px; background: var(--lime-soft); }
+.admin-news-list { display: grid; gap: 9px; }
+.admin-news-row { display: grid; grid-template-columns: 118px minmax(0,1fr) auto; gap: 13px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,253,247,.8); }
+.admin-news-row > img { width: 118px; height: 82px; border-radius: 10px; object-fit: cover; background: var(--green-deep); }
+.admin-news-copy { min-width: 0; }
+.admin-news-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; color: var(--muted); font-size: 9px; }
+.admin-news-copy h3 { margin: 6px 0 3px; font-size: 14px; }
+.admin-news-copy p { display: -webkit-box; margin: 0; overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.55; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.admin-news-actions { display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 980px) { .admin-news-layout { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .admin-news-row { grid-template-columns: 88px minmax(0,1fr); } .admin-news-row > img { width: 88px; height: 66px; } .admin-news-actions { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }

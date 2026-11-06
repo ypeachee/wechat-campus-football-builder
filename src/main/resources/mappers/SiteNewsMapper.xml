@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusfootball.news.SiteNewsMapper">
+    <resultMap id="NewsMap" type="com.campusfootball.news.SiteNews">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="tag" column="tag"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="imageData" column="image_data"/>
+        <result property="imageContentType" column="image_content_type"/>
+        <result property="imageFilename" column="image_filename"/>
+        <result property="displayOrder" column="display_order"/>
+        <result property="active" column="active"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="SummaryColumns">
+        id, title, description, tag, published_at, image_content_type, image_filename,
+        display_order, active, created_by, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO site_news (title, description, tag, published_at, image_data, image_content_type,
+                               image_filename, display_order, active, created_by)
+        VALUES (#{title}, #{description}, #{tag}, #{publishedAt}, #{imageData}, #{imageContentType},
+                #{imageFilename}, #{displayOrder}, #{active}, #{createdBy})
+    </insert>
+
+    <update id="update">
+        UPDATE site_news
+        SET title = #{title}, description = #{description}, tag = #{tag}, published_at = #{publishedAt},
+            image_data = #{imageData}, image_content_type = #{imageContentType}, image_filename = #{imageFilename},
+            display_order = #{displayOrder}, active = #{active}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM site_news WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="NewsMap">
+        SELECT * FROM site_news WHERE id = #{id}
+    </select>
+
+    <select id="findPublic" resultMap="NewsMap">
+        SELECT <include refid="SummaryColumns"/> FROM site_news
+        WHERE active = 1
+        ORDER BY display_order ASC, published_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findAll" resultMap="NewsMap">
+        SELECT <include refid="SummaryColumns"/> FROM site_news
+        ORDER BY display_order ASC, published_at DESC, id DESC
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM site_news
+    </select>
+</mapper>

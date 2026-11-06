@@ -1,0 +1,20 @@
+CREATE TABLE site_news (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    title VARCHAR(120) NOT NULL,
+    description VARCHAR(300) NOT NULL,
+    tag VARCHAR(40) NOT NULL,
+    published_at DATE NOT NULL,
+    image_data MEDIUMBLOB NOT NULL,
+    image_content_type VARCHAR(100) NOT NULL,
+    image_filename VARCHAR(255) NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_by BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_site_news_public (active, display_order, id),
+    CONSTRAINT fk_site_news_created_by FOREIGN KEY (created_by) REFERENCES app_user (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_site_news_active CHECK (active IN (0, 1)),
+    CONSTRAINT chk_site_news_display_order CHECK (display_order >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

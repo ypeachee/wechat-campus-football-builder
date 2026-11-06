@@ -19,6 +19,7 @@ const state = {
   teamMap: new Map(),
   seasonId: null,
   announcements: [],
+  newsFeed: { managed: false, items: [] },
   session: readStoredSession(),
   loading: false,
 };
@@ -98,7 +99,7 @@ function roleBadge(role) {
 
 async function api(path, options = {}) {
   const headers = new Headers(options.headers || {});
-  if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (state.session?.token) headers.set("Authorization", `Bearer ${state.session.token}`);
   let response;
   try {
@@ -319,16 +320,18 @@ window.addEventListener("hashchange", () => {
 });
 
 async function loadCore() {
-  const [competitions, seasons, teams, announcements] = await Promise.all([
+  const [competitions, seasons, teams, announcements, newsFeed] = await Promise.all([
     api("/competitions"),
     api("/seasons"),
     api("/teams"),
     api("/announcements?limit=10").catch(() => []),
+    api("/news?limit=8").catch(() => ({ managed: false, items: [] })),
   ]);
   state.competitions = competitions || [];
   state.seasons = seasons || [];
   state.teams = teams || [];
   state.announcements = announcements || [];
+  state.newsFeed = newsFeed || { managed: false, items: [] };
   state.teamMap = new Map(state.teams.map((team) => [Number(team.id), team]));
   const saved = Number(localStorage.getItem(SEASON_KEY));
   const savedValid = state.seasons.some((season) => season.id === saved);
@@ -418,6 +421,11 @@ async function renderRoute() {
     if (path === "/admin/announcements") {
       setActiveNav("admin");
       await renderAdminAnnouncementsPage();
+      return;
+    }
+    if (path === "/admin/news") {
+      setActiveNav("admin");
+      await renderAdminNewsPage();
       return;
     }
     if (path === "/admin/teams") {
@@ -553,13 +561,19 @@ function announcementBoardHtml() {
 }
 
 function newsRailHtml() {
-  const items = [
-    { image: "/assets/cugb-match-team.jpg", tag: "主场亮相", title: "北地女足主场集结", text: "校园足球在学院路29号开场，绿茵与看台一起见证比赛。" },
-    { image: "/assets/cugb-match-action.jpg", tag: "赛场实况", title: "绿茵场上的攻防转换", text: "奔跑、拼抢和传递，构成北地校园足球最鲜活的现场。" },
-    { image: "/assets/cugb-match-lineup.jpg", tag: "赛前时刻", title: "赛前集结，准备开场", text: "队员们在球场列队，迎接下一场校园足球较量。" },
-    { image: "/assets/cugb-match-goal.jpg", tag: "门前瞬间", title: "球门前的关键一刻", text: "禁区内的争抢与扑救，让每一场比赛都充满悬念。" },
+  const fallbackItems = [
+    { title: "北地女足主场集结", description: "校园足球在学院路29号开场，绿茵与看台一起见证比赛。", tag: "主场亮相", publishedAt: "2026-10-26", imageUrl: "/assets/cugb-match-team.jpg" },
+    { title: "绿茵场上的攻防转换", description: "奔跑、拼抢和传递，构成北地校园足球最鲜活的现场。", tag: "赛场实况", publishedAt: "2026-10-26", imageUrl: "/assets/cugb-match-action.jpg" },
+    { title: "赛前集结，准备开场", description: "队员们在球场列队，迎接下一场校园足球较量。", tag: "赛前时刻", publishedAt: "2026-10-26", imageUrl: "/assets/cugb-match-lineup.jpg" },
+    { title: "球门前的关键一刻", description: "禁区内的争抢与扑救，让每一场比赛都充满悬念。", tag: "门前瞬间", publishedAt: "2026-10-26", imageUrl: "/assets/cugb-match-goal.jpg" },
   ];
-  return `<section class="section news-section"><div class="section-head news-section-head"><div><span class="eyebrow">MATCH DAYS</span><h2 class="section-title">赛场实况</h2><p class="section-subtitle">左右滑动，看看北地足球场上的比赛瞬间。图片来自中国地质大学（北京）体育学院。</p></div><a class="text-link" href="http://www.dpe.cugb.edu.cn/c/2026-10-26/859866.shtml" target="_blank" rel="noopener noreferrer">查看赛事报道</a></div><div class="news-carousel"><button class="news-control news-control-prev" type="button" data-news-scroll="-1" aria-label="向左滚动新闻">‹</button><div class="news-rail" id="news-rail" tabindex="0" aria-label="比赛实况新闻，可左右滚动">${items.map((item) => `<article class="news-card"><div class="news-card-media"><img src="${item.image}" alt="${esc(item.title)}"><span>${esc(item.tag)}</span></div><div class="news-card-copy"><time>2026.10.26</time><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></article>`).join("")}</div><button class="news-control news-control-next" type="button" data-news-scroll="1" aria-label="向右滚动新闻">›</button></div></section>`;
+  const sourceItems = state.newsFeed?.managed ? state.newsFeed.items : fallbackItems;
+  const items = Array.isArray(sourceItems) ? sourceItems : [];
+  const cards = items.length ? items.map((item) => {
+    const date = String(item.publishedAt || "").replaceAll("-", ".");
+    return `<article class="news-card"><div class="news-card-media"><img src="${esc(item.imageUrl)}" alt="${esc(item.title)}"><span>${esc(item.tag)}</span></div><div class="news-card-copy"><time>${esc(date)}</time><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p></div></article>`;
+  }).join("") : `<div class="news-empty card">暂无已发布新闻，管理员可在管理台添加。</div>`;
+  return `<section class="section news-section"><div class="section-head news-section-head"><div><span class="eyebrow">MATCH DAYS</span><h2 class="section-title">赛场实况</h2><p class="section-subtitle">左右滑动，看看北地足球场上的比赛瞬间。${state.newsFeed?.managed ? "由赛事管理台维护。" : "图片来自中国地质大学（北京）体育学院。"}</p></div><a class="text-link" href="http://www.dpe.cugb.edu.cn/c/2026-10-26/859866.shtml" target="_blank" rel="noopener noreferrer">查看赛事报道</a></div><div class="news-carousel"><button class="news-control news-control-prev" type="button" data-news-scroll="-1" aria-label="向左滚动新闻">‹</button><div class="news-rail" id="news-rail" tabindex="0" aria-label="比赛实况新闻，可左右滚动">${cards}</div><button class="news-control news-control-next" type="button" data-news-scroll="1" aria-label="向右滚动新闻">›</button></div></section>`;
 }
 
 function homeGroundHtml() {
@@ -1252,6 +1266,7 @@ async function renderAdminHub() {
       <a class="card admin-module-card" href="#/admin/fixtures"><span class="admin-module-icon">◫</span><span><strong>比赛管理</strong><small>编辑赛程、状态、比分、事件和出场阵容</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/admin/teams"><span class="admin-module-icon">◉</span><span><strong>球队与球员</strong><small>编辑球队资料、球员号码和状态</small></span><b>进入 →</b></a>
       ${me.role === "ADMIN" ? `<a class="card admin-module-card" href="#/admin/announcements"><span class="admin-module-icon">!</span><span><strong>公告板</strong><small>发布赛事通知，首页展示并在访客进入时弹出</small></span><b>发布 →</b></a>` : ""}
+      ${me.role === "ADMIN" ? `<a class="card admin-module-card" href="#/admin/news"><span class="admin-module-icon">▧</span><span><strong>新闻栏</strong><small>上传比赛实况图，编辑首页横向新闻内容</small></span><b>管理 →</b></a>` : ""}
       <a class="card admin-module-card" href="#/tactics"><span class="admin-module-icon">▦</span><span><strong>战术板</strong><small>自由拖拽球员，保存多个阵型方案</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/account"><span class="admin-module-icon">⌁</span><span><strong>账号与权限</strong><small>查看授权范围和管理工作人员网站账号</small></span><b>查看 →</b></a>
     </div>
@@ -1311,6 +1326,76 @@ async function renderAdminAnnouncementsPage() {
       notify(error.message);
       button.disabled = false;
     }
+  });
+}
+
+async function renderAdminNewsPage() {
+  setTitle("新闻栏管理");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "新闻栏管理", "请先登录管理台。")}${emptyState("请先登录", "登录后即可管理首页新闻。", "▧")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "新闻栏管理", "读取权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role !== "ADMIN") {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "新闻栏管理", "只有超级管理员可以编辑新闻栏。")}${emptyState("没有权限", "请联系超级管理员。", "▧")}<div class="page-actions" style="margin-top:18px"><a class="button button-ghost" href="#/admin">返回管理台</a></div></div>`;
+    return;
+  }
+  let items;
+  try {
+    items = await api("/admin/news");
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "新闻栏管理", "读取新闻失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  const editId = Number(param("edit")) || null;
+  const editing = items.find((item) => item.id === editId);
+  const defaultDate = new Date().toISOString().slice(0, 10);
+  const defaultOrder = items.length ? Math.max(...items.map((item) => item.displayOrder)) + 10 : 10;
+  const listHtml = items.length ? items.map((item) => `<article class="admin-news-row"><img src="${esc(item.imageUrl)}" alt="${esc(item.title)}"><div class="admin-news-copy"><div class="admin-news-meta"><span class="badge no-dot ${item.active ? "badge-live" : "badge-cancelled"}">${item.active ? "首页显示" : "已隐藏"}</span><span>排序 ${item.displayOrder}</span><time>${esc(item.publishedAt)}</time></div><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p></div><div class="admin-news-actions"><a class="button button-ghost button-small" href="#/admin/news?edit=${item.id}">编辑</a><button class="button button-danger button-small" type="button" data-delete-news="${item.id}">删除</button></div></article>`).join("") : emptyState("暂无管理新闻", "当前首页仍显示 4 张默认实况图。可以导入默认图后编辑，也可以直接新增。", "▧");
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("NEWS ADMIN", editing ? "编辑新闻" : "新闻栏管理", "管理首页“赛场实况”的图片、标题、说明和排序。", `<a class="button button-ghost button-small" href="#/admin">返回管理台</a>`)}
+    <div class="admin-news-layout">
+      <section class="card admin-form-card"><div class="panel-head"><h2 class="panel-title">${editing ? "编辑新闻" : "新增新闻"}</h2>${editing ? `<a class="text-link" href="#/admin/news">取消编辑</a>` : ""}</div><form id="admin-news-form"><div class="form-field"><label for="news-title">标题</label><input id="news-title" name="title" maxlength="120" required value="${esc(editing?.title || "")}"></div><div class="form-field"><label for="news-description">说明</label><textarea id="news-description" name="description" maxlength="300" rows="4" required>${esc(editing?.description || "")}</textarea></div><div class="admin-form-grid"><div class="form-field"><label for="news-tag">分类标签</label><input id="news-tag" name="tag" maxlength="40" required value="${esc(editing?.tag || "赛场实况")}"></div><div class="form-field"><label for="news-date">发布日期</label><input id="news-date" name="publishedAt" type="date" required value="${esc(editing?.publishedAt || defaultDate)}"></div><div class="form-field"><label for="news-order">排序值</label><input id="news-order" name="displayOrder" type="number" min="0" max="9999" value="${editing?.displayOrder ?? defaultOrder}"></div><div class="form-field"><label for="news-image">图片${editing ? "（不选则保留原图）" : ""}</label><input id="news-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" ${editing ? "" : "required"}><small class="form-help">支持 JPG、PNG、WebP，最大 5MB。</small></div></div><label class="admin-check"><input id="news-active" type="checkbox" ${editing?.active === false ? "" : "checked"}> 在首页新闻栏显示</label><div class="page-actions"><button class="button button-primary" type="submit">${editing ? "保存修改" : "发布新闻"}</button>${editing ? `<a class="button button-ghost" href="#/admin/news">取消</a>` : ""}</div></form></section>
+      <section class="card panel"><div class="panel-head"><h2 class="panel-title">新闻内容</h2><span class="badge no-dot badge-scheduled">${items.length} 条</span></div>${!items.length ? `<div class="admin-news-seed"><button class="button button-lime button-small" type="button" id="seed-default-news">导入当前 4 张默认新闻</button></div>` : ""}<div class="admin-news-list">${listHtml}</div></section>
+    </div>
+  </div>`;
+  const form = document.getElementById("admin-news-form");
+  document.getElementById("seed-default-news")?.addEventListener("click", async (event) => {
+    event.currentTarget.disabled = true;
+    try { await api("/admin/news/seed-defaults", { method: "POST" }); state.newsFeed = await api("/news?limit=8"); notify("默认新闻已导入"); await renderAdminNewsPage(); } catch (error) { notify(error.message); event.currentTarget.disabled = false; }
+  });
+  document.querySelectorAll("[data-delete-news]").forEach((button) => button.addEventListener("click", async () => {
+    if (!window.confirm("确认删除这条新闻？")) return;
+    try { await api(`/admin/news/${button.dataset.deleteNews}`, { method: "DELETE" }); state.newsFeed = await api("/news?limit=8"); notify("新闻已删除"); await renderAdminNewsPage(); } catch (error) { notify(error.message); }
+  }));
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    const data = new FormData();
+    data.append("title", document.getElementById("news-title").value.trim());
+    data.append("description", document.getElementById("news-description").value.trim());
+    data.append("tag", document.getElementById("news-tag").value.trim());
+    data.append("publishedAt", document.getElementById("news-date").value);
+    data.append("displayOrder", document.getElementById("news-order").value || "0");
+    data.append("active", String(document.getElementById("news-active").checked));
+    const file = document.getElementById("news-image").files[0];
+    if (file) data.append("image", file);
+    try {
+      await api(editing ? `/admin/news/${editing.id}` : "/admin/news", { method: editing ? "PUT" : "POST", body: data });
+      state.newsFeed = await api("/news?limit=8");
+      notify(editing ? "新闻已更新" : "新闻已发布");
+      location.hash = "#/admin/news";
+      await renderAdminNewsPage();
+    } catch (error) { notify(error.message); button.disabled = false; }
   });
 }
 
