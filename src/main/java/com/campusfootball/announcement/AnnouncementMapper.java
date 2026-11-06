@@ -18,5 +18,7 @@ public interface AnnouncementMapper {
                                 @Param("limit") int limit,
                                 @Param("offset") int offset);
 
+    List<Announcement> findPublic(@Param("limit") int limit);
+
     long count(@Param("createdBy") Long createdBy);
 }

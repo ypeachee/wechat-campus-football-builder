@@ -75,7 +75,7 @@ public class SecurityConfig {
                                 "/api/v1/seasons", "/api/v1/teams/**", "/api/v1/players/**",
                                 "/api/v1/fixtures/**", "/api/v1/standings", "/api/v1/stats/**",
                                 "/api/v1/competitions", "/api/v1/stages", "/api/v1/groups/**",
-                                "/api/v1/brackets").permitAll()
+                                "/api/v1/brackets", "/api/v1/announcements").permitAll()
                         .requestMatchers("/api/v1/me", "/api/v1/notifications/**").authenticated()
                         .requestMatchers("/api/v1/admin/ratings/**", "/api/v1/admin/sensitive-terms/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/manage/audit-logs").hasRole("ADMIN")

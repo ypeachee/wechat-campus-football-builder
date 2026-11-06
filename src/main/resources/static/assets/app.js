@@ -1,6 +1,7 @@
 const API_BASE = "/api/v1";
 const SESSION_KEY = "campusFootball.webSession";
 const SEASON_KEY = "campusFootball.seasonId";
+const ANNOUNCEMENT_SEEN_KEY = "campusFootball.lastSeenAnnouncementId";
 
 const app = document.getElementById("app");
 const seasonSelect = document.getElementById("season-select");
@@ -17,6 +18,7 @@ const state = {
   teams: [],
   teamMap: new Map(),
   seasonId: null,
+  announcements: [],
   session: readStoredSession(),
   loading: false,
 };
@@ -220,6 +222,39 @@ function statusBadge(status) {
   return `<span class="badge ${cls}">${esc(statusLabel(status))}</span>`;
 }
 
+function announcementDate(value) {
+  const date = parseDate(value);
+  if (!date) return "刚刚发布";
+  return new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
+    .format(date).replaceAll("/", ".");
+}
+
+function maybeShowLatestAnnouncement() {
+  const latest = state.announcements[0];
+  if (!latest || document.querySelector(".announcement-dialog")) return;
+  let seenId = 0;
+  try { seenId = Number(localStorage.getItem(ANNOUNCEMENT_SEEN_KEY) || 0); } catch { /* ignore */ }
+  if (Number(latest.id) <= seenId) return;
+  const dialog = document.createElement("dialog");
+  dialog.className = "announcement-dialog";
+  dialog.setAttribute("aria-labelledby", "announcement-dialog-title");
+  dialog.innerHTML = `<div class="announcement-dialog-top"><span class="badge no-dot badge-admin">最新公告</span><button class="dialog-close" type="button" data-dialog-close aria-label="关闭公告">×</button></div>
+    <span class="eyebrow">NOTICE BOARD</span><h2 id="announcement-dialog-title">${esc(latest.title)}</h2><time>${esc(announcementDate(latest.createdAt))}</time><p>${esc(latest.content)}</p>
+    <div class="announcement-dialog-actions"><button class="button button-ghost button-small" type="button" data-dialog-board>查看公告板</button><button class="button button-primary button-small" type="button" data-dialog-close>我知道了</button></div>`;
+  dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+  dialog.addEventListener("close", () => {
+    try { localStorage.setItem(ANNOUNCEMENT_SEEN_KEY, String(latest.id)); } catch { /* ignore */ }
+    dialog.remove();
+  });
+  dialog.querySelectorAll("[data-dialog-close]").forEach((button) => button.addEventListener("click", () => dialog.close()));
+  dialog.querySelector("[data-dialog-board]")?.addEventListener("click", () => {
+    dialog.close();
+    setTimeout(() => document.getElementById("announcement-board")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  });
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
 function fixtureScore(fixture) {
   if (fixture.homeScore == null || fixture.awayScore == null) return "VS";
   return `${fixture.homeScore}<span>:</span>${fixture.awayScore}`;
@@ -284,14 +319,16 @@ window.addEventListener("hashchange", () => {
 });
 
 async function loadCore() {
-  const [competitions, seasons, teams] = await Promise.all([
+  const [competitions, seasons, teams, announcements] = await Promise.all([
     api("/competitions"),
     api("/seasons"),
     api("/teams"),
+    api("/announcements?limit=10").catch(() => []),
   ]);
   state.competitions = competitions || [];
   state.seasons = seasons || [];
   state.teams = teams || [];
+  state.announcements = announcements || [];
   state.teamMap = new Map(state.teams.map((team) => [Number(team.id), team]));
   const saved = Number(localStorage.getItem(SEASON_KEY));
   const savedValid = state.seasons.some((season) => season.id === saved);
@@ -376,6 +413,11 @@ async function renderRoute() {
     if (path === "/admin/fixtures") {
       setActiveNav("admin");
       await renderAdminFixturesPage();
+      return;
+    }
+    if (path === "/admin/announcements") {
+      setActiveNav("admin");
+      await renderAdminAnnouncementsPage();
       return;
     }
     if (path === "/admin/teams") {
@@ -473,19 +515,7 @@ async function renderHome() {
         </aside>
       </div>
     </section>
-    <section class="home-ground card">
-      <figure class="home-ground-media">
-        <img src="/assets/cugb-football-field.jpg" alt="中国地质大学（北京）田径运动场与足球场实景" width="560" height="420" loading="lazy">
-        <figcaption>图源：<a href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">中国地质大学（北京）官网 · 校园风光</a></figcaption>
-      </figure>
-      <div class="home-ground-copy">
-        <span class="eyebrow">HOME GROUND · CUGB</span>
-        <h2>中国地质大学（北京）足球场</h2>
-        <p>中国地质大学（北京）运动场拥有标准跑道和足球场。这里见证训练、联赛与每一场属于北地人的足球记忆。</p>
-        <div class="home-ground-facts"><span>北京 · 学院路29号</span><span>标准跑道</span><span>2 个足球场</span></div>
-        <a class="text-link" href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">查看学校官网实景</a>
-      </div>
-    </section>
+    ${announcementBoardHtml()}
     <section class="section">
       ${sectionHead("最近赛果", "回看刚刚结束的比赛", `<a class="text-link" href="#/fixtures">全部赛程</a>`)}
       <div class="content-grid">
@@ -502,7 +532,51 @@ async function renderHome() {
         </div>
       </div>
     </section>
+    ${newsRailHtml()}
+    ${homeGroundHtml()}
   </div>`;
+  const newsRail = document.getElementById("news-rail");
+  document.querySelectorAll("[data-news-scroll]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const direction = Number(button.dataset.newsScroll);
+      newsRail?.scrollBy({ left: direction * Math.min(newsRail.clientWidth * .82, 430), behavior: "smooth" });
+    });
+  });
+}
+
+function announcementBoardHtml() {
+  const items = state.announcements.slice(0, 3);
+  const cards = items.length
+    ? items.map((item, index) => `<article class="announcement-item"><div class="announcement-item-meta"><time>${esc(announcementDate(item.createdAt))}</time>${index === 0 ? `<span class="announcement-new">最新</span>` : ""}</div><h3>${esc(item.title)}</h3><p>${esc(item.content)}</p></article>`).join("")
+    : `<div class="announcement-empty">暂无公告，管理员发布后会显示在这里。</div>`;
+  return `<section class="announcement-board card" id="announcement-board"><div class="announcement-board-head"><div><span class="eyebrow">NOTICE BOARD</span><h2>公告板</h2><p>赛事通知、赛程变更和重要提醒都会在这里发布。</p></div><span class="badge no-dot badge-scheduled">${items.length} 条</span></div><div class="announcement-grid">${cards}</div></section>`;
+}
+
+function newsRailHtml() {
+  const items = [
+    { image: "/assets/cugb-match-team.jpg", tag: "主场亮相", title: "北地女足主场集结", text: "校园足球在学院路29号开场，绿茵与看台一起见证比赛。" },
+    { image: "/assets/cugb-match-action.jpg", tag: "赛场实况", title: "绿茵场上的攻防转换", text: "奔跑、拼抢和传递，构成北地校园足球最鲜活的现场。" },
+    { image: "/assets/cugb-match-lineup.jpg", tag: "赛前时刻", title: "赛前集结，准备开场", text: "队员们在球场列队，迎接下一场校园足球较量。" },
+    { image: "/assets/cugb-match-goal.jpg", tag: "门前瞬间", title: "球门前的关键一刻", text: "禁区内的争抢与扑救，让每一场比赛都充满悬念。" },
+  ];
+  return `<section class="section news-section"><div class="section-head news-section-head"><div><span class="eyebrow">MATCH DAYS</span><h2 class="section-title">赛场实况</h2><p class="section-subtitle">左右滑动，看看北地足球场上的比赛瞬间。图片来自中国地质大学（北京）体育学院。</p></div><a class="text-link" href="http://www.dpe.cugb.edu.cn/c/2026-10-26/859866.shtml" target="_blank" rel="noopener noreferrer">查看赛事报道</a></div><div class="news-carousel"><button class="news-control news-control-prev" type="button" data-news-scroll="-1" aria-label="向左滚动新闻">‹</button><div class="news-rail" id="news-rail" tabindex="0" aria-label="比赛实况新闻，可左右滚动">${items.map((item) => `<article class="news-card"><div class="news-card-media"><img src="${item.image}" alt="${esc(item.title)}"><span>${esc(item.tag)}</span></div><div class="news-card-copy"><time>2026.10.26</time><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></article>`).join("")}</div><button class="news-control news-control-next" type="button" data-news-scroll="1" aria-label="向右滚动新闻">›</button></div></section>`;
+}
+
+function homeGroundHtml() {
+  return `    <section class="home-ground card">
+      <figure class="home-ground-media">
+        <img src="/assets/cugb-football-field.jpg" alt="中国地质大学（北京）田径运动场与足球场实景" width="560" height="420" loading="lazy">
+        <figcaption>图源：<a href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">中国地质大学（北京）官网 · 校园风光</a></figcaption>
+      </figure>
+      <div class="home-ground-copy">
+        <span class="eyebrow">HOME GROUND · CUGB</span>
+        <h2>中国地质大学（北京）足球场</h2>
+        <p>中国地质大学（北京）运动场拥有标准跑道和足球场。这里见证训练、联赛与每一场属于北地人的足球记忆。</p>
+        <div class="home-ground-facts"><span>北京 · 学院路29号</span><span>标准跑道</span><span>2 个足球场</span></div>
+        <a class="text-link" href="https://www.cugb.edu.cn/xyfg2/39104.jhtml" target="_blank" rel="noopener noreferrer">查看学校官网实景</a>
+      </div>
+    </section>
+`;
 }
 
 function spotlightCard(fixture) {
@@ -1177,11 +1251,67 @@ async function renderAdminHub() {
       ${canManageAll ? `<a class="card admin-module-card admin-module-primary" href="#/admin/fixtures?new=1"><span class="admin-module-icon">＋</span><span><strong>新增比赛</strong><small>直接创建新赛程，不用再进小程序找入口</small></span><b>立即新增 →</b></a>` : ""}
       <a class="card admin-module-card" href="#/admin/fixtures"><span class="admin-module-icon">◫</span><span><strong>比赛管理</strong><small>编辑赛程、状态、比分、事件和出场阵容</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/admin/teams"><span class="admin-module-icon">◉</span><span><strong>球队与球员</strong><small>编辑球队资料、球员号码和状态</small></span><b>进入 →</b></a>
+      ${me.role === "ADMIN" ? `<a class="card admin-module-card" href="#/admin/announcements"><span class="admin-module-icon">!</span><span><strong>公告板</strong><small>发布赛事通知，首页展示并在访客进入时弹出</small></span><b>发布 →</b></a>` : ""}
       <a class="card admin-module-card" href="#/tactics"><span class="admin-module-icon">▦</span><span><strong>战术板</strong><small>自由拖拽球员，保存多个阵型方案</small></span><b>进入 →</b></a>
       <a class="card admin-module-card" href="#/account"><span class="admin-module-icon">⌁</span><span><strong>账号与权限</strong><small>查看授权范围和管理工作人员网站账号</small></span><b>查看 →</b></a>
     </div>
     <section class="card admin-note"><strong>权限说明</strong><p>管理员和球队管理员可新增比赛并维护全部比赛数据；领队可在比赛管理中维护被授权球队的出场阵容。所有写操作都由后端再次校验。</p></section>
   </div>`;
+}
+
+async function renderAdminAnnouncementsPage() {
+  setTitle("公告管理");
+  if (!state.session) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "公告管理", "请先登录管理台。")}${emptyState("请先登录", "登录后即可发布公告。", "!")}<div class="page-actions" style="margin-top:18px"><a class="button button-primary" href="#/login">前往登录</a></div></div>`;
+    return;
+  }
+  showLoading();
+  let me;
+  try {
+    me = await api("/me");
+    saveSession({ ...state.session, ...me });
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "公告管理", "读取权限失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  if (me.role !== "ADMIN") {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "公告管理", "只有超级管理员可以发布全员公告。")}${emptyState("没有权限", "球队管理员和领队不能发布全员公告。", "!")}<div class="page-actions" style="margin-top:18px"><a class="button button-ghost" href="#/admin">返回管理台</a></div></div>`;
+    return;
+  }
+  let page;
+  try {
+    page = await api("/admin/announcements?page=0&size=30");
+  } catch (error) {
+    app.innerHTML = `<div class="page">${pageHeader("MANAGEMENT", "公告管理", "读取公告失败。")}${errorState(error)}</div>`;
+    return;
+  }
+  const audienceLabel = ({ ALL: "全员公告", ADMIN: "管理员", TEAM_STAFF: "球队工作人员", TEAM: "指定球队", USER: "指定用户" });
+  const items = page.items || [];
+  const listHtml = items.length ? items.map((item) => `<article class="admin-announcement-row"><div><div class="admin-announcement-meta"><time>${esc(announcementDate(item.createdAt))}</time><span class="badge no-dot badge-scheduled">${esc(audienceLabel[item.audience] || item.audience)}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.content)}</p></div><div class="admin-announcement-stats"><span>触达 ${item.deliveredCount}</span><span>已读 ${item.readCount}</span></div></article>`).join("") : emptyState("暂无公告", "发布第一条公告后会显示在这里。", "!");
+  app.innerHTML = `<div class="page admin-page">
+    ${pageHeader("NOTICE ADMIN", "公告管理", "发布全员公告。公告会出现在首页公告板，并在访客下次进入网站时弹出。", `<a class="button button-ghost button-small" href="#/admin">返回管理台</a>`)}
+    <div class="admin-announcement-layout">
+      <section class="card admin-form-card"><div class="panel-head"><h2 class="panel-title">发布新公告</h2><span class="badge no-dot badge-admin">全员可见</span></div>
+        <form id="admin-announcement-form"><div class="form-field"><label for="announcement-title">公告标题</label><input id="announcement-title" name="title" maxlength="120" required placeholder="例如：本周末赛程调整通知"></div><div class="form-field"><label for="announcement-content">公告内容</label><textarea id="announcement-content" name="content" maxlength="500" rows="7" required placeholder="填写要通知所有访客的内容"></textarea><small class="form-help">最多 500 个字符。发布后会同步到首页公告板。</small></div><div class="admin-create-intro"><strong>进站弹窗</strong><span>访客看到最新公告后，浏览器会记住已读状态；后续只有新公告才会再次弹出。</span></div><div class="page-actions"><button class="button button-primary" type="submit">发布公告</button></div></form>
+      </section>
+      <section class="card panel"><div class="panel-head"><h2 class="panel-title">公告记录</h2><span class="badge no-dot badge-scheduled">${page.total || 0} 条</span></div><div class="admin-announcement-list">${listHtml}</div></section>
+    </div>
+  </div>`;
+  document.getElementById("admin-announcement-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    try {
+      await api("/admin/announcements", { method: "POST", body: JSON.stringify({ title: form.title.value.trim(), content: form.content.value.trim(), audience: "ALL" }) });
+      state.announcements = await api("/announcements?limit=10").catch(() => state.announcements);
+      notify("公告已发布");
+      await renderAdminAnnouncementsPage();
+    } catch (error) {
+      notify(error.message);
+      button.disabled = false;
+    }
+  });
 }
 
 async function renderAdminTeamsPage() {
@@ -2098,6 +2228,7 @@ async function init() {
     await loadCore();
     updateAuthHeader();
     await renderRoute();
+    maybeShowLatestAnnouncement();
   } catch (error) {
     console.error(error);
     setTitle("服务暂不可用");

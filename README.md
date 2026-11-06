@@ -110,6 +110,7 @@ $env:TEST_DB_PASSWORD='campus'
 - `GET /api/v1/teams/{teamId}/players`
 - `GET /api/v1/players/{playerId}`
 - `GET /api/v1/players/{playerId}/stats?seasonId=`
+- `GET /api/v1/announcements?limit=`
 - `GET /api/v1/fixtures?seasonId=`
 - `GET /api/v1/fixtures/{fixtureId}`
 - `GET /api/v1/standings?seasonId=`
@@ -185,7 +186,7 @@ http://127.0.0.1:8080/
 
 已实现页面：
 
-- 首页与赛季概览、学校足球场实景
+- 首页与赛季概览、公告板、比赛实况新闻栏和学校足球场实景
 - 赛程列表、比赛详情、事件与出场阵容
 - 积分榜
 - 射手榜、助攻榜

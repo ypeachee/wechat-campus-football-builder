@@ -68,6 +68,13 @@ public class AnnouncementService {
         }
         return view(announcement);
     }
+    public List<PublicAnnouncementView> publicList(int limit) {
+        int safeLimit = Math.max(1, Math.min(20, limit));
+        return announcementMapper.findPublic(safeLimit).stream()
+                .map(item -> new PublicAnnouncementView(item.getId(), item.getTitle(), item.getContent(), item.getCreatedAt()))
+                .toList();
+    }
+
     @Transactional
     public AnnouncementView create(long actorUserId, String title, String content,
                                    AnnouncementAudience audience, Long targetTeamId, Long targetUserId) {
@@ -156,6 +163,9 @@ public class AnnouncementService {
 
     private AppException notFound(String message) {
         return new AppException(HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, message);
+    }
+
+    public record PublicAnnouncementView(long id, String title, String content, LocalDateTime createdAt) {
     }
 
     public record AnnouncementView(long id, String title, String content, AnnouncementAudience audience,

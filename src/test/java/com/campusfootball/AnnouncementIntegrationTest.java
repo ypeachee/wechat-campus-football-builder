@@ -79,4 +79,22 @@ class AnnouncementIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.recipientCount").value(1));
     }
+
+    @Test
+    void publicEndpointReturnsLatestAllAudienceAnnouncementWithoutLogin() throws Exception {
+        String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
+
+        mockMvc.perform(post("/api/v1/admin/announcements")
+                        .header("Authorization", "Bearer " + admin)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"title\":\"Public notice\",\"content\":\"Visible on the web home page\",\"audience\":\"ALL\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/announcements").param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Public notice"))
+                .andExpect(jsonPath("$[0].content").value("Visible on the web home page"))
+                .andExpect(jsonPath("$[0].createdAt").exists());
+    }
+
 }

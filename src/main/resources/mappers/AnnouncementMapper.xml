@@ -50,6 +50,15 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
+    <select id="findPublic" resultMap="AnnouncementMap">
+        SELECT a.id, a.title, a.content, a.audience, a.target_team_id, a.target_user_id,
+               a.created_by, a.recipient_count, a.created_at
+        FROM announcement a
+        WHERE a.audience = 'ALL'
+        ORDER BY a.created_at DESC, a.id DESC
+        LIMIT #{limit}
+    </select>
+
     <select id="count" resultType="long">
         SELECT COUNT(*) FROM announcement a
         <where>
