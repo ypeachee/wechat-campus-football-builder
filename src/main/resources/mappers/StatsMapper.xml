@@ -50,6 +50,92 @@
         ORDER BY appearances DESC, p.name ASC
     </select>
 
+    <select id="playerSeasonSummary" resultType="com.campusfootball.stats.PlayerSeasonSummary">
+        SELECT p.id AS player_id,
+               s.id AS season_id,
+               s.name AS season_name,
+               (SELECT COUNT(DISTINCT a.fixture_id)
+                  FROM fixture_appearance a
+                  JOIN fixture f ON f.id = a.fixture_id
+                 WHERE a.player_id = p.id AND f.season_id = s.id AND f.status = 'FINISHED') AS appearances,
+               (SELECT COUNT(*)
+                  FROM fixture_appearance a
+                  JOIN fixture f ON f.id = a.fixture_id
+                 WHERE a.player_id = p.id AND f.season_id = s.id AND f.status = 'FINISHED'
+                   AND a.is_starter = 1) AS starts,
+               (SELECT COUNT(*)
+                  FROM fixture_appearance a
+                  JOIN fixture f ON f.id = a.fixture_id
+                 WHERE a.player_id = p.id AND f.season_id = s.id AND f.status = 'FINISHED'
+                   AND a.is_starter = 0) AS substitutes,
+               (SELECT COALESCE(SUM(a.minutes_played), 0)
+                  FROM fixture_appearance a
+                  JOIN fixture f ON f.id = a.fixture_id
+                 WHERE a.player_id = p.id AND f.season_id = s.id AND f.status = 'FINISHED') AS minutes_played,
+               (SELECT COUNT(*)
+                  FROM fixture_event e
+                  JOIN fixture f ON f.id = e.fixture_id
+                 WHERE e.player_id = p.id AND e.event_type = 'GOAL'
+                   AND f.season_id = s.id AND f.status = 'FINISHED') AS goals,
+               (SELECT COUNT(*)
+                  FROM fixture_event e
+                  JOIN fixture f ON f.id = e.fixture_id
+                 WHERE e.related_player_id = p.id AND e.event_type = 'GOAL'
+                   AND f.season_id = s.id AND f.status = 'FINISHED') AS assists,
+               (SELECT COUNT(*)
+                  FROM fixture_event e
+                  JOIN fixture f ON f.id = e.fixture_id
+                 WHERE e.player_id = p.id AND e.event_type = 'YELLOW_CARD'
+                   AND f.season_id = s.id AND f.status = 'FINISHED') AS yellow_cards,
+               (SELECT COUNT(*)
+                  FROM fixture_event e
+                  JOIN fixture f ON f.id = e.fixture_id
+                 WHERE e.player_id = p.id AND e.event_type = 'RED_CARD'
+                   AND f.season_id = s.id AND f.status = 'FINISHED') AS red_cards,
+               (SELECT COUNT(*)
+                  FROM fixture_event e
+                  JOIN fixture f ON f.id = e.fixture_id
+                 WHERE e.player_id = p.id AND e.event_type = 'OWN_GOAL'
+                   AND f.season_id = s.id AND f.status = 'FINISHED') AS own_goals
+        FROM player p
+        JOIN season s ON s.id = #{seasonId}
+        WHERE p.id = #{playerId}
+    </select>
+
+    <select id="playerMatchStats" resultType="com.campusfootball.stats.PlayerMatchStat">
+        SELECT f.id AS fixture_id,
+               f.round_no AS round_no,
+               f.kickoff_at AS kickoff_at,
+               ot.id AS opponent_team_id,
+               ot.name AS opponent_team_name,
+               CASE WHEN f.home_team_id = a.team_id THEN f.home_score ELSE f.away_score END AS score_for,
+               CASE WHEN f.home_team_id = a.team_id THEN f.away_score ELSE f.home_score END AS score_against,
+               a.is_starter AS starter,
+               a.minutes_played AS minutes_played,
+               (SELECT COUNT(*) FROM fixture_event e
+                 WHERE e.fixture_id = f.id AND e.player_id = a.player_id
+                   AND e.event_type = 'GOAL') AS goals,
+               (SELECT COUNT(*) FROM fixture_event e
+                 WHERE e.fixture_id = f.id AND e.related_player_id = a.player_id
+                   AND e.event_type = 'GOAL') AS assists,
+               (SELECT COUNT(*) FROM fixture_event e
+                 WHERE e.fixture_id = f.id AND e.player_id = a.player_id
+                   AND e.event_type = 'YELLOW_CARD') AS yellow_cards,
+               (SELECT COUNT(*) FROM fixture_event e
+                 WHERE e.fixture_id = f.id AND e.player_id = a.player_id
+                   AND e.event_type = 'RED_CARD') AS red_cards,
+               (SELECT COUNT(*) FROM fixture_event e
+                 WHERE e.fixture_id = f.id AND e.player_id = a.player_id
+                   AND e.event_type = 'OWN_GOAL') AS own_goals
+        FROM fixture_appearance a
+        JOIN fixture f ON f.id = a.fixture_id
+        JOIN team ot ON ot.id = CASE WHEN f.home_team_id = a.team_id THEN f.away_team_id ELSE f.home_team_id END
+        WHERE a.player_id = #{playerId}
+          AND f.season_id = #{seasonId}
+          AND f.status = 'FINISHED'
+        ORDER BY f.kickoff_at, f.id
+    </select>
+
     <select id="leagueStandings" resultType="com.campusfootball.stats.StandingRow">
         WITH results AS (
             SELECT f.home_team_id AS team_id, f.home_score AS goals_for, f.away_score AS goals_against,

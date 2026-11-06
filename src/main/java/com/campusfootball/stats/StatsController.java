@@ -2,6 +2,7 @@ package com.campusfootball.stats;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,9 +12,11 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class StatsController {
     private final StatsService statsService;
+    private final PlayerStatsService playerStatsService;
 
-    public StatsController(StatsService statsService) {
+    public StatsController(StatsService statsService, PlayerStatsService playerStatsService) {
         this.statsService = statsService;
+        this.playerStatsService = playerStatsService;
     }
 
     @GetMapping("/stats/scorers")
@@ -38,6 +41,11 @@ public class StatsController {
                                            @RequestParam(required = false) Long stageId,
                                            @RequestParam(required = false) Long groupId) {
         return statsService.appearances(filter(competitionId, seasonId, stageId, groupId));
+    }
+
+    @GetMapping("/players/{playerId}/stats")
+    public PlayerSeasonStats playerStats(@PathVariable long playerId, @RequestParam long seasonId) {
+        return playerStatsService.get(playerId, seasonId);
     }
 
     @GetMapping("/standings")

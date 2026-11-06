@@ -26,8 +26,17 @@
 | 出场榜 | `GET /api/v1/stats/appearances?seasonId=` |
 | 球队 | `GET /api/v1/teams`、`GET /api/v1/teams/{teamId}` |
 | 球员 | `GET /api/v1/teams/{teamId}/players`、`GET /api/v1/players/{playerId}` |
+| 球员赛季统计 | `GET /api/v1/players/{playerId}/stats?seasonId=` |
 
 ## 新增接口
+
+### 球员赛季统计
+
+```http
+GET /api/v1/players/{playerId}/stats?seasonId=<seasonId>
+```
+
+返回该球员在指定赛季的汇总数据与逐场明细，包括出场、首发、替补、上场分钟、进球、助攻、黄牌、红牌和乌龙球。只统计已完赛比赛。
 
 ### Web 登录
 

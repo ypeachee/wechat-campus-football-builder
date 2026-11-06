@@ -704,21 +704,50 @@ async function renderPlayerDetail(playerId) {
   showLoading();
   const id = Number(playerId);
   if (!Number.isFinite(id)) throw new ApiError("球员编号无效", 400, "VALIDATION_FAILED");
-  const [player, scorers, assists, appearances] = await Promise.all([
+  const emptyStats = {
+    appearances: 0, starts: 0, substitutes: 0, minutesPlayed: 0,
+    goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, matches: [],
+  };
+  const [player, stats] = await Promise.all([
     api(`/players/${id}`),
-    state.seasonId ? api(`/stats/scorers?${seasonQuery()}`).catch(() => []) : Promise.resolve([]),
-    state.seasonId ? api(`/stats/assists?${seasonQuery()}`).catch(() => []) : Promise.resolve([]),
-    state.seasonId ? api(`/stats/appearances?${seasonQuery()}`).catch(() => []) : Promise.resolve([]),
+    state.seasonId ? api(`/players/${id}/stats?${seasonQuery()}`) : Promise.resolve(emptyStats),
   ]);
   const [team, players] = await Promise.all([
     api(`/teams/${player.teamId}`).catch(() => teamById(player.teamId)),
     api(`/teams/${player.teamId}/players`).catch(() => []),
   ]);
-  const scoring = scorers.find((row) => row.playerId === id);
-  const assisting = assists.find((row) => row.playerId === id);
-  const apps = appearances.find((row) => row.playerId === id);
   const age = player.birthDate ? new Date().getFullYear() - new Date(player.birthDate).getFullYear() : null;
   const photo = player.photoUrl ? `<img src="${esc(player.photoUrl)}" alt="${esc(player.name)}照片" loading="lazy">` : esc(initials(player.name));
+  const matches = Array.isArray(stats.matches) ? stats.matches : [];
+  const seasonOptions = state.seasons.map((season) => `<option value="${season.id}" ${season.id === state.seasonId ? "selected" : ""}>${esc(season.name)}</option>`).join("");
+  const statCards = [
+    ["出场", stats.appearances],
+    ["首发", stats.starts],
+    ["替补", stats.substitutes],
+    ["上场时间", stats.minutesPlayed],
+    ["进球", stats.goals],
+    ["助攻", stats.assists],
+    ["黄牌", stats.yellowCards],
+    ["红牌", stats.redCards],
+    ["乌龙球", stats.ownGoals],
+  ].map(([label, value]) => `<div class="card player-stat"><strong>${esc(value)}${label === "上场时间" ? "<small>′</small>" : ""}</strong><span>${esc(label)}</span></div>`).join("");
+  const matchRows = matches.map((match) => {
+    const when = dateParts(match.kickoffAt);
+    const result = match.scoreFor > match.scoreAgainst ? "胜" : match.scoreFor < match.scoreAgainst ? "负" : "平";
+    const resultClass = result === "胜" ? "match-result-win" : result === "负" ? "match-result-loss" : "match-result-draw";
+    return `<tr>
+      <td><a class="player-match-date" href="#/fixtures/${match.fixtureId}">${esc(when.date)}</a><small>第 ${esc(match.roundNo || "-")} 轮</small></td>
+      <td class="team-cell"><a href="#/teams/${match.opponentTeamId}">${esc(match.opponentTeamName)}</a></td>
+      <td><span class="player-match-score ${resultClass}">${esc(match.scoreFor)}:${esc(match.scoreAgainst)} <small>${result}</small></span></td>
+      <td>${match.starter ? "首发" : "替补"}</td>
+      <td>${match.minutesPlayed != null ? `${esc(match.minutesPlayed)}′` : "—"}</td>
+      <td>${match.goals || "—"}</td>
+      <td>${match.assists || "—"}</td>
+      <td>${match.yellowCards || "—"}</td>
+      <td>${match.redCards || "—"}</td>
+      <td>${match.ownGoals || "—"}</td>
+    </tr>`;
+  }).join("");
   app.innerHTML = `<div class="page">
     <section class="player-hero">
       <div class="player-photo">${photo}</div>
@@ -734,10 +763,17 @@ async function renderPlayerDetail(playerId) {
       </div>
       <div class="player-number"><strong>${esc(player.jerseyNo || "-")}</strong><span>JERSEY NUMBER</span></div>
     </section>
-    <section class="player-stats">
-      <div class="card player-stat"><strong>${scoring?.goals || 0}</strong><span>本赛季进球</span></div>
-      <div class="card player-stat"><strong>${assisting?.assists || 0}</strong><span>本赛季助攻</span></div>
-      <div class="card player-stat"><strong>${apps?.appearances || 0}</strong><span>本赛季出场</span></div>
+    <section class="player-season-bar card">
+      <div><span class="eyebrow">SEASON DATA</span><h2>赛季数据</h2><p>只统计已完赛比赛，切换赛季即可查看历史数据。</p></div>
+      <label class="player-season-picker" for="player-season-select"><span>选择赛季</span><select id="player-season-select" ${state.seasons.length ? "" : "disabled"}>${seasonOptions || '<option value="">暂无赛季</option>'}</select></label>
+    </section>
+    <section class="player-stats">${statCards}</section>
+    <section class="card panel player-match-panel">
+      <div class="panel-head"><h2 class="panel-title">逐场数据</h2><span class="badge no-dot badge-scheduled">${matches.length} 场</span></div>
+      ${matches.length ? `<div class="table-wrap"><table class="data-table player-match-table">
+        <thead><tr><th>日期</th><th>对手</th><th>比分</th><th>身份</th><th>分钟</th><th>进球</th><th>助攻</th><th>黄牌</th><th>红牌</th><th>乌龙</th></tr></thead>
+        <tbody>${matchRows}</tbody>
+      </table></div>` : emptyState("本赛季暂无出场数据", "比赛完赛并录入出场阵容后，这里会显示逐场统计。", "○")}
     </section>
     <section class="section content-grid">
       <div class="card panel">
@@ -757,6 +793,14 @@ async function renderPlayerDetail(playerId) {
       </div>
     </section>
   </div>`;
+  document.getElementById("player-season-select")?.addEventListener("change", async (event) => {
+    const seasonId = Number(event.target.value);
+    if (!Number.isFinite(seasonId) || seasonId <= 0) return;
+    state.seasonId = seasonId;
+    localStorage.setItem(SEASON_KEY, String(seasonId));
+    populateSeasonSelect();
+    await renderPlayerDetail(id);
+  });
 }
 
 async function renderFixtureDetail(fixtureId) {

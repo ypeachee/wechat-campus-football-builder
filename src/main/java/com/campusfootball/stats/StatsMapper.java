@@ -13,6 +13,10 @@ public interface StatsMapper {
 
     List<AppearanceRow> appearances(@Param("filter") StatsFilter filter);
 
+    PlayerSeasonSummary playerSeasonSummary(@Param("playerId") long playerId, @Param("seasonId") long seasonId);
+
+    List<PlayerMatchStat> playerMatchStats(@Param("playerId") long playerId, @Param("seasonId") long seasonId);
+
     List<StandingRow> leagueStandings(@Param("filter") StatsFilter filter);
 
     List<StandingRow> groupStandings(@Param("filter") StatsFilter filter);
