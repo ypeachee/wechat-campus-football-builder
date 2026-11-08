@@ -961,13 +961,17 @@ async function renderFixtureDetail(fixtureId) {
 
 function eventRow(event, match, playerMap) {
   const player = playerMap.get(Number(event.playerId));
+  const playerTeam = player ? teamById(player.teamId) : null;
   const team = event.teamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
   const type = ({ GOAL: ["⚽", "进球"], OWN_GOAL: ["OG", "乌龙球"], YELLOW_CARD: ["▰", "黄牌"], RED_CARD: ["■", "红牌"] })[event.eventType] || ["•", "事件"];
   const related = event.relatedPlayerId ? playerMap.get(Number(event.relatedPlayerId)) : null;
+  const detail = event.eventType === "OWN_GOAL"
+    ? `${team.name}得分 · 乌龙球员来自${playerTeam?.name || "对方"}`
+    : `${team.name}${related ? ` · 助攻 ${related.name}` : ""}${event.note ? ` · ${event.note}` : ""}`;
   return `<div class="event-row">
     <span class="event-minute">${event.minute}${event.stoppageMinute ? `+${event.stoppageMinute}` : ""}'</span>
     <span class="event-icon">${type[0]}</span>
-    <span class="event-main"><strong>${esc(type[1])} · ${esc(player?.name || `球员 #${event.playerId}`)}</strong><span>${esc(team.name)}${related ? ` · 助攻 ${esc(related.name)}` : ""}${event.note ? ` · ${esc(event.note)}` : ""}</span></span>
+    <span class="event-main"><strong>${esc(type[1])} · ${esc(player?.name || `球员 #${event.playerId}`)}</strong><span>${esc(detail)}</span></span>
   </div>`;
 }
 
@@ -1801,8 +1805,8 @@ async function renderAdminFixturesPage() {
   function playerOptions(team) {
     return (team.id === home.id ? homePlayers : awayPlayers).map((player) => `<option value="${player.id}">${esc(player.jerseyNo ? `${player.jerseyNo} ` : "")}${esc(player.name)}</option>`).join("");
   }
-  function relatedOptions() {
-    return allPlayers.map((player) => `<option value="${player.id}">${esc(player.name)} · ${esc(teamById(player.teamId).name)}</option>`).join("");
+  function relatedOptions(team) {
+    return (team.id === home.id ? homePlayers : awayPlayers).map((player) => `<option value="${player.id}">${esc(player.name)} · ${esc(teamById(player.teamId).name)}</option>`).join("");
   }
   function eventLabel(type) {
     return ({ GOAL: "进球", OWN_GOAL: "乌龙球", YELLOW_CARD: "黄牌", RED_CARD: "红牌" })[type] || type;
@@ -1858,7 +1862,7 @@ async function renderAdminFixturesPage() {
           <div class="panel-head"><h2 class="panel-title">比赛事件</h2><span class="badge no-dot badge-scheduled">${events.length} 条</span></div>
           ${events.length ? `<div class="admin-event-list">${events.slice().sort((a, b) => a.minute - b.minute).map((event) => `<div class="admin-event-row"><span class="event-minute">${event.minute}${event.stoppageMinute ? `+${event.stoppageMinute}` : ""}'</span><span class="event-icon">${eventIcon(event.eventType)}</span><span class="admin-event-copy"><strong>${esc(eventLabel(event.eventType))} · ${esc(playerMap.get(Number(event.playerId))?.name || `球员 #${event.playerId}`)}</strong><small>${esc(teamById(event.teamId).name)}${event.relatedPlayerId ? ` · 助攻 ${esc(playerMap.get(Number(event.relatedPlayerId))?.name || `球员 #${event.relatedPlayerId}`)}` : ""}${event.note ? ` · ${esc(event.note)}` : ""}</small></span>${canManageAll && eventEditable ? `<button class="button button-danger button-small" type="button" data-delete-event="${event.id}">删除</button>` : ""}</div>`).join("")}</div>` : emptyState("暂无比赛事件", "比赛开始后可以录入进球、助攻和红黄牌。", "○")}
           ${canManageAll && !eventEditable ? `<p class="admin-locked-note">${fixture.dataLocked ? "比赛数据已锁定，解锁后才能维护事件。" : "比赛仍是草稿，先把状态改为“未开始”后才能录入事件。"}</p>` : ""}
-          ${canManageAll && eventEditable ? `<form id="admin-event-form" class="admin-event-form"><div class="admin-form-grid"><div class="form-field"><label for="admin-event-team">事件球队</label><select id="admin-event-team"><option value="${home.id}">${esc(home.name)}</option><option value="${away.id}">${esc(away.name)}</option></select></div><div class="form-field"><label for="admin-event-player">球员</label><select id="admin-event-player">${playerOptions(home)}</select></div><div class="form-field"><label for="admin-event-type">事件类型</label><select id="admin-event-type"><option value="GOAL">进球</option><option value="OWN_GOAL">乌龙球</option><option value="YELLOW_CARD">黄牌</option><option value="RED_CARD">红牌</option></select></div><div class="form-field"><label for="admin-event-related">助攻球员</label><select id="admin-event-related"><option value="">无</option>${relatedOptions()}</select></div><div class="form-field"><label for="admin-event-minute">分钟</label><input id="admin-event-minute" type="number" min="1" max="130" required></div><div class="form-field"><label for="admin-event-stoppage">补时</label><input id="admin-event-stoppage" type="number" min="0" max="30" value="0"></div><div class="form-field admin-form-wide"><label for="admin-event-note">备注</label><input id="admin-event-note" maxlength="255" placeholder="可选"></div></div><div class="page-actions"><button class="button button-primary button-small" type="submit">添加事件</button></div></form>` : ""}
+          ${canManageAll && eventEditable ? `<form id="admin-event-form" class="admin-event-form"><div class="admin-form-grid"><div class="form-field"><label for="admin-event-team">事件归属球队</label><select id="admin-event-team"><option value="${home.id}">${esc(home.name)}</option><option value="${away.id}">${esc(away.name)}</option></select><small class="form-help" id="admin-event-team-help">进球、红黄牌归属该球队</small></div><div class="form-field"><label for="admin-event-player">球员</label><select id="admin-event-player">${playerOptions(home)}</select></div><div class="form-field"><label for="admin-event-type">事件类型</label><select id="admin-event-type"><option value="GOAL">进球</option><option value="OWN_GOAL">乌龙球</option><option value="YELLOW_CARD">黄牌</option><option value="RED_CARD">红牌</option></select></div><div class="form-field"><label for="admin-event-related">助攻球员</label><select id="admin-event-related"><option value="">无</option>${relatedOptions(home)}</select></div><div class="form-field"><label for="admin-event-minute">分钟</label><input id="admin-event-minute" type="number" min="1" max="130" required></div><div class="form-field"><label for="admin-event-stoppage">补时</label><input id="admin-event-stoppage" type="number" min="0" max="30" value="0"></div><div class="form-field admin-form-wide"><label for="admin-event-note">备注</label><input id="admin-event-note" maxlength="255" placeholder="可选"></div></div><div class="page-actions"><button class="button button-primary button-small" type="submit">添加事件</button></div></form>` : ""}
         </section>
 
         <section class="card panel admin-form-card">
@@ -1877,6 +1881,9 @@ async function renderAdminFixturesPage() {
   const eventForm = document.getElementById("admin-event-form");
   const eventTeam = document.getElementById("admin-event-team");
   const eventPlayer = document.getElementById("admin-event-player");
+  const eventType = document.getElementById("admin-event-type");
+  const eventRelated = document.getElementById("admin-event-related");
+  const eventTeamHelp = document.getElementById("admin-event-team-help");
 
   document.querySelector(".admin-fixture-list")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-fixture-id]");
@@ -1957,9 +1964,22 @@ async function renderAdminFixturesPage() {
     } catch (error) { notify(error.message); }
   });
 
-  eventTeam?.addEventListener("change", () => {
-    eventPlayer.innerHTML = playerOptions(eventTeam.value === String(home.id) ? home : away);
-  });
+  function refreshEventFormFields() {
+    if (!eventTeam || !eventPlayer || !eventType || !eventRelated) return;
+    const beneficiary = eventTeam.value === String(home.id) ? home : away;
+    const playerTeam = eventType.value === "OWN_GOAL" ? (beneficiary.id === home.id ? away : home) : beneficiary;
+    eventPlayer.innerHTML = playerOptions(playerTeam);
+    const relatedTeamPlayers = beneficiary.id === home.id ? homePlayers : awayPlayers;
+    eventRelated.replaceChildren(new Option("无", ""));
+    relatedTeamPlayers.forEach((player) => eventRelated.add(new Option(player.name + " · " + teamById(player.teamId).name, player.id)));
+    eventRelated.disabled = eventType.value !== "GOAL";
+    if (eventRelated.disabled) eventRelated.value = "";
+    if (eventTeamHelp) eventTeamHelp.textContent = eventType.value === "OWN_GOAL" ? "乌龙球计入" + beneficiary.name + "，请选择" + playerTeam.name + "球员" : "进球、红黄牌归属该球队";
+  }
+
+  eventTeam?.addEventListener("change", refreshEventFormFields);
+  eventType?.addEventListener("change", refreshEventFormFields);
+  refreshEventFormFields();
 
   eventForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1968,8 +1988,8 @@ async function renderAdminFixturesPage() {
       await api(`/manage/fixtures/${fixtureId}/events`, { method: "POST", body: JSON.stringify({
         teamId,
         playerId: Number(eventPlayer.value),
-        eventType: document.getElementById("admin-event-type").value,
-        relatedPlayerId: document.getElementById("admin-event-related").value ? Number(document.getElementById("admin-event-related").value) : null,
+        eventType: eventType.value,
+        relatedPlayerId: eventRelated.value ? Number(eventRelated.value) : null,
         minute: Number(document.getElementById("admin-event-minute").value),
         stoppageMinute: Number(document.getElementById("admin-event-stoppage").value || 0),
         note: document.getElementById("admin-event-note").value.trim() || null,
