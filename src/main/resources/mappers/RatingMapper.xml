@@ -24,6 +24,11 @@
         WHERE fixture_id = #{fixtureId} AND player_id = #{playerId} AND user_id = #{userId}
         LIMIT 1
     </select>
+    <select id="findByFixtureAndUser" resultMap="RatingMap">
+        SELECT * FROM player_match_rating
+        WHERE fixture_id = #{fixtureId} AND user_id = #{userId}
+        ORDER BY player_id
+    </select>
     <select id="findAppearanceTeamId" resultType="long">
         SELECT team_id FROM fixture_appearance
         WHERE fixture_id = #{fixtureId} AND player_id = #{playerId}

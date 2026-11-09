@@ -101,6 +101,11 @@ public class RatingService {
     public Optional<PlayerMatchRating> findMine(long userId, long fixtureId, long playerId) {
         return ratingMapper.findByTarget(fixtureId, playerId, userId);
     }
+    public java.util.List<MyPlayerRatingState> findMineForFixture(long userId, long fixtureId) {
+        return ratingMapper.findByFixtureAndUser(fixtureId, userId).stream()
+                .map(rating -> new MyPlayerRatingState(rating.getPlayerId(), rating.getStars(), canEdit(rating)))
+                .toList();
+    }
 
     public boolean canEdit(PlayerMatchRating rating) {
         return (rating.getEditsUsed() == null || rating.getEditsUsed() < 1)

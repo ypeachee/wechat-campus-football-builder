@@ -57,6 +57,11 @@ public class RatingController {
         return new PlayerSeasonRatingSummary(playerId, seasonId, round(summary.averageScore()), summary.ratingCount());
     }
 
+    @GetMapping("/fixtures/{fixtureId}/player-ratings/me")
+    public List<MyPlayerRatingState> mineForFixture(@PathVariable long fixtureId) {
+        return ratingService.findMineForFixture(currentUser.require().userId(), fixtureId);
+    }
+
     @GetMapping("/fixtures/{fixtureId}/players/{playerId}/rating/me")
     public OwnRatingView mine(@PathVariable long fixtureId, @PathVariable long playerId) {
         return ratingService.findMine(currentUser.require().userId(), fixtureId, playerId)

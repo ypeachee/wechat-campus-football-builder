@@ -42,6 +42,13 @@ class RatingPublicApiIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$[0].star4Count").value(1))
                 .andExpect(jsonPath("$[0].star5Count").value(1));
 
+        mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId() + "/player-ratings/me")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].playerId").value(fixture.playerId()))
+                .andExpect(jsonPath("$[0].stars").value(4))
+                .andExpect(jsonPath("$[0].canEdit").value(true));
+
         mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId()
                         + "/players/" + fixture.playerId() + "/ratings"))
                 .andExpect(status().isOk())
@@ -62,6 +69,8 @@ class RatingPublicApiIntegrationTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId()
                         + "/players/" + fixture.playerId() + "/rating/me"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId() + "/player-ratings/me"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(put("/api/v1/fixtures/" + fixture.fixtureId()
                         + "/players/" + fixture.playerId() + "/rating")

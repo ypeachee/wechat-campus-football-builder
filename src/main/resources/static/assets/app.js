@@ -904,52 +904,90 @@ async function renderPlayerDetail(playerId) {
   });
 }
 
+function ratingAverageText(summary) {
+  if (!summary || !summary.ratingCount) return "暂无评分";
+  const stars = (Number(summary.averageScore || 0) / 2).toFixed(1);
+  return `${stars} / 5 · ${summary.ratingCount} 人评分`;
+}
+
+function ratingStarDisplay(summary) {
+  const average = summary?.ratingCount ? Number(summary.averageScore || 0) / 2 : 0;
+  const filled = Math.round(average);
+  return `<span class="rating-stars-readonly" aria-label="${average.toFixed(1)} 星">${[1, 2, 3, 4, 5].map((star) => `<span class="${star <= filled ? "filled" : ""}">★</span>`).join("")}</span>`;
+}
+
+function ratingStarInput(kind, targetId, ownRating, enabled) {
+  const selected = Number(ownRating?.stars || 0);
+  const locked = Boolean(ownRating?.rated && !ownRating.canEdit);
+  return `<div class="rating-star-input" data-rating-kind="${kind}" data-target-id="${targetId}" role="group" aria-label="选择 1 到 5 星">${[1, 2, 3, 4, 5].map((star) => `<button class="rating-star-button ${star <= selected ? "selected" : ""}" type="button" data-rating-kind="${kind}" data-target-id="${targetId}" data-rating-value="${star}" aria-label="${star} 星" ${!enabled || locked ? "disabled" : ""}>★</button>`).join("")}</div>`;
+}
+
 async function renderFixtureDetail(fixtureId) {
   setTitle("比赛详情");
   showLoading();
   const id = Number(fixtureId);
   if (!Number.isFinite(id)) throw new ApiError("比赛编号无效", 400, "VALIDATION_FAILED");
   const match = await api(`/fixtures/${id}`);
-  const [homePlayers, awayPlayers] = await Promise.all([
+  const [homePlayers, awayPlayers, ratingSummaries, refereeRating, myPlayerRatings, myRefereeRating] = await Promise.all([
     api(`/teams/${match.homeTeam.id}/players`).catch(() => []),
     api(`/teams/${match.awayTeam.id}/players`).catch(() => []),
+    api(`/fixtures/${id}/player-ratings`).catch(() => []),
+    match.referee ? api(`/fixtures/${id}/referee-rating`).catch(() => null) : Promise.resolve(null),
+    state.session ? api(`/fixtures/${id}/player-ratings/me`).catch(() => []) : Promise.resolve([]),
+    state.session && match.referee ? api(`/fixtures/${id}/referee-rating/me`).catch(() => null) : Promise.resolve(null),
   ]);
   const playerMap = new Map([...homePlayers, ...awayPlayers].map((player) => [Number(player.id), player]));
+  const ratingMap = new Map(ratingSummaries.map((rating) => [Number(rating.playerId), rating]));
+  const myPlayerRatingMap = new Map(myPlayerRatings.map((rating) => [Number(rating.playerId), { ...rating, rated: true }]));
   const when = dateParts(match.kickoffAt);
   const hasScore = match.homeScore != null && match.awayScore != null;
   const homeEvents = match.events.filter((event) => event.teamId === match.homeTeam.id).sort((a, b) => a.minute - b.minute);
   const awayEvents = match.events.filter((event) => event.teamId === match.awayTeam.id).sort((a, b) => a.minute - b.minute);
   const eventsHtml = match.events.length
     ? `<div class="event-list">${[...match.events].sort((a, b) => a.minute - b.minute).map((event) => eventRow(event, match, playerMap)).join("")}</div>`
-    : emptyState("暂无比赛事件", "进球、助攻和红黄牌事件会在比赛过程中记录。", "○");
+    : emptyState("暂无比赛事件", "进球、助攻和红黄牌会显示在这里。", "○");
   const homeLineup = lineupHtml(match.homeTeam, homePlayers, match.appearances, match.homeTeam.id);
   const awayLineup = lineupHtml(match.awayTeam, awayPlayers, match.appearances, match.awayTeam.id);
+  const ratingEnabled = match.status === "FINISHED";
+  const appearancePlayerIds = [...new Set(match.appearances.map((item) => Number(item.playerId)))];
+  const appearancePlayers = appearancePlayerIds.map((playerId) => playerMap.get(playerId)).filter(Boolean);
+  const homeRatingPlayers = appearancePlayers.filter((player) => Number(player.teamId) === Number(match.homeTeam.id));
+  const awayRatingPlayers = appearancePlayers.filter((player) => Number(player.teamId) === Number(match.awayTeam.id));
+  const ratingRow = (player) => {
+    const summary = ratingMap.get(Number(player.id));
+    const own = myPlayerRatingMap.get(Number(player.id));
+    return `<div class="rating-player-row"><div class="rating-player-copy"><span class="jersey">${esc(player.jerseyNo || "-")}</span><span><strong>${esc(player.name)}</strong><small>${ratingStarDisplay(summary)} ${esc(ratingAverageText(summary))}</small></span></div>${ratingStarInput("player", player.id, own, ratingEnabled)}</div>`;
+  };
+  const ratingTeamHtml = (team, players) => `<div class="rating-team-block"><div class="rating-team-head"><strong>${esc(team.name)}</strong><span>${players.length} 人</span></div>${players.length ? players.map(ratingRow).join("") : `<p class="rating-empty">暂无出场球员可评分</p>`}</div>`;
+  const refereeCard = match.referee ? `<div class="rating-referee"><div><span class="eyebrow">REFEREE</span><h3>${esc(match.referee)}</h3><p>${ratingStarDisplay(refereeRating)} ${esc(ratingAverageText(refereeRating))}</p></div>${ratingStarInput("referee", "0", myRefereeRating, ratingEnabled)}</div>` : "";
   app.innerHTML = `<div class="page">
     <a class="text-link" href="#/fixtures" style="margin-top:30px">返回赛程</a>
     <section class="match-hero">
       <div class="match-meta-row">${statusBadge(match.status)}<span>${match.roundNo ? `第 ${match.roundNo} 轮` : "比赛详情"}</span><span>${esc(when.full)}</span></div>
       <div class="match-scoreboard">
         <a class="match-team" href="#/teams/${match.homeTeam.id}">${teamCrest(match.homeTeam, "large")}<h2>${esc(match.homeTeam.name)}</h2><span>主队</span></a>
-        <div class="match-big-score ${match.status === "LIVE" ? "is-live" : ""}">
-          <strong>${hasScore ? `${match.homeScore} : ${match.awayScore}` : "VS"}</strong>
-          <span>${statusLabel(match.status)}</span>
-        </div>
+        <div class="match-big-score ${match.status === "LIVE" ? "is-live" : ""}"><strong>${hasScore ? `${match.homeScore} : ${match.awayScore}` : "VS"}</strong><span>${statusLabel(match.status)}</span></div>
         <a class="match-team" href="#/teams/${match.awayTeam.id}">${teamCrest(match.awayTeam, "large")}<h2>${esc(match.awayTeam.name)}</h2><span>客队</span></a>
       </div>
-      <div class="match-info"><span>场地 <strong>${esc(match.venue || "待定")}</strong></span><span>主裁 <strong>${esc(match.referee || "待定")}</strong></span><span>数据状态 <strong>${match.dataLocked ? "已锁定" : "可更新"}</strong></span></div>
+      <div class="match-info"><span>场地 <strong>${esc(match.venue || "待定")}</strong></span><span>主裁 <strong>${esc(match.referee || "待定")}</strong></span><span>数据状态 <strong>${match.dataLocked ? "已锁定" : "可编辑"}</strong></span></div>
+    </section>
+    <section class="card panel rating-panel">
+      <div class="panel-head"><h2 class="panel-title">赛后评分</h2><span class="badge no-dot ${ratingEnabled ? "badge-live" : "badge-scheduled"}">${ratingEnabled ? "可打星" : "比赛结束后开放"}</span></div>
+      <p class="rating-intro">只提供 1–5 星评分，不提供文字评价。${state.session ? "每场可提交一次，24 小时内可修改一次。" : "登录后即可参与打星。"}</p>
+      ${refereeCard}
+      <div class="rating-teams-grid">${ratingTeamHtml(match.homeTeam, homeRatingPlayers)}${ratingTeamHtml(match.awayTeam, awayRatingPlayers)}</div>
+      ${!state.session ? `<div class="rating-login-hint"><a class="button button-primary button-small" href="#/login">登录后打星</a></div>` : ""}
     </section>
     <div class="detail-layout">
       <div class="stack">
         <section class="card panel"><div class="panel-head"><h2 class="panel-title">比赛事件</h2><span class="badge no-dot badge-scheduled">${match.events.length} 条</span></div>${eventsHtml}</section>
-        <section class="card panel"><div class="panel-head"><h2 class="panel-title">出场阵容</h2><span class="badge no-dot badge-scheduled">${match.appearances.length} 人</span></div>
-          <div class="lineup-grid">${homeLineup}${awayLineup}</div>
-        </section>
+        <section class="card panel"><div class="panel-head"><h2 class="panel-title">出场阵容</h2><span class="badge no-dot badge-scheduled">${match.appearances.length} 人</span></div><div class="lineup-grid">${homeLineup}${awayLineup}</div></section>
       </div>
       <div class="stack">
         <section class="card panel"><div class="panel-head"><h2 class="panel-title">比赛信息</h2></div><div class="info-list">
-          <div class="info-row"><span>比赛时间</span><strong>${esc(when.full)} ${esc(when.time)}</strong></div>
+          <div class="info-row"><span>开球时间</span><strong>${esc(when.full)} ${esc(when.time)}</strong></div>
           <div class="info-row"><span>比赛场地</span><strong>${esc(match.venue || "待定")}</strong></div>
-          <div class="info-row"><span>裁判</span><strong>${esc(match.referee || "待定")}</strong></div>
+          <div class="info-row"><span>主裁</span><strong>${esc(match.referee || "待定")}</strong></div>
           <div class="info-row"><span>主队事件</span><strong>${homeEvents.length}</strong></div>
           <div class="info-row"><span>客队事件</span><strong>${awayEvents.length}</strong></div>
         </div></section>
@@ -957,6 +995,39 @@ async function renderFixtureDetail(fixtureId) {
       </div>
     </div>
   </div>`;
+  document.querySelectorAll(".rating-star-button").forEach((button) => button.addEventListener("click", async () => {
+    if (!state.session) {
+      location.hash = "#/login";
+      return;
+    }
+    if (!ratingEnabled) {
+      notify("比赛结束后才能评分");
+      return;
+    }
+    const kind = button.dataset.ratingKind;
+    const targetId = Number(button.dataset.targetId);
+    const stars = Number(button.dataset.ratingValue);
+    const own = kind === "player" ? myPlayerRatingMap.get(targetId) : myRefereeRating;
+    if (own?.rated && !own.canEdit) {
+      notify("本场评分已提交且不可再修改");
+      return;
+    }
+    if (own?.rated && !window.confirm(`你已评 ${own.stars} 星，确认改为 ${stars} 星？`)) return;
+    const group = button.closest(".rating-star-input");
+    group?.querySelectorAll("button").forEach((item) => { item.disabled = true; });
+    try {
+      if (kind === "player") {
+        await api(`/fixtures/${id}/players/${targetId}/rating`, { method: "PUT", body: JSON.stringify({ stars, comment: null }) });
+      } else {
+        await api(`/fixtures/${id}/referee-rating`, { method: "PUT", body: JSON.stringify({ stars }) });
+      }
+      notify("评分已提交");
+      await renderFixtureDetail(id);
+    } catch (error) {
+      notify(error.message);
+      group?.querySelectorAll("button").forEach((item) => { item.disabled = false; });
+    }
+  }));
 }
 
 function eventRow(event, match, playerMap) {

@@ -13,6 +13,8 @@ public interface RatingMapper {
     Optional<PlayerMatchRating> findByTarget(@Param("fixtureId") long fixtureId,
                                              @Param("playerId") long playerId,
                                              @Param("userId") long userId);
+    List<PlayerMatchRating> findByFixtureAndUser(@Param("fixtureId") long fixtureId,
+                                                  @Param("userId") long userId);
     Optional<Long> findAppearanceTeamId(@Param("fixtureId") long fixtureId,
                                         @Param("playerId") long playerId);
     int countRecentSubmissions(@Param("userId") long userId,
