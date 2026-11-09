@@ -45,10 +45,23 @@ public class RatingService {
 
     @Transactional
     public RatingSubmissionResult submit(long userId, long fixtureId, long playerId, int stars, String comment) {
+        return submitInternal(userId, null, fixtureId, playerId, stars, comment);
+    }
+
+    @Transactional
+    public RatingSubmissionResult submitVisitor(String visitorId, long fixtureId, long playerId, int stars, String comment) {
+        return submitInternal(null, visitorId, fixtureId, playerId, stars, comment);
+    }
+
+    private RatingSubmissionResult submitInternal(Long userId, String visitorId, long fixtureId,
+                                                   long playerId, int stars, String comment) {
+        if ((userId == null) == (visitorId == null || visitorId.isBlank())) {
+            throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "请提供访客标识或登录");
+        }
         if (stars < 1 || stars > 5) {
             throw badRequest("评分必须为 1–5 星");
         }
-        String cleanedComment = normalizeComment(comment);
+        String cleanedComment = userId == null ? null : normalizeComment(comment);
         Fixture fixture = fixtureMapper.findById(fixtureId).orElseThrow(() -> notFound("比赛不存在"));
         if (fixture.getStatus() != FixtureStatus.FINISHED) {
             throw conflict("比赛结束后才能评分");
@@ -56,7 +69,9 @@ public class RatingService {
         long teamId = ratingMapper.findAppearanceTeamId(fixtureId, playerId)
                 .orElseThrow(() -> conflict("该球员没有出场记录，不能评分"));
 
-        Optional<PlayerMatchRating> existing = ratingMapper.findByTarget(fixtureId, playerId, userId);
+        Optional<PlayerMatchRating> existing = userId != null
+                ? ratingMapper.findByTarget(fixtureId, playerId, userId)
+                : ratingMapper.findByVisitorTarget(fixtureId, playerId, visitorId);
         LocalDateTime now = LocalDateTime.now(clock);
         if (existing.isPresent()) {
             PlayerMatchRating rating = existing.get();
@@ -72,13 +87,18 @@ public class RatingService {
             rating.setEditsUsed(1);
             rating.setUpdatedAt(now);
             ratingMapper.updateSubmission(rating);
-            auditService.record(userId, teamId, AuditAction.UPDATE, "PLAYER_RATING", rating.getId(), null, rating);
+            if (userId != null) {
+                auditService.record(userId, teamId, AuditAction.UPDATE, "PLAYER_RATING", rating.getId(), null, rating);
+            }
             notifyPendingIfNeeded(rating);
             return result(rating, false);
         }
 
         LocalDateTime windowStart = now.minus(SUBMISSION_WINDOW);
-        if (ratingMapper.countRecentSubmissions(userId, windowStart) >= MAX_SUBMISSIONS_PER_WINDOW) {
+        int recentSubmissions = userId != null
+                ? ratingMapper.countRecentSubmissions(userId, windowStart)
+                : ratingMapper.countRecentVisitorSubmissions(visitorId, windowStart);
+        if (recentSubmissions >= MAX_SUBMISSIONS_PER_WINDOW) {
             throw new AppException(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.RATE_LIMITED,
                     "评分提交过于频繁，请稍后再试");
         }
@@ -87,13 +107,16 @@ public class RatingService {
         rating.setPlayerId(playerId);
         rating.setTeamId(teamId);
         rating.setUserId(userId);
+        rating.setVisitorId(visitorId);
         rating.setStars(stars);
         rating.setEditsUsed(0);
         rating.setCreatedAt(now);
         rating.setUpdatedAt(now);
         applyModeratedContent(rating, userId, cleanedComment);
         ratingMapper.insert(rating);
-        auditService.record(userId, teamId, AuditAction.CREATE, "PLAYER_RATING", rating.getId(), null, rating);
+        if (userId != null) {
+            auditService.record(userId, teamId, AuditAction.CREATE, "PLAYER_RATING", rating.getId(), null, rating);
+        }
         notifyPendingIfNeeded(rating);
         return result(rating, true);
     }
@@ -101,8 +124,18 @@ public class RatingService {
     public Optional<PlayerMatchRating> findMine(long userId, long fixtureId, long playerId) {
         return ratingMapper.findByTarget(fixtureId, playerId, userId);
     }
+
+    public Optional<PlayerMatchRating> findMineVisitor(String visitorId, long fixtureId, long playerId) {
+        return ratingMapper.findByVisitorTarget(fixtureId, playerId, visitorId);
+    }
     public java.util.List<MyPlayerRatingState> findMineForFixture(long userId, long fixtureId) {
         return ratingMapper.findByFixtureAndUser(fixtureId, userId).stream()
+                .map(rating -> new MyPlayerRatingState(rating.getPlayerId(), rating.getStars(), canEdit(rating)))
+                .toList();
+    }
+
+    public java.util.List<MyPlayerRatingState> findMineForFixtureVisitor(String visitorId, long fixtureId) {
+        return ratingMapper.findByFixtureAndVisitor(fixtureId, visitorId).stream()
                 .map(rating -> new MyPlayerRatingState(rating.getPlayerId(), rating.getStars(), canEdit(rating)))
                 .toList();
     }
@@ -154,7 +187,7 @@ public class RatingService {
                     "/pages/manage/index", "rating-moderation:" + rating.getId());
         }
     }
-    private void applyModeratedContent(PlayerMatchRating rating, long userId, String comment) {
+    private void applyModeratedContent(PlayerMatchRating rating, Long userId, String comment) {
         rating.setComment(comment);
         if (comment == null) {
             rating.setStatus(RatingStatus.VISIBLE);

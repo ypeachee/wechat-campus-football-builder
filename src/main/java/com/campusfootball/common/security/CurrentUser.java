@@ -7,13 +7,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class CurrentUser {
     public UserPrincipal require() {
+        return optional().orElseThrow(() -> new AppException(
+                HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "请先登录"));
+    }
+
+    public Optional<UserPrincipal> optional() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
-            throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "请先登录");
+            return Optional.empty();
         }
-        return principal;
+        return Optional.of(principal);
     }
 }

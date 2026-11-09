@@ -61,6 +61,30 @@ class RatingPublicApiIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void visitorCanRatePlayerWithoutLogin() throws Exception {
+        RatingFixture fixture = fixture();
+        String visitorId = "visitor-player-123456";
+
+        mockMvc.perform(put("/api/v1/fixtures/" + fixture.fixtureId()
+                        + "/players/" + fixture.playerId() + "/rating")
+                        .header("X-Visitor-Id", visitorId)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"stars\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stars").value(5));
+
+        mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId() + "/player-ratings/me")
+                        .header("X-Visitor-Id", visitorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].playerId").value(fixture.playerId()))
+                .andExpect(jsonPath("$[0].stars").value(5));
+
+        mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId() + "/player-ratings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].ratingCount").value(1));
+    }
+
+    @Test
     void protectsPersonalEndpointsAndRejectsSelfAndDuplicateReports() throws Exception {
         RatingFixture fixture = fixture();
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");

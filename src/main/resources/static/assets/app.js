@@ -2,6 +2,7 @@ const API_BASE = "/api/v1";
 const SESSION_KEY = "campusFootball.webSession";
 const SEASON_KEY = "campusFootball.seasonId";
 const ANNOUNCEMENT_SEEN_KEY = "campusFootball.lastSeenAnnouncementId";
+const VISITOR_KEY = "campusFootball.visitorId";
 
 const app = document.getElementById("app");
 const seasonSelect = document.getElementById("season-select");
@@ -97,10 +98,23 @@ function roleBadge(role) {
   return `<span class="badge no-dot ${cls}">${esc(roleLabel(role))}</span>`;
 }
 
+function visitorId() {
+  let value = "";
+  try { value = localStorage.getItem(VISITOR_KEY) || ""; } catch { /* ignore */ }
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(value)) {
+    value = typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `visitor-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+    try { localStorage.setItem(VISITOR_KEY, value); } catch { /* ignore */ }
+  }
+  return value;
+}
+
 async function api(path, options = {}) {
   const headers = new Headers(options.headers || {});
   if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (state.session?.token) headers.set("Authorization", `Bearer ${state.session.token}`);
+  headers.set("X-Visitor-Id", visitorId());
   let response;
   try {
     response = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -933,8 +947,8 @@ async function renderFixtureDetail(fixtureId) {
     api(`/teams/${match.awayTeam.id}/players`).catch(() => []),
     api(`/fixtures/${id}/player-ratings`).catch(() => []),
     match.referee ? api(`/fixtures/${id}/referee-rating`).catch(() => null) : Promise.resolve(null),
-    state.session ? api(`/fixtures/${id}/player-ratings/me`).catch(() => []) : Promise.resolve([]),
-    state.session && match.referee ? api(`/fixtures/${id}/referee-rating/me`).catch(() => null) : Promise.resolve(null),
+    api(`/fixtures/${id}/player-ratings/me`).catch(() => []),
+    match.referee ? api(`/fixtures/${id}/referee-rating/me`).catch(() => null) : Promise.resolve(null),
   ]);
   const playerMap = new Map([...homePlayers, ...awayPlayers].map((player) => [Number(player.id), player]));
   const ratingMap = new Map(ratingSummaries.map((rating) => [Number(rating.playerId), rating]));
@@ -973,10 +987,9 @@ async function renderFixtureDetail(fixtureId) {
     </section>
     <section class="card panel rating-panel">
       <div class="panel-head"><h2 class="panel-title">赛后评分</h2><span class="badge no-dot ${ratingEnabled ? "badge-live" : "badge-scheduled"}">${ratingEnabled ? "可打星" : "比赛结束后开放"}</span></div>
-      <p class="rating-intro">只提供 1–5 星评分，不提供文字评价。${state.session ? "每场可提交一次，24 小时内可修改一次。" : "登录后即可参与打星。"}</p>
+      <p class="rating-intro">只提供 1–5 星评分，不提供文字评价。同一浏览器每场可提交一次，24 小时内可修改一次。</p>
       ${refereeCard}
       <div class="rating-teams-grid">${ratingTeamHtml(match.homeTeam, homeRatingPlayers)}${ratingTeamHtml(match.awayTeam, awayRatingPlayers)}</div>
-      ${!state.session ? `<div class="rating-login-hint"><a class="button button-primary button-small" href="#/login">登录后打星</a></div>` : ""}
     </section>
     <div class="detail-layout">
       <div class="stack">
@@ -996,10 +1009,6 @@ async function renderFixtureDetail(fixtureId) {
     </div>
   </div>`;
   document.querySelectorAll(".rating-star-button").forEach((button) => button.addEventListener("click", async () => {
-    if (!state.session) {
-      location.hash = "#/login";
-      return;
-    }
     if (!ratingEnabled) {
       notify("比赛结束后才能评分");
       return;

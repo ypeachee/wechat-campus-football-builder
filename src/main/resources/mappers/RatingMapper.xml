@@ -7,6 +7,7 @@
         <result property="playerId" column="player_id"/>
         <result property="teamId" column="team_id"/>
         <result property="userId" column="user_id"/>
+        <result property="visitorId" column="visitor_id"/>
         <result property="stars" column="stars"/>
         <result property="comment" column="comment"/>
         <result property="status" column="status"/>
@@ -24,10 +25,20 @@
         WHERE fixture_id = #{fixtureId} AND player_id = #{playerId} AND user_id = #{userId}
         LIMIT 1
     </select>
+    <select id="findByFixtureAndVisitor" resultMap="RatingMap">
+        SELECT * FROM player_match_rating
+        WHERE fixture_id = #{fixtureId} AND visitor_id = #{visitorId}
+        ORDER BY player_id
+    </select>
     <select id="findByFixtureAndUser" resultMap="RatingMap">
         SELECT * FROM player_match_rating
         WHERE fixture_id = #{fixtureId} AND user_id = #{userId}
         ORDER BY player_id
+    </select>
+    <select id="findByVisitorTarget" resultMap="RatingMap">
+        SELECT * FROM player_match_rating
+        WHERE fixture_id = #{fixtureId} AND player_id = #{playerId} AND visitor_id = #{visitorId}
+        LIMIT 1
     </select>
     <select id="findAppearanceTeamId" resultType="long">
         SELECT team_id FROM fixture_appearance
@@ -38,12 +49,16 @@
         SELECT COUNT(*) FROM player_match_rating
         WHERE user_id = #{userId} AND updated_at &gt;= #{since}
     </select>
+    <select id="countRecentVisitorSubmissions" resultType="int">
+        SELECT COUNT(*) FROM player_match_rating
+        WHERE visitor_id = #{visitorId} AND updated_at &gt;= #{since}
+    </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO player_match_rating
-            (fixture_id, player_id, team_id, user_id, stars, comment, status,
+            (fixture_id, player_id, team_id, user_id, visitor_id, stars, comment, status,
              moderation_reason, edits_used, created_at, updated_at)
         VALUES
-            (#{fixtureId}, #{playerId}, #{teamId}, #{userId}, #{stars}, #{comment}, #{status},
+            (#{fixtureId}, #{playerId}, #{teamId}, #{userId}, #{visitorId}, #{stars}, #{comment}, #{status},
              #{moderationReason}, #{editsUsed}, #{createdAt}, #{updatedAt})
     </insert>
     <update id="updateSubmission">

@@ -37,12 +37,26 @@ public class RefereeRatingService {
 
     @Transactional
     public RefereeRatingSubmission submit(long userId, long fixtureId, int stars) {
+        return submitInternal(userId, null, fixtureId, stars);
+    }
+
+    @Transactional
+    public RefereeRatingSubmission submitVisitor(String visitorId, long fixtureId, int stars) {
+        return submitInternal(null, visitorId, fixtureId, stars);
+    }
+
+    private RefereeRatingSubmission submitInternal(Long userId, String visitorId, long fixtureId, int stars) {
+        if ((userId == null) == (visitorId == null || visitorId.isBlank())) {
+            throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "请提供访客标识或登录");
+        }
         if (stars < 1 || stars > 5) {
             throw badRequest("评分必须为 1–5 星");
         }
         Fixture fixture = requireRateableFixture(fixtureId);
         LocalDateTime now = LocalDateTime.now(clock);
-        Optional<FixtureRefereeRating> existing = mapper.findByTarget(fixtureId, fixture.getReferee(), userId);
+        Optional<FixtureRefereeRating> existing = userId != null
+                ? mapper.findByTarget(fixtureId, fixture.getReferee(), userId)
+                : mapper.findByVisitorTarget(fixtureId, fixture.getReferee(), visitorId);
         if (existing.isPresent()) {
             FixtureRefereeRating rating = existing.get();
             if (rating.getEditsUsed() != null && rating.getEditsUsed() >= 1) {
@@ -55,10 +69,15 @@ public class RefereeRatingService {
             rating.setEditsUsed(1);
             rating.setUpdatedAt(now);
             mapper.updateSubmission(rating);
-            auditService.record(userId, null, AuditAction.UPDATE, "REFEREE_RATING", rating.getId(), null, rating);
+            if (userId != null) {
+                auditService.record(userId, null, AuditAction.UPDATE, "REFEREE_RATING", rating.getId(), null, rating);
+            }
             return new RefereeRatingSubmission(rating.getId(), stars, stars * 2, false);
         }
-        if (mapper.countRecentSubmissions(userId, now.minus(SUBMISSION_WINDOW)) >= MAX_SUBMISSIONS_PER_WINDOW) {
+        int recentSubmissions = userId != null
+                ? mapper.countRecentSubmissions(userId, now.minus(SUBMISSION_WINDOW))
+                : mapper.countRecentVisitorSubmissions(visitorId, now.minus(SUBMISSION_WINDOW));
+        if (recentSubmissions >= MAX_SUBMISSIONS_PER_WINDOW) {
             throw new AppException(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.RATE_LIMITED,
                     "主裁评分提交过于频繁，请稍后再试");
         }
@@ -66,12 +85,15 @@ public class RefereeRatingService {
         rating.setFixtureId(fixtureId);
         rating.setRefereeName(fixture.getReferee());
         rating.setUserId(userId);
+        rating.setVisitorId(visitorId);
         rating.setStars(stars);
         rating.setEditsUsed(0);
         rating.setCreatedAt(now);
         rating.setUpdatedAt(now);
         mapper.insert(rating);
-        auditService.record(userId, null, AuditAction.CREATE, "REFEREE_RATING", rating.getId(), null, rating);
+        if (userId != null) {
+            auditService.record(userId, null, AuditAction.CREATE, "REFEREE_RATING", rating.getId(), null, rating);
+        }
         return new RefereeRatingSubmission(rating.getId(), stars, stars * 2, true);
     }
 
@@ -81,6 +103,14 @@ public class RefereeRatingService {
             return Optional.empty();
         }
         return mapper.findByTarget(fixtureId, fixture.getReferee(), userId);
+    }
+
+    public Optional<FixtureRefereeRating> findMineVisitor(String visitorId, long fixtureId) {
+        Fixture fixture = fixtureMapper.findById(fixtureId).orElseThrow(() -> notFound("比赛不存在"));
+        if (fixture.getReferee() == null || fixture.getReferee().isBlank()) {
+            return Optional.empty();
+        }
+        return mapper.findByVisitorTarget(fixtureId, fixture.getReferee(), visitorId);
     }
 
     public RefereeRatingSummary summary(long fixtureId) {

@@ -64,13 +64,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/wechat-login", "/api/v1/auth/web-login").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/", "/index.html", "/assets/**", "/favicon.svg").permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/v1/fixtures/*/players/*/rating/me",
-                                "/api/v1/fixtures/*/player-ratings/me",
-                                "/api/v1/fixtures/*/referee-rating/me").authenticated()
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/v1/fixtures/*/players/*/rating",
-                                "/api/v1/fixtures/*/referee-rating").authenticated()
+                                "/api/v1/fixtures/*/referee-rating").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/ratings/*/report").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/seasons", "/api/v1/teams/**", "/api/v1/players/**",

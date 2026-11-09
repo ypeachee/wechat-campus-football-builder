@@ -6,6 +6,7 @@
         <result property="fixtureId" column="fixture_id"/>
         <result property="refereeName" column="referee_name"/>
         <result property="userId" column="user_id"/>
+        <result property="visitorId" column="visitor_id"/>
         <result property="stars" column="stars"/>
         <result property="editsUsed" column="edits_used"/>
         <result property="createdAt" column="created_at"/>
@@ -16,14 +17,23 @@
         WHERE fixture_id = #{fixtureId} AND referee_name = #{refereeName} AND user_id = #{userId}
         LIMIT 1
     </select>
+    <select id="findByVisitorTarget" resultMap="RefereeRatingMap">
+        SELECT * FROM fixture_referee_rating
+        WHERE fixture_id = #{fixtureId} AND referee_name = #{refereeName} AND visitor_id = #{visitorId}
+        LIMIT 1
+    </select>
+    <select id="countRecentVisitorSubmissions" resultType="int">
+        SELECT COUNT(*) FROM fixture_referee_rating
+        WHERE visitor_id = #{visitorId} AND updated_at &gt;= #{since}
+    </select>
     <select id="countRecentSubmissions" resultType="int">
         SELECT COUNT(*) FROM fixture_referee_rating
         WHERE user_id = #{userId} AND updated_at &gt;= #{since}
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO fixture_referee_rating
-            (fixture_id, referee_name, user_id, stars, edits_used, created_at, updated_at)
-        VALUES (#{fixtureId}, #{refereeName}, #{userId}, #{stars}, #{editsUsed}, #{createdAt}, #{updatedAt})
+            (fixture_id, referee_name, user_id, visitor_id, stars, edits_used, created_at, updated_at)
+        VALUES (#{fixtureId}, #{refereeName}, #{userId}, #{visitorId}, #{stars}, #{editsUsed}, #{createdAt}, #{updatedAt})
     </insert>
     <update id="updateSubmission">
         UPDATE fixture_referee_rating

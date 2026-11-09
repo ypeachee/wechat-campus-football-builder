@@ -13,12 +13,19 @@ public interface RatingMapper {
     Optional<PlayerMatchRating> findByTarget(@Param("fixtureId") long fixtureId,
                                              @Param("playerId") long playerId,
                                              @Param("userId") long userId);
+    Optional<PlayerMatchRating> findByVisitorTarget(@Param("fixtureId") long fixtureId,
+                                                    @Param("playerId") long playerId,
+                                                    @Param("visitorId") String visitorId);
     List<PlayerMatchRating> findByFixtureAndUser(@Param("fixtureId") long fixtureId,
                                                   @Param("userId") long userId);
+    List<PlayerMatchRating> findByFixtureAndVisitor(@Param("fixtureId") long fixtureId,
+                                                     @Param("visitorId") String visitorId);
     Optional<Long> findAppearanceTeamId(@Param("fixtureId") long fixtureId,
                                         @Param("playerId") long playerId);
     int countRecentSubmissions(@Param("userId") long userId,
                                @Param("since") LocalDateTime since);
+    int countRecentVisitorSubmissions(@Param("visitorId") String visitorId,
+                                       @Param("since") LocalDateTime since);
     int insert(PlayerMatchRating rating);
     int updateSubmission(PlayerMatchRating rating);
     int countRecentReports(@Param("userId") long userId, @Param("since") LocalDateTime since);

@@ -8,6 +8,7 @@ public class PlayerMatchRating {
     private Long playerId;
     private Long teamId;
     private Long userId;
+    private String visitorId;
     private Integer stars;
     private String comment;
     private RatingStatus status;
@@ -26,6 +27,8 @@ public class PlayerMatchRating {
     public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+    public String getVisitorId() { return visitorId; }
+    public void setVisitorId(String visitorId) { this.visitorId = visitorId; }
     public Integer getStars() { return stars; }
     public void setStars(Integer stars) { this.stars = stars; }
     public String getComment() { return comment; }

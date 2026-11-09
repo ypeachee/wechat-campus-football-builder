@@ -7,6 +7,7 @@ public class FixtureRefereeRating {
     private Long fixtureId;
     private String refereeName;
     private Long userId;
+    private String visitorId;
     private Integer stars;
     private Integer editsUsed;
     private LocalDateTime createdAt;
@@ -20,6 +21,8 @@ public class FixtureRefereeRating {
     public void setRefereeName(String refereeName) { this.refereeName = refereeName; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+    public String getVisitorId() { return visitorId; }
+    public void setVisitorId(String visitorId) { this.visitorId = visitorId; }
     public Integer getStars() { return stars; }
     public void setStars(Integer stars) { this.stars = stars; }
     public Integer getEditsUsed() { return editsUsed; }

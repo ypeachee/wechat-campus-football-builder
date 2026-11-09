@@ -75,6 +75,25 @@ class RefereeRatingIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void visitorCanRateRefereeWithoutLogin() throws Exception {
+        RatingFixture fixture = fixture(FixtureStatus.FINISHED, "王竞");
+        String visitorId = "visitor-referee-123456";
+
+        mockMvc.perform(put("/api/v1/fixtures/" + fixture.fixtureId() + "/referee-rating")
+                        .header("X-Visitor-Id", visitorId)
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"stars\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stars").value(5));
+
+        mockMvc.perform(get("/api/v1/fixtures/" + fixture.fixtureId() + "/referee-rating/me")
+                        .header("X-Visitor-Id", visitorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rated").value(true))
+                .andExpect(jsonPath("$.stars").value(5));
+    }
+
+    @Test
     void exposesPublicSummaryAndProtectsPersonalRatingEndpoints() throws Exception {
         RatingFixture fixture = fixture(FixtureStatus.FINISHED, "傅明");
         String admin = TestAuthSupport.loginToken(mockMvc, "admin-code");
