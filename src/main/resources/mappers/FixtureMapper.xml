@@ -42,11 +42,11 @@
     <select id="findPublicBySeason" resultMap="FixtureMap">
         SELECT * FROM fixture
         WHERE season_id = #{seasonId} AND status &lt;&gt; 'DRAFT'
-        ORDER BY kickoff_at, id
+        ORDER BY kickoff_at IS NULL, kickoff_at, id
     </select>
 
     <select id="findAllBySeason" resultMap="FixtureMap">
-        SELECT * FROM fixture WHERE season_id = #{seasonId} ORDER BY kickoff_at, id
+        SELECT * FROM fixture WHERE season_id = #{seasonId} ORDER BY kickoff_at IS NULL, kickoff_at, id
     </select>
 
     <update id="updateSchedule">
@@ -109,14 +109,14 @@
         SELECT * FROM fixture
         WHERE stage_id = #{stageId} AND status &lt;&gt; 'DRAFT'
         <if test="groupId != null">AND group_id = #{groupId}</if>
-        ORDER BY kickoff_at, id
+        ORDER BY kickoff_at IS NULL, kickoff_at, id
     </select>
 
     <select id="findAllByStage" resultMap="FixtureMap">
         SELECT * FROM fixture
         WHERE stage_id = #{stageId}
         <if test="groupId != null">AND group_id = #{groupId}</if>
-        ORDER BY kickoff_at, id
+        ORDER BY kickoff_at IS NULL, kickoff_at, id
     </select>
 
     <select id="findByKnockoutTieId" resultMap="FixtureMap">

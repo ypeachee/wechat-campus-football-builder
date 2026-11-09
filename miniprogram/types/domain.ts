@@ -3,7 +3,7 @@ export type UserStatus = "ACTIVE" | "DISABLED";
 export type TeamStatus = "ACTIVE" | "INACTIVE";
 export type PlayerStatus = "ACTIVE" | "INACTIVE";
 export type SeasonStatus = "DRAFT" | "ACTIVE" | "FINISHED";
-export type FixtureStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "FINISHED" | "CANCELLED";
+export type FixtureStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "FINISHED" | "CANCELLED" | "INTERRUPTED";
 export type EventType = "GOAL" | "OWN_GOAL" | "YELLOW_CARD" | "RED_CARD";
 export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "GRANT" | "REVOKE" | "SCORE_UPDATE" | "FINISH" | "LOCK" | "UNLOCK";
 

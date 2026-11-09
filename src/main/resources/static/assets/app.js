@@ -215,11 +215,11 @@ function dateParts(value) {
 }
 
 function statusLabel(status) {
-  return ({ DRAFT: "草稿", SCHEDULED: "未开始", LIVE: "进行中", FINISHED: "已结束", CANCELLED: "已取消" })[status] || status;
+  return ({ DRAFT: "草稿", SCHEDULED: "未开始", LIVE: "进行中", FINISHED: "已结束", CANCELLED: "已取消", INTERRUPTED: "中断" })[status] || status;
 }
 
 function statusBadge(status) {
-  const cls = ({ DRAFT: "badge-draft", SCHEDULED: "badge-scheduled", LIVE: "badge-live", FINISHED: "badge-finished", CANCELLED: "badge-cancelled" })[status] || "badge-scheduled";
+  const cls = ({ DRAFT: "badge-draft", SCHEDULED: "badge-scheduled", LIVE: "badge-live", FINISHED: "badge-finished", CANCELLED: "badge-cancelled", INTERRUPTED: "badge-interrupted" })[status] || "badge-scheduled";
   return `<span class="badge ${cls}">${esc(statusLabel(status))}</span>`;
 }
 
@@ -621,7 +621,7 @@ async function renderFixturesPage() {
   app.innerHTML = `<div class="page">
     ${pageHeader("MATCH CENTER", "赛程", `${seasonName()} 的全部比赛安排、比分与场地信息。`, `<a class="button button-ghost button-small" href="#/standings">积分榜</a>`)}
     <div class="filters" id="fixture-filters">
-      ${[["all", "全部"], ["SCHEDULED", "未开始"], ["LIVE", "进行中"], ["FINISHED", "已结束"], ["CANCELLED", "已取消"]].map(([value, label], index) => `<button class="filter-chip ${index === 0 ? "active" : ""}" type="button" data-fixture-filter="${value}">${label}</button>`).join("")}
+      ${[["all", "全部"], ["SCHEDULED", "未开始"], ["LIVE", "进行中"], ["FINISHED", "已结束"], ["INTERRUPTED", "中断"], ["CANCELLED", "已取消"]].map(([value, label], index) => `<button class="filter-chip ${index === 0 ? "active" : ""}" type="button" data-fixture-filter="${value}">${label}</button>`).join("")}
       <span style="margin-left:auto;color:var(--muted);font-size:11px">共 ${fixtures.length} 场</span>
     </div>
     <div id="fixture-list">${renderFixtureList(fixtures, "all")}</div>
@@ -1797,7 +1797,7 @@ async function renderAdminFixturesPage() {
   ].filter((item) => item.canEdit);
   const scoreText = fixture.homeScore != null && fixture.awayScore != null ? `${fixture.homeScore} : ${fixture.awayScore}` : "VS";
   const kickoffValue = fixture.kickoffAt ? String(fixture.kickoffAt).slice(0, 16) : "";
-  const statusOptions = ["DRAFT", "SCHEDULED", "LIVE", "CANCELLED"];
+  const statusOptions = ["DRAFT", "SCHEDULED", "LIVE", "INTERRUPTED", "CANCELLED"];
   const lineupEditable = !fixture.dataLocked && ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status);
   const eventEditable = !fixture.dataLocked && ["SCHEDULED", "LIVE", "FINISHED"].includes(fixture.status);
 

@@ -5,5 +5,6 @@ public enum FixtureStatus {
     SCHEDULED,
     LIVE,
     FINISHED,
-    CANCELLED
+    CANCELLED,
+    INTERRUPTED
 }

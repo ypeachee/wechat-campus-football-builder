@@ -20,7 +20,7 @@ Page({
     competitions: [] as Competition[], seasons: [] as Season[], stages: [] as Stage[], groups: [] as CompetitionGroup[],
     selectedCompetition: 0, selectedSeason: 0, selectedStage: 0, selectedGroup: 0,
     selectedCompetitionName: "", selectedSeasonName: "", selectedStageName: "", selectedGroupName: "", selectedStatus: "ALL",
-    statusFilters: [{value:"ALL",label:"全部"},{value:"SCHEDULED",label:"未开始"},{value:"LIVE",label:"进行中"},{value:"FINISHED",label:"已完赛"},{value:"CANCELLED",label:"已取消"}] as Array<{value:"ALL"|FixtureStatus;label:string}>,
+    statusFilters: [{value:"ALL",label:"全部"},{value:"SCHEDULED",label:"未开始"},{value:"LIVE",label:"进行中"},{value:"FINISHED",label:"已完赛"},{value:"INTERRUPTED",label:"中断"},{value:"CANCELLED",label:"已取消"}] as Array<{value:"ALL"|FixtureStatus;label:string}>,
     fixtureViews: [] as FixtureCard[], allFixtures: [] as FixtureCard[], canOpenBracket: false
   } as FixturesData,
   onShow() { void this.bootstrap(); },

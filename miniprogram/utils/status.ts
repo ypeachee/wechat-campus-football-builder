@@ -5,7 +5,8 @@ const FIXTURE_STATUS_LABELS: Record<FixtureStatus, string> = {
   SCHEDULED: "未开始",
   LIVE: "进行中",
   FINISHED: "已完赛",
-  CANCELLED: "已取消"
+  CANCELLED: "已取消",
+  INTERRUPTED: "中断"
 };
 
 const EVENT_LABELS: Record<EventType, string> = {
@@ -41,6 +42,7 @@ export function fixtureStatusTone(status: FixtureStatus): "default" | "primary" 
     case "FINISHED":
       return "primary";
     case "CANCELLED":
+    case "INTERRUPTED":
       return "warning";
     case "SCHEDULED":
       return "success";

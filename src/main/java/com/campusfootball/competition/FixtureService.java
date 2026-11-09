@@ -270,9 +270,10 @@ public class FixtureService {
     private boolean isAllowedTransition(FixtureStatus from, FixtureStatus to) {
         return switch (from) {
             case DRAFT -> to == FixtureStatus.SCHEDULED || to == FixtureStatus.CANCELLED;
-            case SCHEDULED -> to == FixtureStatus.LIVE || to == FixtureStatus.CANCELLED;
-            case LIVE -> to == FixtureStatus.CANCELLED;
-            case FINISHED, CANCELLED -> false;
+            case SCHEDULED -> to == FixtureStatus.LIVE || to == FixtureStatus.CANCELLED
+                    || to == FixtureStatus.INTERRUPTED;
+            case LIVE -> to == FixtureStatus.INTERRUPTED || to == FixtureStatus.CANCELLED;
+            case FINISHED, CANCELLED, INTERRUPTED -> false;
         };
     }
 

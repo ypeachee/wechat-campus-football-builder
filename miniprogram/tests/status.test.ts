@@ -8,6 +8,7 @@ describe("status labels", () => {
     expect(fixtureStatusLabel("LIVE")).toBe("进行中");
     expect(fixtureStatusLabel("FINISHED")).toBe("已完赛");
     expect(fixtureStatusLabel("CANCELLED")).toBe("已取消");
+  expect(fixtureStatusLabel("INTERRUPTED")).toBe("中断");
   });
 
   it("labels event types", () => {

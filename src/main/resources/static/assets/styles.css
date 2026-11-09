@@ -182,6 +182,7 @@ h1, h2, h3, h4 { line-height: 1.16; letter-spacing: -.035em; }
 .badge-live { background: #fff0ed; color: var(--danger); }
 .badge-finished { background: var(--lime-soft); color: var(--green-deep); }
 .badge-cancelled, .badge-draft { background: #f1f1ed; color: #838980; }
+.badge-interrupted { background: #fff0d6; color: #8c5a0a; }
 .badge-admin { background: #fff0d6; color: #8c5a0a; }
 .badge-manager { background: #e5f4ed; color: var(--green); }
 .badge-leader { background: #e8f1ff; color: #2c5e9a; }
