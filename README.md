@@ -224,6 +224,13 @@ WEB_ADMIN_PASSWORD
 
 网站使用 Hash 路由，无需额外配置 Nginx/Caddy 的 SPA 回退规则；静态页面与 API 由同一个域名提供。
 
+## Android 客户端
+
+网站提供基于 Android WebView 的 `泥地soccer` 客户端，加载生产站点 `https://api2.cugbsoccer.xyz/`，并支持返回键、下拉刷新、文件上传与下载、断网重试。
+
+可安装 APK：[android/dist/muddy-soccer-v1.0.0.apk](android/dist/muddy-soccer-v1.0.0.apk)
+
+校验值与重新构建说明：[android/README.md](android/README.md)
 ## 微信小程序
 
 前端子工程位于 `miniprogram/`，包含公开浏览、微信登录、角色门禁和管理端页面。
