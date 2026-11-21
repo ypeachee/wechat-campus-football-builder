@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $projectRoot = $PSScriptRoot
 $repoRoot = Split-Path -Parent $projectRoot
-$versionName = "1.0.0"
+$versionName = "1.1.0"
 
 if (-not $env:JAVA_HOME) {
     $env:JAVA_HOME = "D:\Tools\jdk-21\jdk-21.0.12.1+1"

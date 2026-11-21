@@ -4,7 +4,7 @@
 
 ## 下载
 
-- [泥地soccer-v1.0.0.apk](dist/muddy-soccer-v1.0.0.apk)
+- [泥地soccer-v1.1.0.apk](dist/muddy-soccer-v1.1.0.apk)
 - [SHA-256 校验值](dist/SHA256SUMS.txt)
 
 ## 当前配置
@@ -13,7 +13,7 @@
 - 包名：`xyz.cugbsoccer.muddy`
 - 最低系统：Android 8.0（API 26）
 - 默认站点：`https://api2.cugbsoccer.xyz/`
-- 版本：`1.0.0`
+- 版本：`1.1.0`
 
 站点地址位于 `app/src/main/res/values/strings.xml` 的 `app_url`。如果生产域名变化，只需要修改这里并重新打包。
 
@@ -51,8 +51,8 @@
 
 APK 会复制到：
 
-- `output/android/泥地soccer-v1.0.0.apk`
-- `android/dist/muddy-soccer-v1.0.0.apk`
+- `output/android/泥地soccer-v1.1.0.apk`
+- `android/dist/muddy-soccer-v1.1.0.apk`
 
 ## 签名备份
 
