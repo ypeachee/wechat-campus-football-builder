@@ -379,6 +379,7 @@ seasonSelect?.addEventListener("change", () => {
 async function renderRoute() {
   if (state.loading) return;
   const { path, parts } = routeInfo();
+  document.body.classList.toggle("broadcast-home-active", parts.length === 0);
   updateAuthHeader();
   closeMobileNav();
   try {
@@ -486,77 +487,100 @@ async function renderHome() {
   const standings = results[1].status === "fulfilled" ? results[1].value : [];
   const scorers = results[2].status === "fulfilled" ? results[2].value : [];
   const assists = results[3].status === "fulfilled" ? results[3].value : [];
-  const season = state.seasons.find((item) => item.id === state.seasonId);
   const upcoming = fixtures.filter((item) => item.status === "SCHEDULED" || item.status === "DRAFT");
   const live = fixtures.filter((item) => item.status === "LIVE");
   const finished = fixtures.filter((item) => item.status === "FINISHED").reverse();
   const spotlight = live[0] || upcoming[0] || finished[0];
   const goalCount = fixtures.reduce((sum, item) => sum + (item.homeScore || 0) + (item.awayScore || 0), 0);
-  const safeResults = [fixtures, standings, scorers, assists];
-
-  const spotlightHtml = spotlight ? spotlightCard(spotlight) : `<div class="spotlight">${emptyState("赛程准备中", "当前赛季还没有可展示的比赛。", "↗")}</div>`;
+  const teamRows = broadcastTeamRows(standings);
   const recentHtml = finished.length
-    ? finished.slice(0, 4).map((fixture) => fixtureRow(fixture, true)).join("")
+    ? finished.slice(0, 6).map((fixture) => broadcastResultRow(fixture)).join("")
     : emptyState("暂无完赛记录", "比赛结束后，比分和事件会出现在这里。", "○");
   const standingsHtml = standings.length
-    ? standings.slice(0, 5).map((row, index) => `<a class="rank-item" href="#/teams/${row.teamId}">
-        <span class="rank-person"><strong>${esc(row.teamName)}</strong><span>${row.played} 场 · 净胜球 ${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</span></span>
-        <span class="rank-number">${row.points}<small>分</small></span>
+    ? standings.slice(0, 5).map((row, index) => `<a class="broadcast-rank-row" href="#/teams/${row.teamId}">
+        <span class="broadcast-rank-no">${String(index + 1).padStart(2, "0")}</span>
+        <span class="broadcast-rank-name"><strong>${esc(row.teamName)}</strong><span>${row.played} 场 · 净胜球 ${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</span></span>
+        <span class="broadcast-rank-value">${row.points}<small>分</small></span>
       </a>`).join("")
     : emptyState("积分榜尚未生成", "录入并完成比赛后会自动计算积分。", "≡");
   const scorersHtml = scorers.length
-    ? scorers.slice(0, 5).map((row) => `<a class="rank-item" href="#/players/${row.playerId}">
-        <span class="rank-person"><strong>${esc(row.playerName)}</strong><span>${esc(row.teamName)}</span></span>
-        <span class="rank-number">${row.goals}<small>球</small></span>
+    ? scorers.slice(0, 5).map((row, index) => `<a class="broadcast-rank-row" href="#/players/${row.playerId}">
+        <span class="broadcast-rank-no">${String(index + 1).padStart(2, "0")}</span>
+        <span class="broadcast-rank-name"><strong>${esc(row.playerName)}</strong><span>${esc(row.teamName)}</span></span>
+        <span class="broadcast-rank-value">${row.goals}<small>球</small></span>
       </a>`).join("")
     : emptyState("暂无射手数据", "已完赛比赛中的进球会进入榜单。", "⚽");
+  const statusText = results.some((item) => item.status === "fulfilled") ? "数据已连接赛事后台" : "等待赛事数据";
+  const tickerItems = [
+    seasonName(),
+    spotlight ? `下一场 ${teamById(spotlight.homeTeamId)?.shortName || teamById(spotlight.homeTeamId)?.name || "主队"} VS ${teamById(spotlight.awayTeamId)?.shortName || teamById(spotlight.awayTeamId)?.name || "客队"}` : "赛程准备中",
+    `${finished.length} 场已完赛`,
+    `${goalCount} 个赛季进球`,
+    "泥地soccer · MUD SOCCER",
+  ].map((item) => `<span>${esc(item)}</span>`).join("");
 
-  app.innerHTML = `<div class="page">
-    <section class="hero">
-      <div class="hero-grid">
-        <article class="hero-main">
-          <div class="hero-copy">
-            <span class="hero-kicker"><span class="pulse"></span>${esc(seasonName())} · 正在进行</span>
-            <h1 class="hero-title">把每一场<br><span class="outline">比赛</span>写进赛季。</h1>
-            <p>赛程、比分、积分与球员数据，在一处完整呈现。为每一次奔跑留下可被看见的记录。</p>
+  app.innerHTML = `<div class="broadcast-home">
+    <div class="broadcast-ticker" aria-hidden="true"><div class="broadcast-ticker-track">${tickerItems}${tickerItems}</div></div>
+    <section class="broadcast-hero">
+      <div class="broadcast-hero-photo" aria-hidden="true"></div>
+      <div class="broadcast-wrap broadcast-hero-grid">
+        <div class="broadcast-hero-copy">
+          <div class="broadcast-eyebrow"><i></i>${esc(seasonName())} · 正在进行</div>
+          <h1>MUD<br>SOCCER</h1>
+          <div class="broadcast-hero-title-cn">把每一场比赛<br><span>写进这个赛季。</span></div>
+          <p>赛程、比分、积分与球员数据，在一处完整呈现。点开战术盘上的球队，查看这个赛季正在发生什么。</p>
+          <div class="broadcast-hero-actions">
+            <a class="broadcast-button is-lime" href="#/fixtures">查看完整赛程 ↗</a>
+            <a class="broadcast-button" href="#/standings">查看积分榜</a>
+            <span class="broadcast-data-note">${esc(statusText)}</span>
           </div>
-          <div class="hero-actions">
-            <a class="button button-lime" href="#/fixtures">查看完整赛程</a>
-            <a class="button button-ghost" href="#/standings" style="color:white;border-color:rgba(255,255,255,.22)">查看积分榜</a>
-            <span class="hero-note">${results.some((item) => item.status === "fulfilled") ? "数据实时同步自赛事后台" : "等待赛事数据"}</span>
+        </div>
+        <aside class="broadcast-score-wrap">${broadcastSpotlightCard(spotlight)}</aside>
+      </div>
+    </section>
+    <div class="broadcast-stat-strip">
+      <div class="broadcast-stat"><strong>${String(state.teams.length).padStart(2, "0")}</strong><span>参赛球队</span></div>
+      <div class="broadcast-stat"><strong>${String(fixtures.length).padStart(2, "0")}</strong><span>赛季比赛</span></div>
+      <div class="broadcast-stat"><strong>${String(finished.length).padStart(2, "0")}</strong><span>已完赛</span></div>
+      <div class="broadcast-stat"><strong>${String(goalCount).padStart(2, "0")}</strong><span>总进球</span></div>
+    </div>
+    <section class="broadcast-tactical-section">
+      <div class="broadcast-wrap">
+        <div class="broadcast-section-head">
+          <div><div class="broadcast-kicker">TACTICAL BOARD / 01</div><h2 class="broadcast-section-title">赛季战术盘</h2><p class="broadcast-section-desc">点击场上的球队节点，查看排名、积分和近期状态。</p></div>
+          <a class="broadcast-text-link" href="#/tactics">进入完整战术板 →</a>
+        </div>
+        <div class="broadcast-command-grid">
+          <div class="broadcast-pitch-stage">
+            <div class="broadcast-pitch-lines" aria-hidden="true"><i class="pitch-box pitch-box-top"></i><i class="pitch-box pitch-box-bottom"></i><i class="pitch-goal pitch-goal-top"></i><i class="pitch-goal pitch-goal-bottom"></i><i class="pitch-center-mark"></i></div>
+            ${broadcastPitchMatchNode(spotlight)}
+            ${broadcastTeamNodes(teamRows)}
+            <div class="broadcast-pitch-caption">TAP A TEAM TO INSPECT THE SEASON / 点击球队查看赛季状态</div>
           </div>
-        </article>
-        <aside class="hero-side">
-          ${spotlightHtml}
-          <div class="quick-stats">
-            <div class="quick-stat"><strong>${state.teams.length}</strong><span>参赛球队</span></div>
-            <div class="quick-stat"><strong>${fixtures.length}</strong><span>赛季比赛</span></div>
-            <div class="quick-stat"><strong>${finished.length}</strong><span>已完赛</span></div>
-            <div class="quick-stat"><strong>${goalCount}</strong><span>总进球</span></div>
-          </div>
-        </aside>
+          <aside class="broadcast-inspector">
+            <div class="broadcast-inspector-label">TEAM INSPECTOR / 球队雷达</div>
+            <div id="broadcast-team-detail" aria-live="polite">${broadcastInspectorBodyHtml(teamRows[0], fixtures)}</div>
+            <div class="broadcast-inspector-foot"><span>选择场上的球队节点</span><a href="#/teams">球队档案 →</a></div>
+          </aside>
+        </div>
       </div>
     </section>
     ${announcementBoardHtml()}
-    <section class="section">
-      ${sectionHead("最近赛果", "回看刚刚结束的比赛", `<a class="text-link" href="#/fixtures">全部赛程</a>`)}
-      <div class="content-grid">
-        <div class="fixture-list">${recentHtml}</div>
-        <div class="stack">
-          <section class="card panel">
-            <div class="panel-head"><h2 class="panel-title">积分榜 · 前五</h2><a class="text-link" href="#/standings">完整</a></div>
-            <div class="rank-list">${standingsHtml}</div>
-          </section>
-          <section class="card panel">
-            <div class="panel-head"><h2 class="panel-title">射手榜 · 前五</h2><a class="text-link" href="#/stats">完整</a></div>
-            <div class="rank-list">${scorersHtml}</div>
-          </section>
+    <section class="broadcast-section broadcast-wrap">
+      <div class="broadcast-section-head"><div><div class="broadcast-kicker">MATCH RESULTS / 02</div><h2 class="broadcast-section-title">最近赛果</h2><p class="broadcast-section-desc">比分与赛场在同一条时间线上。</p></div><a class="broadcast-text-link" href="#/fixtures">全部赛程 →</a></div>
+      <div class="broadcast-results-layout">
+        <div class="broadcast-result-column"><div class="broadcast-result-list">${recentHtml}</div><a class="broadcast-results-more" href="#/fixtures"><span>MATCH CENTER</span><strong>查看完整赛程</strong><small>全部轮次、比赛场地与详细比分</small><b>→</b></a></div>
+        <div class="broadcast-side-stack">
+          <section class="broadcast-panel"><div class="broadcast-panel-head"><h3>积分榜 · 前五</h3><a href="#/standings">完整 →</a></div><div class="broadcast-rank-list">${standingsHtml}</div></section>
+          <section class="broadcast-panel"><div class="broadcast-panel-head"><h3>射手榜 · 前五</h3><a href="#/stats">完整 →</a></div><div class="broadcast-rank-list">${scorersHtml}</div></section>
         </div>
       </div>
     </section>
     ${newsRailHtml()}
     ${homeGroundHtml()}
   </div>`;
+
+  bindBroadcastTeamInspector(teamRows, fixtures);
   const newsRail = document.getElementById("news-rail");
   document.querySelectorAll("[data-news-scroll]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -564,6 +588,112 @@ async function renderHome() {
       newsRail?.scrollBy({ left: direction * Math.min(newsRail.clientWidth * .82, 430), behavior: "smooth" });
     });
   });
+}
+
+function broadcastTeamRows(standings) {
+  if (standings.length) {
+    return standings.slice(0, 6).map((row, index) => ({ ...row, rank: index + 1 }));
+  }
+  return state.teams.slice(0, 6).map((team, index) => ({
+    teamId: team.id,
+    teamName: team.name,
+    played: 0,
+    goalDifference: 0,
+    points: 0,
+    rank: index + 1,
+  }));
+}
+
+function broadcastTeamLabel(teamId, fallback = "待定") {
+  const team = teamById(teamId);
+  return team?.shortName || team?.name || fallback;
+}
+
+function broadcastSpotlightCard(fixture) {
+  if (!fixture) {
+    return `<article class="broadcast-scoreboard"><div class="broadcast-scoreboard-top"><span>NEXT MATCH</span><span class="broadcast-live-dot">赛程准备中</span></div><div class="broadcast-scoreboard-empty">${emptyState("等待赛程", "管理员录入赛程后会显示下一场焦点比赛。", "↗")}</div></article>`;
+  }
+  const home = teamById(fixture.homeTeamId);
+  const away = teamById(fixture.awayTeamId);
+  const when = dateParts(fixture.kickoffAt);
+  const score = fixture.homeScore == null ? "VS" : `${fixture.homeScore}<span>:</span>${fixture.awayScore}`;
+  return `<article class="broadcast-scoreboard">
+    <div class="broadcast-scoreboard-top"><span>${fixture.roundNo ? `第 ${fixture.roundNo} 轮 · NEXT MATCH` : "NEXT MATCH"}</span><span class="broadcast-live-dot">${statusBadge(fixture.status)}</span></div>
+    <div class="broadcast-scoreboard-main">
+      <a class="broadcast-scoreboard-team" href="#/teams/${home.id}"><span class="broadcast-team-crest">${esc(initials(home.shortName || home.name))}</span><strong>${esc(home.shortName || home.name)}</strong><small>${esc(home.name)}</small></a>
+      <div class="broadcast-scoreboard-score">${score}</div>
+      <a class="broadcast-scoreboard-team" href="#/teams/${away.id}"><span class="broadcast-team-crest is-lime">${esc(initials(away.shortName || away.name))}</span><strong>${esc(away.shortName || away.name)}</strong><small>${esc(away.name)}</small></a>
+    </div>
+    <div class="broadcast-scoreboard-meta"><div><span>KICK OFF</span><strong>${esc(when.full)}</strong></div><div><span>GROUND</span><strong>${esc(fixture.venue || "场地待定")}</strong></div></div>
+    <a class="broadcast-scoreboard-link" href="#/fixtures/${fixture.id}"><span>比赛详情</span><span>→</span></a>
+  </article>`;
+}
+
+function broadcastPitchMatchNode(fixture) {
+  if (!fixture) return `<div class="broadcast-pitch-match"><div class="broadcast-pitch-round">NEXT MATCH</div><div class="broadcast-pitch-vs">等待赛程</div></div>`;
+  return `<div class="broadcast-pitch-match"><div class="broadcast-pitch-round">${fixture.roundNo ? `第 ${fixture.roundNo} 轮` : "NEXT MATCH"}</div><div class="broadcast-pitch-teams"><strong>${esc(broadcastTeamLabel(fixture.homeTeamId))}</strong><span>VS</span><strong>${esc(broadcastTeamLabel(fixture.awayTeamId))}</strong></div><div class="broadcast-pitch-kick">${esc(dateParts(fixture.kickoffAt).full)} · ${esc(fixture.venue || "场地待定")}</div></div>`;
+}
+
+function broadcastTeamNodes(rows) {
+  const positions = ["node-a", "node-b", "node-c", "node-d", "node-e", "node-f"];
+  return rows.map((row, index) => {
+    const team = teamById(row.teamId);
+    const label = team?.shortName || row.teamName || "待定";
+    return `<button class="broadcast-team-node ${positions[index] || "node-a"}" type="button" data-home-team-id="${row.teamId}" aria-pressed="${index === 0}"><span class="broadcast-node-dot">${esc(initials(label))}</span><span>${esc(label)}</span></button>`;
+  }).join("");
+}
+
+function broadcastTeamForm(teamId, fixtures) {
+  return fixtures
+    .filter((fixture) => fixture.status === "FINISHED" && (fixture.homeTeamId === teamId || fixture.awayTeamId === teamId))
+    .slice(-3)
+    .map((fixture) => {
+      const isHome = fixture.homeTeamId === teamId;
+      const goalsFor = isHome ? fixture.homeScore : fixture.awayScore;
+      const goalsAgainst = isHome ? fixture.awayScore : fixture.homeScore;
+      if (goalsFor > goalsAgainst) return "W";
+      if (goalsFor < goalsAgainst) return "L";
+      return "D";
+    });
+}
+
+function broadcastInspectorBodyHtml(row, fixtures) {
+  const team = teamById(row.teamId);
+  const teamName = row.teamName || team?.name || "待定球队";
+  const recordTeam = teamById(row.teamId);
+  const form = broadcastTeamForm(row.teamId, fixtures);
+  const formHtml = form.length ? form.map((value) => `<i class="broadcast-form-${value.toLowerCase()}">${value}</i>`).join("") : `<i class="broadcast-form-empty">—</i>`;
+  return `<div class="broadcast-inspector-team"><div class="broadcast-inspector-crest">${esc(initials(teamName))}</div><div><h3>${esc(teamName)}</h3><p>${row.played} 场 · 净胜球 ${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</p></div></div>
+    <div class="broadcast-inspector-record"><div><strong>${row.points}</strong><span>积分</span></div><div><strong>${String(row.rank || 1).padStart(2, "0")}</strong><span>当前排名</span></div></div>
+    <div class="broadcast-inspector-form"><span>RECENT FORM / 近况</span><div>${formHtml}</div></div>
+    <div class="broadcast-inspector-photo"><img src="/assets/cugb-match-action.jpg" alt="泥地soccer比赛现场"><span>MATCH ACTION · 2026</span></div>
+    ${team ? `<a class="broadcast-inspector-team-link" href="#/teams/${team.id}">查看完整球队档案 →</a>` : ""}`;
+}
+
+function bindBroadcastTeamInspector(rows, fixtures) {
+  const detail = document.getElementById("broadcast-team-detail");
+  document.querySelectorAll("[data-home-team-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = Number(button.dataset.homeTeamId);
+      const row = rows.find((item) => Number(item.teamId) === id);
+      if (!row || !detail) return;
+      document.querySelectorAll("[data-home-team-id]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      detail.innerHTML = broadcastInspectorBodyHtml(row, fixtures);
+    });
+  });
+}
+
+function broadcastResultRow(fixture) {
+  const home = teamById(fixture.homeTeamId);
+  const away = teamById(fixture.awayTeamId);
+  const when = dateParts(fixture.kickoffAt);
+  return `<a class="broadcast-result-row" href="#/fixtures/${fixture.id}">
+    <span class="broadcast-result-date">${esc(when.date)}<small>${esc(when.weekday)}</small></span>
+    <span class="broadcast-result-team"><i>${esc(initials(home?.shortName || home?.name || "主"))}</i><strong>${esc(home?.shortName || home?.name || "主队")}</strong></span>
+    <span class="broadcast-result-score">${fixture.homeScore ?? "-"} : ${fixture.awayScore ?? "-"}</span>
+    <span class="broadcast-result-team"><i>${esc(initials(away?.shortName || away?.name || "客"))}</i><strong>${esc(away?.shortName || away?.name || "客队")}</strong></span>
+    <span class="broadcast-result-meta">${esc(fixture.venue || "场地待定")}</span>
+  </a>`;
 }
 
 function announcementBoardHtml() {
